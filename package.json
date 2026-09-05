@@ -7,7 +7,7 @@
     "dev": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
-    "lint": "eslint . && prettier --check . && bun scripts/check-tokens.ts",
+    "lint": "eslint . && prettier --check . && tsc --noEmit && bun scripts/check-tokens.ts",
     "format": "prettier --write .",
     "test": "bun test"
   },
