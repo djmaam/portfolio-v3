@@ -5,6 +5,8 @@ import {
   auroraStyle,
   bootDelay,
   docProgress,
+  logWindow,
+  metricsAt,
   scrambleFrame,
   typedLength,
 } from '../src/lib/motion/math'
@@ -128,5 +130,50 @@ test('typedLength advances exactly one character per perChar ms', () => {
   for (let n = 0; n <= 46; n++) {
     expect(typedLength(n * 28, 28, 46)).toBe(n)
     expect(typedLength(n * 28 + 27, 28, 46)).toBe(n)
+  }
+})
+
+test('metricsAt is exactly the three formulas of the mock', () => {
+  for (const tick of [0, 1, 6, 11, 12, 66]) {
+    expect(metricsAt(tick)).toEqual({
+      agents: 3 + (tick % 2),
+      specs: 12 + Math.floor(tick / 11),
+      shipped: 41 + Math.floor(tick / 6),
+    })
+  }
+  expect(metricsAt(0)).toEqual({ agents: 3, specs: 12, shipped: 41 })
+  expect(metricsAt(66)).toEqual({ agents: 3, specs: 18, shipped: 52 })
+})
+
+test('the console metrics only ever count up, and agents stays in 3-4', () => {
+  let previous = metricsAt(0)
+  for (let tick = 0; tick <= 500; tick++) {
+    const metrics = metricsAt(tick)
+    expect([3, 4]).toContain(metrics.agents)
+    expect(metrics.specs).toBeGreaterThanOrEqual(previous.specs)
+    expect(metrics.shipped).toBeGreaterThanOrEqual(previous.shipped)
+    previous = metrics
+  }
+})
+
+test('logWindow ships the first six of the cycle as the initial six lines', () => {
+  expect(logWindow(6, 11, 6)).toEqual([0, 1, 2, 3, 4, 5])
+})
+
+test('logWindow keeps the six most recent lines and wraps the source forever', () => {
+  expect(logWindow(7, 11, 6)).toEqual([1, 2, 3, 4, 5, 6])
+  expect(logWindow(11, 11, 6)).toEqual([5, 6, 7, 8, 9, 10])
+  expect(logWindow(12, 11, 6)).toEqual([6, 7, 8, 9, 10, 0])
+  expect(logWindow(17, 11, 6)).toEqual([0, 1, 2, 3, 4, 5])
+})
+
+test('logWindow never shows more than six lines, and fills up before it drops any', () => {
+  expect(logWindow(0, 11, 6)).toEqual([])
+  expect(logWindow(3, 11, 6)).toEqual([0, 1, 2])
+  for (let tick = 0; tick <= 200; tick++) {
+    const window = logWindow(tick, 11, 6)
+    expect(window.length).toBe(Math.min(tick, 6))
+    for (const index of window) expect(index).toBeGreaterThanOrEqual(0)
+    for (const index of window) expect(index).toBeLessThan(11)
   }
 })
