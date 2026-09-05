@@ -1,11 +1,11 @@
 ---
-import '../styles/app.css'
-import { content, links } from '../lib/content'
-import type { Lang } from '../lib/content'
-import { siblingPath } from '../lib/i18n'
+import '../../styles/app.css'
+import { content, links } from '../../lib/content'
+import type { Lang } from '../../lib/content'
+import { siblingPath } from '../../lib/i18n'
 
-const lang: Lang = 'es'
-const otherLang: Lang = 'en'
+const lang: Lang = 'en'
+const otherLang: Lang = 'es'
 const t = content[lang]
 const siblingHref = siblingPath(Astro.url.pathname, otherLang)
 ---
