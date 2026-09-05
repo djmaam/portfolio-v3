@@ -93,10 +93,14 @@ const title = `${site.name} · ${t.eyebrow}`
     <script>
       import { bindAnchors } from '../lib/motion/anchors'
       import { auroraStyle } from '../lib/motion/math'
+      import { bindReveals } from '../lib/motion/reveal'
       import { onScroll } from '../lib/motion/scroll'
 
       // Delegated on document, so it also covers the links every later issue adds.
       bindAnchors()
+
+      // One observer for every `[data-reveal]` of the page, sections 08-13 included.
+      bindReveals()
 
       const aurora = document.querySelector<HTMLElement>('.aurora')
       if (aurora) {
