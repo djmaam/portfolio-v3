@@ -141,6 +141,108 @@
   }
 }
 
+/* ── Layout utilities ────────────────────────────────────────────────────────
+   The spacing of `DESIGN_SPEC §2`, so no component repeats the magic numbers.
+   The hero padding is deliberately not here: it appears exactly once. */
+
+@utility container-page {
+  max-width: 1200px;
+  margin-inline: auto;
+  padding-inline: clamp(20px, 4vw, 48px);
+}
+
+@utility section-y {
+  padding-block: clamp(56px, 7vw, 100px);
+}
+
+@utility section-divider {
+  border-top: 1px solid var(--color-line);
+}
+
+/* ── Aurora ───────────────────────────────────────────────────────────────────
+   The site's background layer (`MOTION_SPEC §4`): three blurred blobs, fixed, the
+   only thing painted at z-index 0. Decoration — `aria-hidden` in the markup, no
+   pointer events, and readable without JS since it needs none to show. */
+
+@layer components {
+  .aurora {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    overflow: hidden;
+    pointer-events: none;
+    /* Scroll drives filter/opacity/transform once per frame; this smooths the steps. */
+    transition:
+      filter 0.2s linear,
+      opacity 0.2s linear;
+  }
+
+  .aurora > * {
+    position: absolute;
+    border-radius: 50%;
+  }
+
+  .aurora > :nth-child(1) {
+    left: 55%;
+    top: -10%;
+    width: 56vw;
+    height: 56vw;
+    filter: blur(90px);
+    background: light-dark(
+      color-mix(in srgb, var(--color-accent) 22%, transparent),
+      color-mix(in srgb, var(--color-accent) 16%, transparent)
+    );
+  }
+
+  .aurora > :nth-child(2) {
+    left: 20%;
+    top: 30%;
+    width: 44vw;
+    height: 44vw;
+    filter: blur(100px);
+    background: color-mix(in srgb, var(--color-violet) 14%, transparent);
+  }
+
+  .aurora > :nth-child(3) {
+    left: 70%;
+    top: 40%;
+    width: 36vw;
+    height: 36vw;
+    filter: blur(90px);
+    background: light-dark(
+      color-mix(in srgb, var(--color-accent) 12%, transparent),
+      color-mix(in srgb, var(--color-accent) 8%, transparent)
+    );
+  }
+
+  /* Two blobs on narrow viewports (`MOTION_SPEC §13`). */
+  @media (width < 720px) {
+    .aurora > :nth-child(3) {
+      display: none;
+    }
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .aurora > :nth-child(1) {
+      animation: aur1 16s ease-in-out infinite alternate;
+    }
+
+    .aurora > :nth-child(2) {
+      animation: aur2 20s ease-in-out infinite alternate;
+    }
+
+    .aurora > :nth-child(3) {
+      animation: aur1 24s ease-in-out infinite alternate-reverse;
+    }
+
+    /* Resting opacity of the scroll ramp. Only with JS, which raises it on the first
+       frame — without JS the aurora stays at full strength instead of dimmed. */
+    .has-js .aurora {
+      opacity: 0.45;
+    }
+  }
+}
+
 /* ── Keyframes ────────────────────────────────────────────────────────────────
    The 11 from the mock (`handoff/reference/Portfolio.dc.html`). Unused so far:
    each motion issue consumes its own. */
