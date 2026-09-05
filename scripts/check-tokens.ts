@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
-// Ningún color literal fuera de src/styles/app.css: los componentes solo consumen
-// tokens (`text-ink`, `bg-bg`, `var(--color-*)`). Corre desde `bun run lint`.
+// No literal colours outside src/styles/app.css: components only consume tokens
+// (`text-ink`, `bg-bg`, `var(--color-*)`). Runs from `bun run lint`.
 
 import { Glob } from 'bun'
 import { relative, resolve } from 'node:path'
@@ -23,7 +23,7 @@ for await (const file of new Glob('**/*.{astro,ts,tsx,js,jsx,css,svelte,vue}').s
 }
 
 if (findings.length > 0) {
-  console.error(`Colores literales fuera de ${ALLOWED} (usá tokens de @theme):\n`)
+  console.error(`Literal colours outside ${ALLOWED} (use @theme tokens):\n`)
   console.error(findings.join('\n'))
   process.exit(1)
 }

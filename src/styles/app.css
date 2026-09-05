@@ -1,8 +1,8 @@
 @import "tailwindcss";
 
-/* ── Fuentes ──────────────────────────────────────────────────────────────────
-   Self-hosted desde /fonts (subset latin, U+0000-00FF: cubre acentos, ¿ y ¡).
-   IBM Plex Mono no tiene versión variable en Google Fonts: van dos estáticos. */
+/* ── Fonts ────────────────────────────────────────────────────────────────────
+   Self-hosted from /fonts (latin subset, U+0000-00FF: covers accents, ¿ and ¡).
+   IBM Plex Mono has no variable version on Google Fonts, hence two static cuts. */
 
 @font-face {
   font-family: "Manrope";
@@ -29,14 +29,13 @@
 }
 
 /* ── Tokens ───────────────────────────────────────────────────────────────────
-   `static` fuerza a Tailwind a emitir todas las variables aunque una utilidad
-   todavía no las use: son la API de diseño de los issues siguientes.
+   `static` forces Tailwind to emit every variable even when no utility uses it
+   yet: these are the design API the following issues build on.
 
-   Los colores usan `light-dark()`, así que los modificadores de opacidad de
-   Tailwind (`bg-accent/45`) NO funcionan sobre ellos — Tailwind no puede
-   recalcular el alfa. Las variantes con alfa que el diseño repite son tokens
-   propios; las de una sola aparición se resuelven en la utilidad que las
-   necesite con `color-mix(in srgb, var(--color-accent) 45%, transparent)`. */
+   Colours use `light-dark()`, so Tailwind's opacity modifiers (`bg-accent/45`)
+   do NOT work on them — Tailwind cannot recompute the alpha. Alpha variants the
+   design repeats get a token of their own; one-off ones are resolved in whichever
+   utility needs them with `color-mix(in srgb, var(--color-accent) 45%, transparent)`. */
 
 @theme static {
   --color-bg: light-dark(#f4f5f7, #08090c);
@@ -50,11 +49,11 @@
   --color-violet: light-dark(rgb(120, 90, 255), rgb(170, 120, 255));
   --color-console-bg: light-dark(rgba(255, 255, 255, 0.75), rgba(14, 16, 22, 0.85));
 
-  /* La tarjeta de contacto invierte el tema. */
+  /* The contact card inverts the theme. */
   --color-contact-card: light-dark(#0b0d12, #f3f5f9);
   --color-contact-ink: light-dark(#f3f5f9, #0b0d12);
 
-  /* Semáforo de "Cómo trabajo": iguales en ambos temas. */
+  /* Traffic-light colours of the "How I work" steps: same in both themes. */
   --color-step-1: #ff5c5c;
   --color-step-2: #ff9f43;
   --color-step-3: #ffd64d;
@@ -64,8 +63,8 @@
   --font-sans: Manrope, -apple-system, "Helvetica Neue", sans-serif;
   --font-mono: "IBM Plex Mono", ui-monospace, monospace;
 
-  /* Escala tipográfica: el mock usa `cqw` sobre un contenedor de 1200px;
-     acá van los `clamp()` equivalentes. */
+  /* Type scale: the mock uses `cqw` against a 1200px container; these are the
+     equivalent `clamp()` values. */
   --leading-h1: 1;
   --tracking-h1: -0.04em;
   --text-h1: clamp(36px, 5.5vw, 76px);
@@ -128,8 +127,8 @@
 }
 
 @layer base {
-  /* Sin `color-scheme`, `light-dark()` no resuelve. El script inline del <head>
-     lo pisa con el valor elegido; sin JS, el tema sigue a prefers-color-scheme. */
+  /* Without `color-scheme`, `light-dark()` does not resolve. The inline script in
+     <head> overrides it; with no JS the theme follows prefers-color-scheme. */
   :root {
     color-scheme: light dark;
   }
@@ -143,8 +142,8 @@
 }
 
 /* ── Keyframes ────────────────────────────────────────────────────────────────
-   Los 11 del mock (`handoff/reference/Portfolio.dc.html`). Todavía sin uso:
-   cada issue de motion consume los suyos. */
+   The 11 from the mock (`handoff/reference/Portfolio.dc.html`). Unused so far:
+   each motion issue consumes its own. */
 
 @keyframes blink {
   50% {

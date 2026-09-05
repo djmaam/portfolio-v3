@@ -10,7 +10,7 @@ import '../styles/app.css'
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <title>Marcos Arrieta</title>
 
-    {/* Antes de cualquier hoja de estilo: fija el tema en el primer paint. */}
+    {/* Before any stylesheet: settles the theme on the first paint. */}
     <script is:inline>
       ;(function () {
         let t = localStorage.getItem('theme')
@@ -33,18 +33,18 @@ import '../styles/app.css'
     />
   </head>
   <body>
-    <!-- Banco de pruebas de tokens; el issue 02 reemplaza esta página. -->
+    <!-- Token test bench; issue 02 replaces this page. -->
     <main class="mx-auto max-w-[1200px] px-[clamp(20px,4vw,48px)] py-16">
       <p class="font-mono text-label text-dim uppercase">00 / tokens</p>
       <h1 class="text-h1 font-sans">
         Marcos Arrieta<br /><span class="text-accent">portfolio v3</span>
       </h1>
-      <p class="text-hero-sub text-dim mt-6">Acentos: ñ á é í ó ú ü ¿? ¡!</p>
+      <p class="text-hero-sub text-dim mt-6">Latin subset: ñ á é í ó ú ü ¿? ¡!</p>
       <div
         class="border-line bg-surface mt-10 rounded-3xl border p-6"
         style="border-color: color-mix(in srgb, var(--color-accent) 45%, transparent)"
       >
-        <p class="text-body">Superficie sobre <code class="font-mono">--color-surface</code>.</p>
+        <p class="text-body">Surface on <code class="font-mono">--color-surface</code>.</p>
       </div>
       <ul class="mt-10 flex gap-3">
         <li class="bg-step-1 size-4 rounded-full"></li>

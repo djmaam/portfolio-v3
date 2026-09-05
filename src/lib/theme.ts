@@ -4,14 +4,14 @@ const STORAGE_KEY = 'theme'
 
 const isTheme = (value: unknown): value is Theme => value === 'light' || value === 'dark'
 
-/** El tema elegido en localStorage; si no hay uno válido, el del sistema. */
+/** The theme stored in localStorage; falls back to the system one. */
 export function getTheme(): Theme {
   const stored = localStorage.getItem(STORAGE_KEY)
   if (isTheme(stored)) return stored
   return matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
 }
 
-/** Persiste el tema y lo aplica al <html>, igual que el script inline del <head>. */
+/** Persists the theme and applies it to <html>, like the inline script in <head>. */
 export function setTheme(theme: Theme): void {
   localStorage.setItem(STORAGE_KEY, theme)
   const root = document.documentElement
