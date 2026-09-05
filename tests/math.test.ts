@@ -1,6 +1,6 @@
 import { expect, test } from 'bun:test'
 
-import { auroraStyle, docProgress } from '../src/lib/motion/math'
+import { anchorOffset, auroraStyle, docProgress, scrambleFrame } from '../src/lib/motion/math'
 
 test('docProgress is 0 at the top of the document and 1 at the bottom', () => {
   expect(docProgress(0, 5000, 800)).toBe(0)
@@ -46,4 +46,59 @@ test('auroraStyle at p=1 is the full hue rotation of MOTION_SPEC §4', () => {
   expect(s.filter).toBe('hue-rotate(260deg) saturate(1.4)')
   expect(s.opacity).toBeCloseTo(1, 10)
   expect(s.translateY).toBe('-12vh')
+})
+
+const GLYPHS = '<>/_-=+*#%&{}[]|\\01'
+const BRAND = 'Marcos Arrieta'
+
+/** Deterministic stand-in for Math.random: walks [0, 1) in coprime steps. */
+const seeded = () => {
+  let i = 0
+  return () => ((i++ * 7) % 19) / 19
+}
+
+test('scrambleFrame keeps the length and the spaces of its target at every progress', () => {
+  const spaces = [...BRAND].flatMap((char, index) => (char === ' ' ? [index] : []))
+  for (const p of [0, 0.25, 0.5, 0.75, 1]) {
+    const frame = scrambleFrame(BRAND, p, seeded())
+    expect(frame).toHaveLength(BRAND.length)
+    expect([...frame].flatMap((char, index) => (char === ' ' ? [index] : []))).toEqual(spaces)
+  }
+})
+
+test('scrambleFrame resolves to its target at p=1 and is all glyphs at p=0', () => {
+  expect(scrambleFrame(BRAND, 1, seeded())).toBe(BRAND)
+  for (const char of scrambleFrame(BRAND, 0, seeded())) {
+    if (char !== ' ') expect(GLYPHS).toInclude(char)
+  }
+})
+
+test('scrambleFrame resolves exactly floor(p² · len) characters, left to right', () => {
+  // `<` is the first glyph of the pool and absent from the target, so with a `rand` that
+  // always picks it the resolved prefix is whatever precedes the first `<`.
+  const target = 'ORCHESTRATION'
+  const first = () => 0
+  let previous = -1
+  for (let p = 0; p <= 1.0001; p += 0.05) {
+    const frame = scrambleFrame(target, p, first)
+    const n = Math.floor(p ** 2 * target.length)
+    expect(frame.slice(0, n)).toBe(target.slice(0, n))
+    expect(frame.slice(n)).toBe('<'.repeat(target.length - n))
+    expect(n).toBeGreaterThanOrEqual(previous)
+    previous = n
+  }
+})
+
+test('scrambleFrame defaults to Math.random and stays inside the glyph pool', () => {
+  const frame = scrambleFrame('abc', 0)
+  expect(frame).toHaveLength(3)
+  for (const char of frame) expect(GLYPHS).toInclude(char)
+})
+
+test('anchorOffset lands the target below the nav, and never above the document', () => {
+  expect(anchorOffset(1200, 64)).toBe(1136)
+  expect(anchorOffset(64, 64)).toBe(0)
+  // `#top` reports a document top of 0, which is where it must land — never at -64.
+  expect(anchorOffset(0, 64)).toBe(0)
+  expect(anchorOffset(30, 64)).toBe(0)
 })

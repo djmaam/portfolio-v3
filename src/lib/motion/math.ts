@@ -30,3 +30,34 @@ export function auroraStyle(p: number): { filter: string; opacity: number; trans
     translateY: `${round(-12 * p)}vh`,
   }
 }
+
+/** The console glyphs the scramble draws from (`MOTION_SPEC` §1). */
+const GLYPHS = '<>/_-=+*#%&{}[]|\\01'
+
+/**
+ * One frame of the scramble of `MOTION_SPEC` §1, at progress `p` ∈ [0, 1]. The resolved
+ * prefix is `floor(p² · len)` characters, so the text settles left to right and
+ * accelerates; everything past it is a random glyph, except spaces, which never scramble
+ * so the word shape holds. `rand` is injectable to keep the tests deterministic.
+ */
+export function scrambleFrame(target: string, p: number, rand: () => number = Math.random): string {
+  const resolved = Math.floor(p ** 2 * target.length)
+  let out = target.slice(0, resolved)
+  for (let i = resolved; i < target.length; i++) {
+    // `Math.random` never returns 1, but an injected `rand` might: clamp, don't trust.
+    out +=
+      target[i] === ' '
+        ? ' '
+        : GLYPHS[Math.min(GLYPHS.length - 1, Math.floor(rand() * GLYPHS.length))]
+  }
+  return out
+}
+
+/**
+ * Where an anchor link should scroll to: the target's document top minus the nav that
+ * would cover it (`MOTION_SPEC` §1). Clamped at 0, which is both what `#top` needs and
+ * what any target sitting under the nav needs.
+ */
+export function anchorOffset(top: number, navH: number): number {
+  return Math.max(0, top - navH)
+}
