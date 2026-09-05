@@ -1,26 +1,17 @@
 ---
+import Nav from '../components/Nav.astro'
 import Base from '../layouts/Base.astro'
 import { content } from '../lib/content'
 import type { Lang } from '../lib/content'
-import { siblingPath } from '../lib/i18n'
 
 const lang: Lang = 'es'
-const otherLang: Lang = 'en'
 const t = content[lang]
-const siblingHref = siblingPath(Astro.url.pathname, otherLang)
 ---
 
 <Base lang={lang}>
-  {/* Wiring scaffold: issues 04-14 replace this markup with real components. */}
+  <Nav slot="nav" lang={lang} />
+  {/* Wiring scaffold: issues 05-14 replace this markup with real components. */}
   <div class="container-page section-y">
-    <a
-      class="font-mono text-label text-dim uppercase"
-      href={siblingHref}
-      rel="alternate"
-      hreflang={otherLang}
-      lang={otherLang}
-      data-lang-toggle={otherLang}>{otherLang}</a
-    >
     <h1 class="text-h1 font-sans mt-6">{t.h1a}<br /><span class="text-accent">{t.h1b}</span></h1>
     <p class="text-hero-sub text-dim mt-6">{t.heroSub}</p>
     <ul class="text-body mt-10">

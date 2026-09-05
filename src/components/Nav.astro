@@ -1,0 +1,221 @@
+---
+import { content, site } from '../lib/content'
+import type { Lang } from '../lib/content'
+import { siblingPath } from '../lib/i18n'
+import { ui } from '../lib/ui'
+
+interface Props {
+  lang: Lang
+}
+
+const { lang } = Astro.props
+const otherLang: Lang = lang === 'es' ? 'en' : 'es'
+const t = content[lang]
+const siblingHref = siblingPath(Astro.url.pathname, otherLang)
+
+// The sections these point at arrive with issues 08-13. Until then the links are inert
+// by design: the click handler no-ops when the target is missing.
+const sections = [
+  { href: '#about', label: t.navAbout },
+  { href: '#work', label: t.navWork },
+  { href: '#projects', label: t.navProjects },
+  { href: '#contact', label: t.navContact },
+]
+---
+
+<nav class="nav">
+  <a class="brand" href="#top" data-nav-link data-brand>
+    <span class="glyph" aria-hidden="true">✳</span>
+    <span class="brand-text" data-brand-text>{site.name}</span>
+  </a>
+
+  <ul class="sections">
+    {
+      sections.map(({ href, label }) => (
+        <li>
+          <a href={href} data-nav-link>
+            {label}
+          </a>
+        </li>
+      ))
+    }
+  </ul>
+
+  {
+    /* A real link, so the translation is reachable without JS. Base's inline script owns
+      the click that records the choice; this only has to carry `data-lang-toggle`. */
+  }
+  <a
+    class="toggle lang font-mono text-label"
+    href={siblingHref}
+    rel="alternate"
+    hreflang={otherLang}
+    data-lang-toggle={otherLang}
+  >
+    <span class="lang-current">{lang.toUpperCase()}</span> / {otherLang}
+  </a>
+
+  <button
+    class="toggle theme"
+    type="button"
+    aria-label={ui[lang].themeToggle}
+    aria-pressed="false"
+    data-theme-toggle
+  >
+    <span class="dial" aria-hidden="true"></span>
+  </button>
+</nav>
+
+<style>
+  .nav {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    height: var(--nav-h);
+    padding-inline: clamp(20px, 4vw, 48px);
+    background: var(--color-glass);
+    backdrop-filter: blur(18px) saturate(1.4);
+    border-bottom: 1px solid var(--color-line);
+  }
+
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-right: auto;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    color: var(--color-ink);
+  }
+
+  /* Wide enough for the resolved name, so the scramble never resizes the nav. */
+  .brand-text {
+    display: inline-block;
+    min-width: 9.2em;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .glyph {
+    width: 14px;
+    height: 14px;
+    font-size: 15px;
+    line-height: 14px;
+    text-align: center;
+    color: var(--color-accent);
+    text-shadow: 0 0 10px var(--color-accent);
+  }
+
+  .sections {
+    display: flex;
+    gap: 22px;
+    font-size: 14px;
+    color: var(--color-dim);
+  }
+
+  .sections a:hover {
+    color: var(--color-ink);
+  }
+
+  /* No mobile menu is designed: the links go, both toggles stay. */
+  @media (width < 720px) {
+    .sections {
+      display: none;
+    }
+  }
+
+  .toggle {
+    display: grid;
+    place-items: center;
+    height: 34px;
+    border: 1px solid var(--color-line);
+    border-radius: 999px;
+    color: var(--color-dim);
+    transition: border-color 0.2s;
+  }
+
+  .toggle:hover {
+    border-color: var(--color-accent);
+  }
+
+  .lang {
+    padding-inline: 12px;
+    white-space: nowrap;
+  }
+
+  .lang-current {
+    color: var(--color-ink);
+  }
+
+  .theme {
+    width: 34px;
+    background: transparent;
+    cursor: pointer;
+    color: var(--color-ink);
+  }
+
+  /* Half-filled circle: one half `currentColor`, the other only outlined, tilted so it
+     reads as a moon and a sun at once. */
+  .dial {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: linear-gradient(to right, currentColor 50%, transparent 50%);
+    box-shadow: inset 0 0 0 1px currentColor;
+    transform: rotate(-30deg);
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .glyph {
+      animation: think 2.6s cubic-bezier(0.6, 0.05, 0.3, 1) infinite;
+    }
+  }
+</style>
+
+<script>
+  import { anchorOffset } from '../lib/motion/math'
+  import { prefersReducedMotion } from '../lib/motion/reduced'
+  import { scramble } from '../lib/motion/scramble'
+  import { toggleTheme } from '../lib/theme'
+
+  // One number for the sticky height and the scroll offset: app.css owns it.
+  const navH = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--nav-h'))
+
+  for (const link of document.querySelectorAll<HTMLAnchorElement>('[data-nav-link]')) {
+    link.addEventListener('click', (event) => {
+      const hash = link.getAttribute('href') ?? ''
+      const target = hash === '#top' ? null : document.getElementById(hash.slice(1))
+      // The sections land in issues 08-13. Until then the link falls back to the browser,
+      // which does nothing with a fragment it cannot resolve.
+      if (hash !== '#top' && !target) return
+
+      event.preventDefault()
+      const top = target ? target.getBoundingClientRect().top + window.scrollY : 0
+      window.scrollTo({
+        top: anchorOffset(top, navH),
+        behavior: prefersReducedMotion() ? 'auto' : 'smooth',
+      })
+    })
+  }
+
+  const brand = document.querySelector<HTMLElement>('[data-brand]')
+  const brandText = document.querySelector<HTMLElement>('[data-brand-text]')
+  if (brand && brandText) {
+    setTimeout(() => scramble(brandText, 1100), 300)
+    setInterval(() => scramble(brandText, 900), 9000)
+    brand.addEventListener('mouseenter', () => scramble(brandText, 700))
+  }
+
+  const themeToggle = document.querySelector<HTMLButtonElement>('[data-theme-toggle]')
+  if (themeToggle) {
+    const reflect = (theme: string | undefined) =>
+      themeToggle.setAttribute('aria-pressed', String(theme === 'dark'))
+
+    // The inline script in <head> settled the theme before the first paint; read it from
+    // there, never from matchMedia, or a stored choice and the button disagree.
+    reflect(document.documentElement.dataset.theme)
+    themeToggle.addEventListener('click', () => reflect(toggleTheme()))
+  }
+</script>
