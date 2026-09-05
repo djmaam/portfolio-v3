@@ -1,6 +1,6 @@
 ---
-import '../styles/app.css'
-import { content, links, site } from '../lib/content'
+import Base from '../layouts/Base.astro'
+import { content } from '../lib/content'
 import type { Lang } from '../lib/content'
 import { siblingPath } from '../lib/i18n'
 
@@ -10,76 +10,21 @@ const t = content[lang]
 const siblingHref = siblingPath(Astro.url.pathname, otherLang)
 ---
 
-<!doctype html>
-<html lang={lang}>
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <title>{`${site.name} · ${t.eyebrow}`}</title>
-
-    <link rel="alternate" hreflang="es" href={`${links.domain}/`} />
-    <link rel="alternate" hreflang="en" href={`${links.domain}/en`} />
-    <link rel="alternate" hreflang="x-default" href={`${links.domain}/`} />
-
-    {/* Before any stylesheet: settles the theme and the language on the first paint. */}
-    <script is:inline define:vars={{ otherLang, siblingHref }}>
-      ;(function () {
-        let t = localStorage.getItem('theme')
-        if (t !== 'light' && t !== 'dark')
-          t = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
-        const r = document.documentElement
-        r.style.colorScheme = t
-        r.dataset.theme = t
-        r.classList.add('has-js')
-
-        // At most one language redirect per session, and `replace` so the wrong-language
-        // page never enters the back-button history. The toggle writes `lang` before it
-        // navigates, so an explicit choice always agrees with the route it lands on.
-        if (
-          localStorage.getItem('lang') === otherLang &&
-          !sessionStorage.getItem('langRedirected')
-        ) {
-          sessionStorage.setItem('langRedirected', '1')
-          location.replace(siblingHref)
-        }
-      })()
-    </script>
-
-    <link rel="preload" as="font" type="font/woff2" href="/fonts/manrope-var.woff2" crossorigin />
-    <link
-      rel="preload"
-      as="font"
-      type="font/woff2"
-      href="/fonts/ibm-plex-mono-400.woff2"
-      crossorigin
-    />
-  </head>
-  <body>
-    {/* Wiring scaffold: issues 03-14 replace this markup with real components. */}
-    <main class="mx-auto max-w-[1200px] px-[clamp(20px,4vw,48px)] py-16">
-      <a
-        class="font-mono text-label text-dim uppercase"
-        href={siblingHref}
-        rel="alternate"
-        hreflang={otherLang}
-        lang={otherLang}
-        data-lang-toggle={otherLang}>{otherLang}</a
-      >
-      <h1 class="text-h1 font-sans mt-6">{t.h1a}<br /><span class="text-accent">{t.h1b}</span></h1>
-      <p class="text-hero-sub text-dim mt-6">{t.heroSub}</p>
-      <ul class="text-body mt-10">
-        {t.jobs.map((job) => <li>{job.company}</li>)}
-      </ul>
-    </main>
-
-    <script>
-      // The toggle is a real link; this only records the explicit choice before leaving.
-      const toggle = document.querySelector<HTMLAnchorElement>('a[data-lang-toggle]')
-      const target = toggle?.dataset.langToggle
-      if (toggle && target) {
-        toggle.addEventListener('click', () => localStorage.setItem('lang', target))
-      }
-    </script>
-  </body>
-</html>
+<Base lang={lang}>
+  {/* Wiring scaffold: issues 04-14 replace this markup with real components. */}
+  <div class="container-page section-y">
+    <a
+      class="font-mono text-label text-dim uppercase"
+      href={siblingHref}
+      rel="alternate"
+      hreflang={otherLang}
+      lang={otherLang}
+      data-lang-toggle={otherLang}>{otherLang}</a
+    >
+    <h1 class="text-h1 font-sans mt-6">{t.h1a}<br /><span class="text-accent">{t.h1b}</span></h1>
+    <p class="text-hero-sub text-dim mt-6">{t.heroSub}</p>
+    <ul class="text-body mt-10">
+      {t.jobs.map((job) => <li>{job.company}</li>)}
+    </ul>
+  </div>
+</Base>
