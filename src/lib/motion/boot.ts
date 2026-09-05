@@ -1,0 +1,29 @@
+import { bootDelay } from './math'
+import { prefersReducedMotion } from './reduced'
+
+/**
+ * The boot sequence of `MOTION_SPEC` §2: every `[data-boot="n"]` starts hidden — an
+ * `app.css` rule that only applies under `html.has-js` and `no-preference` — and is
+ * revealed at `bootDelay(n)`. With `reduce` the final state is applied on the first
+ * frame, with no transition, so nothing ever animates.
+ *
+ * Plumbing only: the timing is `bootDelay`, which the unit tests cover.
+ */
+export function boot(): void {
+  const elements = [...document.querySelectorAll<HTMLElement>('[data-boot]')].sort(
+    (a, b) => Number(a.dataset.boot) - Number(b.dataset.boot),
+  )
+
+  const reduced = prefersReducedMotion()
+
+  const show = (element: HTMLElement) => {
+    element.style.opacity = '1'
+    element.style.transform = 'none'
+    element.style.filter = 'none'
+  }
+
+  for (const element of elements) {
+    if (reduced) show(element)
+    else setTimeout(() => show(element), bootDelay(Number(element.dataset.boot)))
+  }
+}
