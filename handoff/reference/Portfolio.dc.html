@@ -1,0 +1,704 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+html,body{margin:0;padding:0}
+body{-webkit-font-smoothing:antialiased;text-wrap:pretty}
+a{color:light-dark(#0A8FAF,#3EE7FF);text-decoration:none}a:hover{color:light-dark(#0B0D12,#F3F5F9)}
+@keyframes blink{50%{opacity:0}}
+@keyframes pulse{50%{opacity:.3;transform:scale(.7)}}
+@keyframes aur1{to{transform:translate(-18%,14%) scale(1.15)}}
+@keyframes aur2{to{transform:translate(22%,-12%) scale(.9)}}
+@keyframes rise{from{opacity:0;transform:translateY(6px)}}
+@keyframes think{0%{transform:rotate(0) scale(1)}30%{transform:rotate(90deg) scale(.72)}60%{transform:rotate(200deg) scale(1.12)}100%{transform:rotate(360deg) scale(1)}}
+@keyframes sweep{from{top:-8%;opacity:0}15%{opacity:1}to{top:108%;opacity:0}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes gridflow{to{background-position:48px 48px}}
+@keyframes shimmer{to{transform:translateX(250%)}}
+@keyframes marquee{to{transform:translateX(-50%)}}
+</style>
+</helmet>
+<div data-screen-label="Portfolio" style="color-scheme: {{ scheme }}; position:relative; container-type:inline-size; min-height:100vh; background:light-dark(#F4F5F7,#08090C); color:light-dark(#0B0D12,#F3F5F9); font-family:{{ fontSans }}; font-size:17px; line-height:1.5; overflow:clip">
+
+<sc-if value="{{ showNetwork }}" hint-placeholder-val="{{ true }}">
+<canvas ref="{{ netRef }}" style="position:absolute; left:0; top:0; width:100%; height:100vh; pointer-events:none; z-index:1; mask-image:linear-gradient(180deg,#000 55%,transparent 100%)"></canvas>
+</sc-if>
+<sc-if value="{{ showAurora }}" hint-placeholder-val="{{ false }}">
+<div ref="{{ auroraRef }}" style="position:fixed; left:0; top:0; width:100%; height:100vh; pointer-events:none; overflow:hidden; z-index:0; transition:filter .2s linear, opacity .2s linear">
+  <div style="position:absolute; left:55%; top:-10%; width:56vw; height:56vw; border-radius:50%; filter:blur(90px); background:light-dark(rgba(10,143,175,.22),rgba(62,231,255,.16)); animation:aur1 16s ease-in-out infinite alternate"></div>
+  <div style="position:absolute; left:20%; top:30%; width:44vw; height:44vw; border-radius:50%; filter:blur(100px); background:light-dark(rgba(120,90,255,.14),rgba(140,90,255,.14)); animation:aur2 20s ease-in-out infinite alternate"></div>
+  <div style="position:absolute; left:70%; top:40%; width:36vw; height:36vw; border-radius:50%; filter:blur(90px); background:light-dark(rgba(10,143,175,.12),rgba(62,231,255,.08)); animation:aur1 24s ease-in-out infinite alternate-reverse"></div>
+</div>
+</sc-if>
+<div style="position:absolute; left:50%; top:-320px; width:900px; height:640px; transform:translateX(-30%); pointer-events:none; background:radial-gradient(closest-side,light-dark(rgba(10,143,175,.16),rgba(62,231,255,.14)),transparent)"></div>
+
+<nav style="position:sticky; top:{{ navTop }}; z-index:20; display:flex; align-items:center; gap:14px; flex-wrap:wrap; padding:{{ navPadTop }} clamp(20px,4cqw,48px) 14px; background:light-dark(rgba(244,245,247,.72),rgba(8,9,12,.6)); backdrop-filter:blur(18px) saturate(1.4); border-bottom:1px solid light-dark(rgba(0,0,0,.08),rgba(255,255,255,.08))">
+  <a href="#top" onClick="{{ go }}" onMouseEnter="{{ brandHover }}" style="font-weight:600; letter-spacing:-.01em; color:light-dark(#0B0D12,#F3F5F9); display:flex; align-items:center; gap:10px"><span aria-hidden="true" style="display:inline-block; width:14px; height:14px; line-height:14px; font-size:15px; text-align:center; color:light-dark(#0A8FAF,#3EE7FF); text-shadow:0 0 10px light-dark(rgba(10,143,175,.7),rgba(62,231,255,.9)); animation:think 2.6s cubic-bezier(.6,.05,.3,1) infinite">✳</span><span ref="{{ brandRef }}" style="display:inline-block; min-width:9.2em; font-variant-numeric:tabular-nums">Marcos Arrieta</span></a>
+  <div style="flex:1"></div>
+  <sc-if value="{{ showLinks }}" hint-placeholder-val="{{ true }}">
+  <div style="display:flex; gap:22px; font-size:14px; color:light-dark(#5E6675,#8B94A7)">
+    <a href="#about" onClick="{{ go }}" style="color:inherit" style-hover="color:light-dark(#0B0D12,#F3F5F9)">{{ t.navAbout }}</a>
+    <a href="#work" onClick="{{ go }}" style="color:inherit" style-hover="color:light-dark(#0B0D12,#F3F5F9)">{{ t.navWork }}</a>
+    <a href="#projects" onClick="{{ go }}" style="color:inherit" style-hover="color:light-dark(#0B0D12,#F3F5F9)">{{ t.navProjects }}</a>
+    <a href="#contact" onClick="{{ go }}" style="color:inherit" style-hover="color:light-dark(#0B0D12,#F3F5F9)">{{ t.navContact }}</a>
+  </div>
+  </sc-if>
+  <div style="display:flex; gap:8px; align-items:center">
+    <button onClick="{{ toggleLang }}" style="font-family:{{ fontMono }}; font-size:12px; letter-spacing:.06em; padding:8px 12px; border-radius:999px; border:1px solid light-dark(rgba(0,0,0,.12),rgba(255,255,255,.12)); background:transparent; color:light-dark(#0B0D12,#F3F5F9); cursor:pointer; white-space:nowrap" style-hover="border-color:light-dark(#0A8FAF,#3EE7FF)">{{ langLabel }}</button>
+    <button onClick="{{ toggleTheme }}" aria-label="theme" style="width:34px; height:34px; border-radius:999px; border:1px solid light-dark(rgba(0,0,0,.12),rgba(255,255,255,.12)); background:transparent; color:light-dark(#0B0D12,#F3F5F9); cursor:pointer; display:grid; place-items:center" style-hover="border-color:light-dark(#0A8FAF,#3EE7FF)"><span style="width:12px;height:12px;border-radius:50%;background:light-dark(#0B0D12,#F3F5F9);box-shadow:inset -4px -3px 0 0 light-dark(#F4F5F7,#08090C)"></span></button>
+  </div>
+</nav>
+
+<main id="top" style="position:relative; z-index:2; max-width:1200px; margin:0 auto; padding:0 clamp(20px,4cqw,48px)">
+
+<section data-screen-label="Hero" style="display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,380px),1fr)); gap:clamp(32px,5cqw,72px); align-items:center; padding:clamp(72px,10cqw,140px) 0 clamp(64px,8cqw,110px)">
+  <div style="display:flex; flex-direction:column; gap:28px; min-width:0">
+    <div ref="{{ boot }}" data-boot="0" style="opacity:0; transform:translateY(14px); filter:blur(8px); transition:opacity .9s cubic-bezier(.2,.8,.2,1), transform .9s cubic-bezier(.2,.8,.2,1), filter .9s cubic-bezier(.2,.8,.2,1); display:flex; align-items:center; gap:12px; font-family:{{ fontMono }}; font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:light-dark(#5E6675,#8B94A7)"><span style="flex:none; width:28px;height:1px;background:light-dark(#0A8FAF,#3EE7FF)"></span><span>{{ typed }}<span style="display:inline-block; width:7px; height:12px; margin-left:6px; vertical-align:-1px; background:light-dark(#0A8FAF,#3EE7FF); animation:blink 1s steps(1) infinite"></span></span></div>
+    <h1 ref="{{ boot }}" data-boot="1" style="opacity:0; transform:translateY(14px); filter:blur(8px); transition:opacity .9s cubic-bezier(.2,.8,.2,1), transform .9s cubic-bezier(.2,.8,.2,1), filter .9s cubic-bezier(.2,.8,.2,1); margin:0; font-size:clamp(36px,4.9cqw,76px); line-height:1; letter-spacing:-.04em; font-weight:600; text-wrap:balance">{{ t.h1a }}<br><span style="color:light-dark(#0A8FAF,#3EE7FF); text-shadow:0 0 40px light-dark(rgba(10,143,175,.3),rgba(62,231,255,.45))">{{ t.h1b }}</span></h1>
+    <p ref="{{ boot }}" data-boot="2" style="opacity:0; transform:translateY(14px); filter:blur(8px); transition:opacity .9s cubic-bezier(.2,.8,.2,1), transform .9s cubic-bezier(.2,.8,.2,1), filter .9s cubic-bezier(.2,.8,.2,1); margin:0; max-width:480px; font-size:clamp(16px,1.3cqw,19px); line-height:1.55; color:light-dark(#5E6675,#8B94A7); font-weight:400">{{ t.heroSub }}</p>
+    <div ref="{{ boot }}" data-boot="3" style="opacity:0; transform:translateY(14px); filter:blur(8px); transition:opacity .9s cubic-bezier(.2,.8,.2,1), transform .9s cubic-bezier(.2,.8,.2,1), filter .9s cubic-bezier(.2,.8,.2,1); display:flex; gap:12px; flex-wrap:wrap; margin-top:6px">
+      <a href="#work" onClick="{{ go }}" style="padding:14px 22px; border-radius:999px; background:light-dark(#0B0D12,#F3F5F9); color:light-dark(#F4F5F7,#08090C); font-weight:500; font-size:15px" style-hover="transform:translateY(-1px); color:light-dark(#F4F5F7,#08090C)">{{ t.ctaWork }}</a>
+      <a href="#contact" onClick="{{ go }}" style="padding:14px 22px; border-radius:999px; border:1px solid light-dark(rgba(0,0,0,.14),rgba(255,255,255,.14)); color:light-dark(#0B0D12,#F3F5F9); font-weight:500; font-size:15px" style-hover="border-color:light-dark(#0A8FAF,#3EE7FF)">{{ t.ctaContact }}</a>
+    </div>
+    <div ref="{{ boot }}" data-boot="4" style="opacity:0; transform:translateY(14px); filter:blur(8px); transition:opacity .9s cubic-bezier(.2,.8,.2,1), transform .9s cubic-bezier(.2,.8,.2,1), filter .9s cubic-bezier(.2,.8,.2,1); display:flex; gap:12px 24px; flex-wrap:wrap; white-space:nowrap; font-family:{{ fontMono }}; font-size:12px; color:light-dark(#5E6675,#8B94A7); margin-top:10px">
+      <span><b style="color:light-dark(#0B0D12,#F3F5F9); font-weight:500">8+</b> {{ t.statYears }}</span>
+      <span><b style="color:light-dark(#0B0D12,#F3F5F9); font-weight:500">5</b> {{ t.statCompanies }}</span>
+      <span><b style="color:light-dark(#0B0D12,#F3F5F9); font-weight:500">6</b> {{ t.statPlatforms }}</span>
+    </div>
+  </div>
+
+  <div ref="{{ boot }}" data-boot="10" style="opacity:0; transform:translateY(24px) scale(.96); filter:blur(10px); transition:opacity 1.1s cubic-bezier(.2,.8,.2,1), transform 1.1s cubic-bezier(.2,.8,.2,1), filter 1.1s cubic-bezier(.2,.8,.2,1); min-width:0; position:relative">
+    <div style="position:absolute; inset:-1px; border-radius:28px; background:linear-gradient(135deg,light-dark(rgba(10,143,175,.5),rgba(62,231,255,.6)),transparent 40%,transparent 60%,light-dark(rgba(10,143,175,.25),rgba(62,231,255,.3))); pointer-events:none"></div>
+    <div ref="{{ consoleRef }}" style="position:relative; border-radius:28px; background:light-dark(rgba(255,255,255,.75),rgba(14,16,22,.85)); backdrop-filter:blur(20px); border:1px solid light-dark(rgba(0,0,0,.06),rgba(255,255,255,.06)); box-shadow:0 30px 80px light-dark(rgba(0,0,0,.12),rgba(0,0,0,.6)), 0 0 0 1px light-dark(rgba(255,255,255,.6),rgba(0,0,0,.6)) inset; overflow:hidden">
+      <div style="position:absolute; left:0; right:0; height:2px; background:linear-gradient(90deg,transparent,light-dark(#0A8FAF,#3EE7FF),transparent); box-shadow:0 0 18px light-dark(rgba(10,143,175,.8),rgba(62,231,255,.9)); pointer-events:none; z-index:2; animation:sweep 1.4s cubic-bezier(.4,0,.2,1) 1.1s both"></div>
+      <div style="display:flex; align-items:center; gap:10px; padding:14px 18px; border-bottom:1px solid light-dark(rgba(0,0,0,.06),rgba(255,255,255,.06)); font-family:{{ fontMono }}; font-size:11px; letter-spacing:.1em; color:light-dark(#5E6675,#8B94A7)">
+        <span style="display:flex; gap:6px"><i style="width:10px;height:10px;border-radius:50%;background:light-dark(#e5e7eb,#2a2f3a)"></i><i style="width:10px;height:10px;border-radius:50%;background:light-dark(#e5e7eb,#2a2f3a)"></i><i style="width:10px;height:10px;border-radius:50%;background:light-dark(#0A8FAF,#3EE7FF)"></i></span>
+        <span style="flex:1; text-align:center">orchestrator — session 0x4D41</span>
+        <span style="display:flex; align-items:center; gap:6px; color:light-dark(#0A8FAF,#3EE7FF)"><i style="width:6px;height:6px;border-radius:50%;background:currentColor;box-shadow:0 0 8px currentColor"></i>LIVE</span>
+      </div>
+      <div style="padding:18px 20px 16px; font-family:{{ fontMono }}; font-size:12.5px; line-height:1.85; min-height:210px; display:flex; flex-direction:column; justify-content:flex-end; background-image:repeating-linear-gradient(180deg,light-dark(rgba(0,0,0,.015),rgba(255,255,255,.025)) 0 1px,transparent 1px 3px)">
+        <sc-for list="{{ lines }}" as="ln" hint-placeholder-count="6">
+          <div style="display:flex; gap:12px; animation:rise .35s ease both; white-space:nowrap; overflow:hidden; text-overflow:ellipsis"><span style="color:light-dark(#9AA3B2,#4A5364); flex:none">{{ ln.t }}</span><span style="color:light-dark(#0A8FAF,#3EE7FF); flex:none; width:64px">{{ ln.k }}</span><span style="color:light-dark(#0B0D12,#F3F5F9); overflow:hidden; text-overflow:ellipsis">{{ ln.v }}</span></div>
+        </sc-for>
+        <div style="display:flex; gap:12px; color:light-dark(#0A8FAF,#3EE7FF)"><span style="color:light-dark(#9AA3B2,#4A5364)">{{ now }}</span><span>▸</span><span style="display:inline-block; width:8px; height:15px; background:currentColor; animation:blink 1s steps(1) infinite; vertical-align:middle"></span></div>
+      </div>
+      <div style="display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); border-top:1px solid light-dark(rgba(0,0,0,.06),rgba(255,255,255,.06))">
+        <div style="padding:14px 18px; border-right:1px solid light-dark(rgba(0,0,0,.06),rgba(255,255,255,.06))"><div style="font-family:{{ fontMono }}; font-size:10px; letter-spacing:.12em; color:light-dark(#5E6675,#8B94A7)">AGENTS</div><div style="font-size:20px; font-weight:500; letter-spacing:-.02em">{{ agents }}</div></div>
+        <div style="padding:14px 18px; border-right:1px solid light-dark(rgba(0,0,0,.06),rgba(255,255,255,.06))"><div style="font-family:{{ fontMono }}; font-size:10px; letter-spacing:.12em; color:light-dark(#5E6675,#8B94A7)">SPECS</div><div style="font-size:20px; font-weight:500; letter-spacing:-.02em">{{ specs }}</div></div>
+        <div style="padding:14px 18px"><div style="font-family:{{ fontMono }}; font-size:10px; letter-spacing:.12em; color:light-dark(#5E6675,#8B94A7)">SHIPPED</div><div style="font-size:20px; font-weight:500; letter-spacing:-.02em; color:light-dark(#0A8FAF,#3EE7FF)">{{ shipped }}</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="about" data-screen-label="Sobre mi" style="padding:clamp(56px,7cqw,100px) 0; border-top:1px solid light-dark(rgba(0,0,0,.08),rgba(255,255,255,.08))">
+  <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr)); gap:clamp(28px,4cqw,64px); align-items:start">
+    <div style="font-family:{{ fontMono }}; font-size:12px; letter-spacing:.14em; color:light-dark(#5E6675,#8B94A7)">01 / {{ t.secAbout }}</div>
+    <div style="grid-column:span 2; min-width:0; display:flex; flex-direction:column; gap:28px">
+      <p ref="{{ aboutRef }}" style="margin:0; font-size:clamp(26px,3cqw,40px); line-height:1.2; letter-spacing:-.025em; font-weight:500; display:flex; flex-wrap:wrap; gap:0 .26em"><sc-for list="{{ leadWords }}" as="w" hint-placeholder-count="12"><span ref="{{ wordRef }}" style="opacity:.16; transition:opacity .35s ease">{{ w }}</span></sc-for></p>
+      <p ref="{{ reveal }}" style="opacity:0; transform:translateY(18px); filter:blur(6px); transition:opacity .8s cubic-bezier(.2,.8,.2,1), transform .8s cubic-bezier(.2,.8,.2,1), filter .8s cubic-bezier(.2,.8,.2,1); margin:0; max-width:640px; font-size:18px; color:light-dark(#5E6675,#8B94A7)">{{ t.aboutBody }}</p>
+      <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,200px),1fr)); gap:14px; margin-top:8px">
+        <sc-for list="{{ principles }}" as="p" hint-placeholder-count="3">
+          <div ref="{{ reveal }}" data-delay="{{ p.delay }}" style="opacity:0; transform:translateY(18px); filter:blur(6px); transition:opacity .8s cubic-bezier(.2,.8,.2,1), transform .8s cubic-bezier(.2,.8,.2,1), filter .8s cubic-bezier(.2,.8,.2,1); padding:20px; border-radius:20px; background:light-dark(rgba(255,255,255,.7),rgba(255,255,255,.035)); border:1px solid light-dark(rgba(0,0,0,.06),rgba(255,255,255,.07))"><div style="font-family:{{ fontMono }}; font-size:11px; letter-spacing:.12em; color:light-dark(#0A8FAF,#3EE7FF); margin-bottom:10px">{{ p.n }}</div><div style="font-weight:500; font-size:17px; margin-bottom:6px">{{ p.h }}</div><div style="font-size:14px; color:light-dark(#5E6675,#8B94A7)">{{ p.d }}</div></div>
+        </sc-for>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="method" data-screen-label="Como trabajo con IA" style="border-top:1px solid light-dark(rgba(0,0,0,.08),rgba(255,255,255,.08))">
+<div ref="{{ methodTrack }}" style="height:280vh; position:relative">
+<div ref="{{ methodPin }}" style="position:sticky; top:0; min-height:100vh; display:flex; flex-direction:column; justify-content:center; padding:clamp(56px,7cqw,100px) 0; box-sizing:border-box">
+  <div style="display:flex; align-items:flex-end; justify-content:space-between; gap:24px; flex-wrap:wrap; margin-bottom:40px">
+    <div style="display:flex; flex-direction:column; gap:14px">
+      <div style="font-family:{{ fontMono }}; font-size:12px; letter-spacing:.14em; color:light-dark(#5E6675,#8B94A7)">02 / {{ t.secMethod }}</div>
+      <h2 style="margin:0; font-size:clamp(32px,4cqw,56px); line-height:1.02; letter-spacing:-.035em; font-weight:600; max-width:720px">{{ t.methodTitle }}</h2>
+    </div>
+    <div style="display:flex; flex-direction:column; gap:12px; align-items:flex-start; max-width:380px">
+      <p style="margin:0; font-size:16px; color:light-dark(#5E6675,#8B94A7)">{{ t.methodSub }}</p>
+      <div ref="{{ methodStatus }}" data-verbs="{{ t.stepVerbs }}" data-done="{{ t.cycleDone }}" data-idle="{{ t.cycleIdle }}" style="display:flex; align-items:center; gap:10px; font-family:{{ fontMono }}; font-size:11px; letter-spacing:.1em; color:light-dark(#5E6675,#8B94A7); transition:color .4s"><span data-role="dot" style="width:8px; height:8px; border-radius:50%; background:light-dark(rgba(0,0,0,.15),rgba(255,255,255,.18)); transition:background .4s, box-shadow .4s"></span><span data-role="txt">{{ t.cycleIdle }}</span></div>
+    </div>
+  </div>
+  <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,150px),1fr)); gap:10px; position:relative">
+    <sc-for list="{{ t.steps }}" as="s" hint-placeholder-count="5">
+      <div ref="{{ stepRef }}" data-color="{{ s.color }}" style="position:relative; padding:22px 20px 20px; border-radius:20px; background:light-dark(rgba(255,255,255,.7),rgba(255,255,255,.035)); border:1px solid light-dark(rgba(0,0,0,.06),rgba(255,255,255,.07)); display:flex; flex-direction:column; gap:14px; min-height:200px; opacity:.22; transform:translateY(10px) scale(.97); transition:opacity .6s cubic-bezier(.2,.8,.2,1), transform .6s cubic-bezier(.2,.8,.2,1), border-color .6s, box-shadow .6s, background .6s">
+        <div style="display:flex; justify-content:space-between; align-items:center; font-family:{{ fontMono }}; font-size:11px; letter-spacing:.12em; color:light-dark(#5E6675,#8B94A7)"><span>{{ s.n }}</span><span data-role="dot" style="width:9px; height:9px; border-radius:50%; background:light-dark(rgba(0,0,0,.15),rgba(255,255,255,.18)); transition:background .5s, box-shadow .5s, transform .5s cubic-bezier(.34,1.5,.4,1)"></span></div>
+        <div style="font-size:22px; font-weight:500; letter-spacing:-.02em">{{ s.h }}</div>
+        <div style="font-size:14px; color:light-dark(#5E6675,#8B94A7); flex:1">{{ s.d }}</div>
+        <div style="font-family:{{ fontMono }}; font-size:11px; color:light-dark(#5E6675,#8B94A7); padding-top:12px; border-top:1px dashed light-dark(rgba(0,0,0,.1),rgba(255,255,255,.1))">{{ s.tool }}</div>
+      </div>
+    </sc-for>
+  </div>
+</div>
+</div>
+</section>
+
+<section id="work" data-screen-label="Experiencia" style="padding:clamp(56px,7cqw,100px) 0; border-top:1px solid light-dark(rgba(0,0,0,.08),rgba(255,255,255,.08))">
+  <div ref="{{ reveal }}" style="opacity:0; transform:translateY(18px); filter:blur(6px); transition:opacity .8s cubic-bezier(.2,.8,.2,1), transform .8s cubic-bezier(.2,.8,.2,1), filter .8s cubic-bezier(.2,.8,.2,1); display:flex; flex-direction:column; gap:14px; margin-bottom:48px">
+    <div style="font-family:{{ fontMono }}; font-size:12px; letter-spacing:.14em; color:light-dark(#5E6675,#8B94A7)">03 / {{ t.secWork }}</div>
+    <h2 style="margin:0; font-size:clamp(32px,4cqw,56px); line-height:1.02; letter-spacing:-.035em; font-weight:600">{{ t.workTitle }}</h2>
+  </div>
+  <div style="display:flex; flex-direction:column">
+    <sc-for list="{{ t.jobs }}" as="j" hint-placeholder-count="5">
+      <div ref="{{ reveal }}" style="opacity:0; transform:translateY(18px); filter:blur(6px); transition:opacity .8s cubic-bezier(.2,.8,.2,1), transform .8s cubic-bezier(.2,.8,.2,1), filter .8s cubic-bezier(.2,.8,.2,1); display:grid; grid-template-columns:minmax(0,1fr); gap:0; position:relative">
+        <div style="display:grid; grid-template-columns:44px minmax(0,1fr); gap:clamp(12px,3cqw,32px)">
+          <div style="position:relative; display:flex; justify-content:center">
+            <div style="position:absolute; top:0; bottom:0; width:1px; background:light-dark(rgba(0,0,0,.1),rgba(255,255,255,.1))"></div>
+            <div style="position:relative; margin-top:28px; width:12px; height:12px; border-radius:50%; background:light-dark(#F4F5F7,#08090C); border:2px solid {{ j.dot }}; box-shadow:0 0 0 4px light-dark(#F4F5F7,#08090C), 0 0 16px {{ j.glow }}"></div>
+          </div>
+          <div style="padding:20px 0 36px; display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr)); gap:20px; align-items:start; min-width:0">
+            <div style="display:flex; gap:16px; align-items:center; min-width:0">
+              <div style="flex:none; width:56px; height:56px; border-radius:16px; display:grid; place-items:center; font-family:{{ fontMono }}; font-size:11px; letter-spacing:.06em; color:light-dark(#5E6675,#8B94A7); border:1px solid light-dark(rgba(0,0,0,.08),rgba(255,255,255,.1)); background:repeating-linear-gradient(135deg,light-dark(rgba(0,0,0,.04),rgba(255,255,255,.05)) 0 4px,transparent 4px 9px)">{{ j.abbr }}</div>
+              <div style="min-width:0"><div ref="{{ glitch }}" style="font-size:22px; font-weight:500; letter-spacing:-.02em; line-height:1.15; white-space:nowrap">{{ j.company }}</div><div style="font-family:{{ fontMono }}; font-size:12px; color:light-dark(#5E6675,#8B94A7); margin-top:4px">{{ j.period }}</div></div>
+            </div>
+            <div style="display:flex; flex-direction:column; gap:10px; min-width:0">
+              <div style="font-size:17px; font-weight:500; color:light-dark(#0A8FAF,#3EE7FF)">{{ j.role }}</div>
+              <div style="font-size:15px; color:light-dark(#5E6675,#8B94A7)">{{ j.note }}</div>
+              <div style="display:flex; flex-wrap:wrap; gap:6px; margin-top:4px">
+                <sc-for list="{{ j.stack }}" as="tk" hint-placeholder-count="3"><span style="font-family:{{ fontMono }}; font-size:11px; padding:5px 10px; border-radius:8px; background:light-dark(rgba(0,0,0,.05),rgba(255,255,255,.06)); color:light-dark(#0B0D12,#F3F5F9)">{{ tk }}</span></sc-for>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </sc-for>
+  </div>
+  <div ref="{{ reveal }}" style="opacity:0; transform:translateY(18px); filter:blur(6px); transition:opacity .8s cubic-bezier(.2,.8,.2,1), transform .8s cubic-bezier(.2,.8,.2,1), filter .8s cubic-bezier(.2,.8,.2,1); margin-top:20px; display:flex; flex-wrap:wrap; align-items:center; gap:14px 28px; padding:24px 28px; border-radius:20px; border:1px dashed light-dark(rgba(0,0,0,.14),rgba(255,255,255,.14)); font-family:{{ fontMono }}; font-size:12px; color:light-dark(#5E6675,#8B94A7)">
+    <span style="letter-spacing:.12em">{{ t.alsoWith }}</span>
+    <sc-for list="{{ companies }}" as="c" hint-placeholder-count="7"><span style="font-size:14px; color:light-dark(#0B0D12,#F3F5F9); font-family:{{ fontSans }}; font-weight:500">{{ c }}</span></sc-for>
+  </div>
+</section>
+
+<section id="projects" data-screen-label="Proyectos" style="padding:clamp(56px,7cqw,100px) 0; border-top:1px solid light-dark(rgba(0,0,0,.08),rgba(255,255,255,.08))">
+  <div ref="{{ reveal }}" style="opacity:0; transform:translateY(18px); filter:blur(6px); transition:opacity .8s cubic-bezier(.2,.8,.2,1), transform .8s cubic-bezier(.2,.8,.2,1), filter .8s cubic-bezier(.2,.8,.2,1); display:flex; align-items:flex-end; justify-content:space-between; gap:24px; flex-wrap:wrap; margin-bottom:40px">
+    <div style="display:flex; flex-direction:column; gap:14px">
+      <div style="font-family:{{ fontMono }}; font-size:12px; letter-spacing:.14em; color:light-dark(#5E6675,#8B94A7)">04 / {{ t.secProjects }}</div>
+      <h2 style="margin:0; font-size:clamp(32px,4cqw,56px); line-height:1.02; letter-spacing:-.035em; font-weight:600">{{ t.projectsTitle }}</h2>
+    </div>
+    <p style="margin:0; max-width:380px; font-size:16px; color:light-dark(#5E6675,#8B94A7)">{{ t.projectsSub }}</p>
+  </div>
+  <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr)); gap:14px">
+    <sc-for list="{{ projects }}" as="pr" hint-placeholder-count="6">
+      <div ref="{{ reveal }}" data-delay="{{ pr.delay }}" style="opacity:0; transform:translateY(18px); filter:blur(6px); transition:opacity .8s cubic-bezier(.2,.8,.2,1), transform .8s cubic-bezier(.2,.8,.2,1), filter .8s cubic-bezier(.2,.8,.2,1); display:flex; min-width:0">
+      <a href="{{ pr.url }}" target="_blank" style="display:flex; flex:1; flex-direction:column; border-radius:24px; overflow:hidden; background:light-dark(rgba(255,255,255,.7),rgba(255,255,255,.035)); border:1px solid light-dark(rgba(0,0,0,.06),rgba(255,255,255,.07)); color:inherit; transition:transform .25s,border-color .25s,box-shadow .25s;" style-hover="transform:translateY(-4px); border-color:light-dark(rgba(10,143,175,.5),rgba(62,231,255,.45)); box-shadow:0 20px 60px light-dark(rgba(0,0,0,.1),rgba(0,0,0,.5)); color:inherit">
+        <div style="aspect-ratio:16/11; position:relative; background:repeating-linear-gradient(135deg,light-dark(rgba(0,0,0,.04),rgba(255,255,255,.04)) 0 6px,transparent 6px 14px); border-bottom:1px solid light-dark(rgba(0,0,0,.06),rgba(255,255,255,.07)); display:grid; place-items:center">
+          <span style="font-family:{{ fontMono }}; font-size:11px; letter-spacing:.12em; color:light-dark(#5E6675,#8B94A7); padding:6px 10px; border-radius:6px; border:1px dashed light-dark(rgba(0,0,0,.2),rgba(255,255,255,.2)); white-space:nowrap">PREVIEW · {{ pr.host }}</span>
+          <span style="position:absolute; top:0; bottom:0; left:-40%; width:40%; background:linear-gradient(90deg,transparent,light-dark(rgba(10,143,175,.12),rgba(62,231,255,.12)),transparent); transform:skewX(-12deg); animation:shimmer 2.8s ease-in-out infinite; pointer-events:none"></span>
+          <span style="position:absolute; top:14px; left:14px; font-family:{{ fontMono }}; font-size:11px; letter-spacing:.1em; padding:5px 10px; border-radius:999px; background:light-dark(rgba(255,255,255,.8),rgba(8,9,12,.7)); color:light-dark(#0A8FAF,#3EE7FF); border:1px solid light-dark(rgba(10,143,175,.3),rgba(62,231,255,.3))">{{ pr.kind }}</span>
+        </div>
+        <div style="padding:16px 20px 18px; display:flex; align-items:baseline; justify-content:space-between; gap:14px; flex:1">
+          <div style="display:flex; flex-direction:column; gap:3px; min-width:0"><span style="font-size:19px; font-weight:500; letter-spacing:-.02em">{{ pr.name }}</span><span style="font-size:14px; color:light-dark(#5E6675,#8B94A7)">{{ pr.desc }}</span></div>
+          <span style="flex:none; font-family:{{ fontMono }}; font-size:12px; color:light-dark(#0A8FAF,#3EE7FF)">↗</span>
+        </div>
+      </a>
+      </div>
+    </sc-for>
+  </div>
+</section>
+
+<section id="stack" data-screen-label="Stack" style="padding:clamp(56px,7cqw,100px) 0; border-top:1px solid light-dark(rgba(0,0,0,.08),rgba(255,255,255,.08))">
+  <div ref="{{ reveal }}" style="opacity:0; transform:translateY(18px); filter:blur(6px); transition:opacity .8s cubic-bezier(.2,.8,.2,1), transform .8s cubic-bezier(.2,.8,.2,1), filter .8s cubic-bezier(.2,.8,.2,1); display:flex; align-items:flex-end; justify-content:space-between; gap:24px; flex-wrap:wrap; margin-bottom:36px">
+    <div style="display:flex; flex-direction:column; gap:14px">
+      <div style="font-family:{{ fontMono }}; font-size:12px; letter-spacing:.14em; color:light-dark(#5E6675,#8B94A7)">05 / {{ t.secStack }}</div>
+      <h2 style="margin:0; font-size:clamp(32px,4cqw,48px); line-height:1.05; letter-spacing:-.035em; font-weight:600">{{ t.stackTitle }}</h2>
+    </div>
+    <p style="margin:0; max-width:400px; font-size:16px; color:light-dark(#5E6675,#8B94A7)">{{ t.stackSub }}</p>
+  </div>
+  <div style="display:flex; flex-direction:column; gap:10px">
+    <div ref="{{ reveal }}" style="opacity:0; transform:translateY(18px); filter:blur(6px); transition:opacity .8s cubic-bezier(.2,.8,.2,1), transform .8s cubic-bezier(.2,.8,.2,1), filter .8s cubic-bezier(.2,.8,.2,1); overflow:hidden; mask-image:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent)">
+      <div style="display:flex; gap:8px; width:max-content; animation:marquee 70s linear infinite normal" style-hover="animation-play-state:paused">
+        <sc-for list="{{ stackRow1 }}" as="it" hint-placeholder-count="12"><span style="white-space:nowrap; font-size:14px; padding:8px 14px; border-radius:999px; border:1px solid {{ it.border }}; color:{{ it.color }}; background:{{ it.bg }}">{{ it.name }}</span></sc-for>
+      </div>
+    </div>
+    <div ref="{{ reveal }}" style="opacity:0; transform:translateY(18px); filter:blur(6px); transition:opacity .8s cubic-bezier(.2,.8,.2,1), transform .8s cubic-bezier(.2,.8,.2,1), filter .8s cubic-bezier(.2,.8,.2,1); overflow:hidden; mask-image:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent)">
+      <div style="display:flex; gap:8px; width:max-content; animation:marquee 85s linear infinite reverse" style-hover="animation-play-state:paused">
+        <sc-for list="{{ stackRow2 }}" as="it" hint-placeholder-count="12"><span style="white-space:nowrap; font-size:14px; padding:8px 14px; border-radius:999px; border:1px solid {{ it.border }}; color:{{ it.color }}; background:{{ it.bg }}">{{ it.name }}</span></sc-for>
+      </div>
+    </div>
+    <div ref="{{ reveal }}" style="opacity:0; transform:translateY(18px); filter:blur(6px); transition:opacity .8s cubic-bezier(.2,.8,.2,1), transform .8s cubic-bezier(.2,.8,.2,1), filter .8s cubic-bezier(.2,.8,.2,1); overflow:hidden; mask-image:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent)">
+      <div style="display:flex; gap:8px; width:max-content; animation:marquee 78s linear infinite normal" style-hover="animation-play-state:paused">
+        <sc-for list="{{ stackRow3 }}" as="it" hint-placeholder-count="12"><span style="white-space:nowrap; font-size:14px; padding:8px 14px; border-radius:999px; border:1px solid {{ it.border }}; color:{{ it.color }}; background:{{ it.bg }}">{{ it.name }}</span></sc-for>
+      </div>
+    </div>
+  </div>
+  <div style="margin-top:18px; display:flex; gap:18px; flex-wrap:wrap; font-family:{{ fontMono }}; font-size:11px; letter-spacing:.1em; color:light-dark(#5E6675,#8B94A7)">
+    <span style="display:flex; align-items:center; gap:8px"><span style="width:8px; height:8px; border-radius:50%; background:light-dark(#0A8FAF,#3EE7FF); box-shadow:0 0 8px light-dark(#0A8FAF,#3EE7FF)"></span>{{ t.stackCore }}</span>
+    <span style="display:flex; align-items:center; gap:8px"><span style="width:8px; height:8px; border-radius:50%; border:1px solid light-dark(rgba(0,0,0,.25),rgba(255,255,255,.3))"></span>{{ t.stackAlso }}</span>
+  </div>
+</section>
+
+<section id="contact" data-screen-label="Contacto" style="padding:clamp(56px,7cqw,100px) 0 clamp(40px,5cqw,72px); border-top:1px solid light-dark(rgba(0,0,0,.08),rgba(255,255,255,.08))">
+  <div ref="{{ reveal }}" style="opacity:0; transform:translateY(18px); filter:blur(6px); transition:opacity .8s cubic-bezier(.2,.8,.2,1), transform .8s cubic-bezier(.2,.8,.2,1), filter .8s cubic-bezier(.2,.8,.2,1); position:relative">
+  <div style="position:absolute; inset:-2px; border-radius:35px; overflow:hidden; filter:blur(14px); opacity:.55; pointer-events:none"><div style="position:absolute; left:50%; top:50%; width:220%; aspect-ratio:1; margin-left:-110%; margin-top:-110%; background:conic-gradient(from 0deg,transparent 0 55%,light-dark(#0A8FAF,#3EE7FF) 76%,light-dark(rgba(120,90,255,.9),rgba(160,110,255,.9)) 86%,transparent 100%); animation:spin 7s linear infinite"></div></div>
+  <div style="position:relative; border-radius:34px; padding:2px; overflow:hidden; isolation:isolate">
+  <div style="position:absolute; left:50%; top:50%; width:220%; aspect-ratio:1; margin-left:-110%; margin-top:-110%; background:conic-gradient(from 0deg,light-dark(rgba(10,143,175,.12),rgba(62,231,255,.1)) 0 50%,light-dark(#0A8FAF,#3EE7FF) 76%,light-dark(rgba(120,90,255,1),rgba(160,110,255,1)) 86%,light-dark(rgba(10,143,175,.12),rgba(62,231,255,.1)) 100%); animation:spin 7s linear infinite; pointer-events:none"></div>
+  <div style="position:relative; border-radius:32px; padding:clamp(36px,5cqw,72px); overflow:hidden; background:light-dark(#0B0D12,#F3F5F9); color:light-dark(#F4F5F7,#08090C)">
+    <div style="position:absolute; inset:0; pointer-events:none; background-image:linear-gradient(light-dark(rgba(62,231,255,.12),rgba(10,143,175,.12)) 1px,transparent 1px),linear-gradient(90deg,light-dark(rgba(62,231,255,.12),rgba(10,143,175,.12)) 1px,transparent 1px); background-size:48px 48px; mask-image:radial-gradient(60% 80% at 80% 50%,#000,transparent); animation:gridflow 6s linear infinite"></div>
+    <div style="position:relative; display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr)); gap:32px; align-items:center">
+      <div style="display:flex; flex-direction:column; gap:18px">
+        <div style="font-family:{{ fontMono }}; font-size:12px; letter-spacing:.14em; color:light-dark(#3EE7FF,#0A8FAF)">06 / {{ t.secContact }}</div>
+        <h2 style="margin:0; font-size:clamp(34px,4.5cqw,64px); line-height:1; letter-spacing:-.04em; font-weight:600">{{ t.contactTitle }}</h2>
+        <p style="margin:0; font-size:17px; opacity:.7; max-width:440px">{{ t.contactSub }}</p>
+      </div>
+      <div style="display:flex; flex-direction:column; gap:10px; align-items:flex-start">
+        <a href="mailto:hi@marcosarrieta.dev" style="display:inline-flex; align-items:baseline; gap:10px; font-size:clamp(22px,2.6cqw,34px); font-weight:500; letter-spacing:-.025em; color:light-dark(#3EE7FF,#0A8FAF); border-bottom:1px solid currentColor; padding-bottom:6px; transition:color .25s, gap .25s" style-hover="color:light-dark(#F4F5F7,#08090C); gap:16px">hi@marcosarrieta.dev<span style="font-size:.7em">↗</span></a>
+        <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:14px">
+          <a href="https://github.com/djmaam" target="_blank" style="display:inline-flex; align-items:center; gap:9px; font-family:{{ fontMono }}; font-size:12px; letter-spacing:.06em; padding:10px 16px; border-radius:999px; border:1px solid light-dark(rgba(255,255,255,.2),rgba(0,0,0,.15)); color:inherit" style-hover="border-color:light-dark(#3EE7FF,#0A8FAF); color:light-dark(#3EE7FF,#0A8FAF)"><span aria-hidden="true" style="display:block; width:15px; height:15px; background:currentColor; -webkit-mask:url(https://cdn.simpleicons.org/github/000) center/contain no-repeat; mask:url(https://cdn.simpleicons.org/github/000) center/contain no-repeat"></span><span>GITHUB</span></a>
+          <a href="https://linkedin.com/in/djmaam" target="_blank" style="display:inline-flex; align-items:center; gap:9px; font-family:{{ fontMono }}; font-size:12px; letter-spacing:.06em; padding:10px 16px; border-radius:999px; border:1px solid light-dark(rgba(255,255,255,.2),rgba(0,0,0,.15)); color:inherit" style-hover="border-color:light-dark(#3EE7FF,#0A8FAF); color:light-dark(#3EE7FF,#0A8FAF)"><span aria-hidden="true" style="display:block; width:15px; height:15px; background:currentColor; -webkit-mask:url(https://api.iconify.design/mdi/linkedin.svg) center/contain no-repeat; mask:url(https://api.iconify.design/mdi/linkedin.svg) center/contain no-repeat"></span><span>LINKEDIN</span></a>
+          <a href="https://t.me/djmaam" target="_blank" style="display:inline-flex; align-items:center; gap:9px; font-family:{{ fontMono }}; font-size:12px; letter-spacing:.06em; padding:10px 16px; border-radius:999px; border:1px solid light-dark(rgba(255,255,255,.2),rgba(0,0,0,.15)); color:inherit" style-hover="border-color:light-dark(#3EE7FF,#0A8FAF); color:light-dark(#3EE7FF,#0A8FAF)"><span aria-hidden="true" style="display:block; width:15px; height:15px; background:currentColor; -webkit-mask:url(https://cdn.simpleicons.org/telegram/000) center/contain no-repeat; mask:url(https://cdn.simpleicons.org/telegram/000) center/contain no-repeat"></span><span>TELEGRAM</span></a>
+        </div>
+      </div>
+    </div>
+  </div>
+  </div>
+  </div>
+</section>
+
+<footer style="display:flex; flex-wrap:wrap; gap:12px 28px; align-items:center; padding:0 0 40px; font-family:{{ fontMono }}; font-size:12px; color:light-dark(#5E6675,#8B94A7)">
+  <span>© 2026 Marcos Arrieta · <a href="https://github.com/djmaam" target="_blank" style="color:inherit" style-hover="color:light-dark(#0A8FAF,#3EE7FF)">@djmaam</a></span>
+  <span style="flex:1"></span>
+  <span style="display:flex; align-items:center; gap:8px"><span aria-hidden="true" style="display:inline-block; color:light-dark(#0A8FAF,#3EE7FF); animation:think 2.6s cubic-bezier(.6,.05,.3,1) infinite">✳</span>{{ t.footerSig }}<span style="color:light-dark(#0B0D12,#F3F5F9); min-width:9ch; display:inline-block">{{ moji }}</span></span>
+</footer>
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;typeface&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;geist&quot;,&quot;manrope&quot;],&quot;default&quot;:&quot;geist&quot;,&quot;tsType&quot;:&quot;'geist'|'manrope'&quot;,&quot;section&quot;:&quot;Apariencia&quot;},&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;dark&quot;,&quot;light&quot;],&quot;default&quot;:&quot;dark&quot;,&quot;tsType&quot;:&quot;'dark'|'light'&quot;,&quot;section&quot;:&quot;Apariencia&quot;},&quot;backdrop&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;both&quot;,&quot;network&quot;,&quot;aurora&quot;,&quot;none&quot;],&quot;default&quot;:&quot;both&quot;,&quot;tsType&quot;:&quot;'both'|'network'|'aurora'|'none'&quot;,&quot;section&quot;:&quot;Apariencia&quot;},&quot;lang&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;es&quot;,&quot;en&quot;],&quot;default&quot;:&quot;es&quot;,&quot;tsType&quot;:&quot;'es'|'en'&quot;,&quot;section&quot;:&quot;Contenido&quot;},&quot;compact&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Layout&quot;}}">
+class Component extends DCLogic {
+  state = { lang: null, theme: null, lines: [], tick: 0, typedN: 0, mojiN: 0 };
+  LOG = [
+    ["spec", "loaded  product/onboarding.md"],
+    ["plan", "4 tasks · 2 agents · 1 reviewer"],
+    ["agent", "claude-code → auth flow + tests"],
+    ["agent", "codex → e2e scenarios"],
+    ["review", "criteria 12/12 · arch ok"],
+    ["ship", "deploy → production ✓"],
+    ["spec", "loaded  mobile/offline-sync.md"],
+    ["plan", "6 tasks · 3 agents"],
+    ["agent", "antigravity → data layer"],
+    ["review", "perf budget met · a11y ok"],
+    ["ship", "release 2.4.0 → stores ✓"],
+  ];
+  reduced = typeof matchMedia !== "undefined" && matchMedia("(prefers-reduced-motion: reduce)").matches;
+  GLYPHS = "<>/_-=+*#%&{}[]|\\01";
+  show(el) {
+    el.style.transitionDelay = (el.dataset.delay || 0) + "ms";
+    el.style.opacity = "1"; el.style.transform = "none"; el.style.filter = "none";
+  }
+  scramble(el, dur = 900) {
+    const final = el.dataset.final || (el.dataset.final = el.textContent);
+    if (this.reduced) return;
+    const start = performance.now(), G = this.GLYPHS;
+    const step = (t) => {
+      const p = Math.min(1, (t - start) / dur), n = Math.floor(p * p * (final.length + 1));
+      let s = final.slice(0, n);
+      for (let i = n; i < final.length; i++) s += final[i] === " " ? " " : G[Math.floor(Math.random() * G.length)];
+      el.textContent = s;
+      if (p < 1) requestAnimationFrame(step); else el.textContent = final;
+    };
+    requestAnimationFrame(step);
+  }
+  get io() {
+    if (!this._io) this._io = new IntersectionObserver((es) => {
+      for (const e of es) {
+        if (!e.isIntersecting) continue;
+        const el = e.target; this._io.unobserve(el);
+        if (el.dataset.kind === "glitch") { this.scramble(el, 1000); continue; }
+        if (el.dataset.kind === "chip") el.style.transitionDelay = Math.round(Math.random() * 1100) + "ms";
+        this.show(el);
+      }
+    }, { threshold: 0.15, rootMargin: "0px 0px -8% 0px" });
+    return this._io;
+  }
+  reveal = (el) => { if (!el) return; if (this.reduced) this.show(el); else this.io.observe(el); };
+  chip = (el) => { if (!el) return; el.dataset.kind = "chip"; if (this.reduced) this.show(el); else this.io.observe(el); };
+  glitch = (el) => { if (!el) return; el.dataset.kind = "glitch"; this.io.observe(el); };
+  boot = (el) => {
+    if (!el || el.dataset.booted) return; el.dataset.booted = "1";
+    if (this.reduced) return this.show(el);
+    setTimeout(() => this.show(el), 500 + Number(el.dataset.boot) * 170);
+  };
+  brandRef = (el) => {
+    clearInterval(this.brandIv); this.brandEl = el; if (!el) return;
+    setTimeout(() => this.scramble(el, 1100), 300);
+    this.brandIv = setInterval(() => this.scramble(el, 900), 9000);
+  };
+  brandHover = () => { if (this.brandEl) this.scramble(this.brandEl, 700); };
+  words = new Set();
+  wordRef = (el) => { if (el) this.words.add(el); };
+  aboutRef = (el) => { this.aboutEl = el; };
+  methodTrack = (el) => { this.trackEl = el; };
+  methodPin = (el) => { this.pinEl = el; };
+  methodStatus = (el) => { this.statusEl = el; };
+  steps = [];
+  stepRef = (el) => { if (el && !this.steps.includes(el)) this.steps.push(el); };
+  setDot(dot, color, on) {
+    dot.style.background = on ? color : "light-dark(rgba(0,0,0,.15),rgba(255,255,255,.18))";
+    dot.style.boxShadow = on ? "0 0 12px " + color : "none";
+    dot.style.transform = on ? "scale(1.25)" : "scale(1)";
+  }
+  paintSteps(active, done) {
+    const n = this.steps.length, CY = "light-dark(#0A8FAF,#3EE7FF)";
+    this.steps.forEach((el, i) => {
+      const c = el.dataset.color, dot = el.querySelector("[data-role=dot]");
+      const isDone = i < active, isActive = i === active && !done;
+      el.style.opacity = isDone || isActive || done ? "1" : "0.22";
+      el.style.transform = isActive ? "translateY(-6px) scale(1.03)" : (isDone || done ? "none" : "translateY(10px) scale(.97)");
+      el.style.borderColor = done ? "light-dark(rgba(10,143,175,.7),rgba(62,231,255,.65))" : (isActive ? c : "light-dark(rgba(0,0,0,.06),rgba(255,255,255,.07))");
+      el.style.boxShadow = done ? "0 0 0 1px light-dark(rgba(10,143,175,.35),rgba(62,231,255,.3)), 0 0 44px light-dark(rgba(10,143,175,.22),rgba(62,231,255,.18))" : (isActive ? "0 0 0 1px " + c + ", 0 20px 60px light-dark(rgba(0,0,0,.12),rgba(0,0,0,.55))" : "none");
+      el.style.background = done ? "light-dark(rgba(10,143,175,.06),rgba(62,231,255,.06))" : "light-dark(rgba(255,255,255,.7),rgba(255,255,255,.035))";
+      if (dot) this.setDot(dot, done ? CY : c, isDone || isActive || done);
+    });
+    const st = this.statusEl;
+    if (st) {
+      const dot = st.querySelector("[data-role=dot]"), txt = st.querySelector("[data-role=txt]");
+      if (done) { txt.textContent = st.dataset.done; this.setDot(dot, CY, true); st.style.color = CY; }
+      else if (active >= 0 && active < n) { const c = this.steps[active].dataset.color; const verbs = (st.dataset.verbs || "").split("|"); txt.textContent = (verbs[active] || "") + " · " + (active + 1) + "/" + n; this.setDot(dot, c, true); st.style.color = c; }
+      else { txt.textContent = st.dataset.idle; this.setDot(dot, "", false); st.style.color = "light-dark(#5E6675,#8B94A7)"; }
+    }
+  }
+  updateScrollFx() {
+    const sc = this.scroller, vh = sc ? sc.clientHeight : window.innerHeight, off = sc ? sc.getBoundingClientRect().top : 0;
+    const rectOf = (el) => { const r = el.getBoundingClientRect(); return { top: r.top - off, height: r.height, width: r.width }; };
+    if (this.aboutEl && this.words.size) {
+      const r = rectOf(this.aboutEl);
+      const p = this.reduced ? 1 : Math.max(0, Math.min(1, (vh * 0.8 - r.top) / (vh * 0.45)));
+      const arr = [...this.words], N = arr.length;
+      arr.forEach((w, i) => { w.style.opacity = String(Math.max(0.16, Math.min(1, p * (N + 3) - i))); });
+    }
+    if (this.trackEl && this.pinEl && this.steps.length) {
+      const n = this.steps.length, r = rectOf(this.trackEl), content = [...this.pinEl.children].reduce((a, c) => a + c.offsetHeight, 0) + 64 + 40, narrow = r.width < 720 || content > vh;
+      this.trackEl.style.height = narrow ? "auto" : "280vh";
+      this.pinEl.style.position = narrow ? "static" : "sticky";
+      this.pinEl.style.minHeight = narrow ? "0" : "100vh";
+      this.pinEl.style.paddingTop = narrow ? "clamp(56px,7cqw,100px)" : "32px";
+      this.pinEl.style.paddingBottom = narrow ? "clamp(56px,7cqw,100px)" : "32px";
+      let p = narrow ? (vh * 0.85 - r.top) / (r.height * 0.9) : -r.top / (r.height - vh);
+      p = this.reduced ? 1 : Math.max(0, Math.min(1, p));
+      const active = p < 0.06 ? -1 : Math.min(n - 1, Math.floor((p - 0.06) / 0.84 * n));
+      const done = p >= 0.93, key = active + (done ? "d" : "");
+      if (key !== this.lastKey) { this.lastKey = key; this.paintSteps(active, done); }
+    }
+  }
+  go = (e) => {
+    const href = e.currentTarget.getAttribute("href");
+    if (!href || !href.startsWith("#")) return;
+    e.preventDefault();
+    const el = document.getElementById(href.slice(1));
+    if (!el) return;
+    const y = el.getBoundingClientRect().top + window.scrollY - (href === "#top" ? 0 : 64);
+    window.scrollTo({ top: y, behavior: this.reduced ? "auto" : "smooth" });
+  };
+  componentDidMount() {
+    let p = this.cv?.parentElement || this.aboutEl?.parentElement, sc = null;
+    while (p && p !== document.body) { const o = getComputedStyle(p).overflowY; if (o === "auto" || o === "scroll") { sc = p; break; } p = p.parentElement; }
+    this.scroller = sc;
+    if (sc) sc.addEventListener("scroll", this.onScroll, { passive: true });
+    window.addEventListener("scroll", this.onScroll, { passive: true });
+    window.addEventListener("resize", this.onScroll);
+    this.onScroll();
+    const type = () => this.setState(s => {
+      const len = this.I18N[s.lang ?? this.props.lang ?? "es"].eyebrow.length;
+      if (s.typedN >= len) { clearInterval(this.typeIv); return null; }
+      return { typedN: s.typedN + 1 };
+    });
+    setTimeout(() => { this.typeIv = setInterval(type, 28); }, this.reduced ? 0 : 700);
+    this.mojiIv = setInterval(() => this.setState(s => ({ mojiN: s.mojiN + 1 })), 1000);
+    this.iv = setInterval(() => {
+      this.setState(s => {
+        const i = s.tick % this.LOG.length;
+        const [k, v] = this.LOG[i];
+        const d = new Date(), t = [d.getHours(), d.getMinutes(), d.getSeconds()].map(n => String(n).padStart(2, "0")).join(":");
+        return { tick: s.tick + 1, lines: [...s.lines, { t, k, v }].slice(-6) };
+      });
+    }, 1400);
+  }
+  componentWillUnmount() { clearInterval(this.iv); clearInterval(this.mojiIv); this.scroller?.removeEventListener?.("scroll", this.onScroll); clearInterval(this.typeIv); clearInterval(this.brandIv); cancelAnimationFrame(this.raf); this.ro?.disconnect(); this._io?.disconnect(); window.removeEventListener("scroll", this.onScroll); window.removeEventListener("resize", this.onScroll); }
+  onScroll = () => {
+    if (this.scrollPending) return; this.scrollPending = true;
+    requestAnimationFrame(() => {
+      this.scrollPending = false;
+      this.updateScrollFx();
+      const el = this.au; if (!el) return;
+      const max = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
+      const p = Math.min(1, window.scrollY / max);
+      // cian → violeta → magenta → ámbar a lo largo del scroll
+      el.style.filter = `hue-rotate(${Math.round(p * 260)}deg) saturate(${1 + p * .4})`;
+      el.style.opacity = (0.45 + 0.55 * Math.min(1, p * 2.5)).toFixed(2);
+      el.style.transform = `translateY(${(-p * 12).toFixed(1)}vh)`;
+    });
+  };
+  consoleRef = (el) => { this.consoleEl = el; };
+  auroraRef = (el) => { this.au = el; if (el) { el.style.opacity = "0.45"; this.onScroll(); } };
+  netRef = (el) => {
+    if (!el) { cancelAnimationFrame(this.raf); this.ro?.disconnect(); window.removeEventListener("pointermove", this.onPointer); this.cv = null; return; }
+    if (this.cv === el) return;
+    this.cv = el;
+    const N = 84, nodes = [], rnd = Math.random;
+    let W = 0, H = 0, dpr = Math.min(2, window.devicePixelRatio || 1);
+    const size = () => { const r = el.getBoundingClientRect(); W = r.width; H = r.height; el.width = W * dpr; el.height = H * dpr; };
+    size(); this.ro = new ResizeObserver(size); this.ro.observe(el);
+    for (let i = 0; i < N; i++) {
+      const spoke = i % 6, k = Math.floor(i / 6) / Math.ceil(N / 6);
+      nodes.push({ th: rnd() * 6.283, ph3: (rnd() - .5) * 2.6, rad: .55 + rnd() * .6, dth: (rnd() - .5) * .0005, dph: (rnd() - .5) * .0002, t1: 0, r: 1 + rnd() * 1.3, ph: rnd() * 6.28, flash: 0, ox: 0, oy: 0, z: 1,
+        fa: spoke * Math.PI / 3 + Math.PI / 2 + (rnd() - .5) * .05, fr: .12 + k * .88 + (rnd() - .5) * .04 });
+    }
+    const pulses = [], mouse = { x: -1, y: -1, tx: -1, ty: -1 };
+    this.onPointer = (ev) => { const r = el.getBoundingClientRect(); mouse.tx = (ev.clientX - r.left) / r.width; mouse.ty = (ev.clientY - r.top) / r.height; };
+    window.addEventListener("pointermove", this.onPointer, { passive: true });
+    const ctx = el.getContext("2d");
+    let last = 0, lastTick = -1, box = null, form = 0, rot = 0, tilt = 0, collapse = 0;
+    const t0 = performance.now();
+    const ease = (t) => t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+    const inside = (x, y) => box && x > box.L - 10 && x < box.R + 10 && y > box.T - 10 && y < box.B + 10;
+    const anchors = () => {
+      const ce = this.consoleEl; if (!ce) { box = null; return []; }
+      const r = ce.getBoundingClientRect(), cr = el.getBoundingClientRect(), L = r.left - cr.left, T = r.top - cr.top, B = r.bottom - cr.top, R = r.right - cr.left;
+      box = { L, T, B, R };
+      return [{ px: L, py: T + (B - T) * .25, flash: 0 }, { px: L, py: T + (B - T) * .62, flash: 0 }, { px: L + (R - L) * .5, py: B, flash: 0 }, { px: L + (R - L) * .3, py: T, flash: 0 }];
+    };
+    const center = () => box ? [(box.L + box.R) / 2, (box.T + box.B) / 2 - 10] : [W * .64, H * .45];
+    // 3D sphere around the console, projected with perspective; formation lerps to the ✳; scroll collapses it
+    const pos = (n) => {
+      if (n.px !== undefined) return [n.px, n.py];
+      const [cx, cy] = center(), k = 1 - .85 * collapse, RX = W * .56 * k, RY = H * .48 * k, RZ = Math.min(W, H) * .5 * k;
+      const a = rot + n.th, cp = Math.cos(n.ph3);
+      const x3 = Math.cos(a) * n.rad * cp * RX, y3 = Math.sin(n.ph3) * n.rad * RY + Math.sin(n.t1 * .001 + n.ph) * 9, z3 = Math.sin(a) * n.rad * cp * RZ;
+      const ct = Math.cos(tilt), st = Math.sin(tilt), y2 = y3 * ct - z3 * st, z2 = y3 * st + z3 * ct;
+      const f = Math.max(W, H) * .9, sc = f / (f + z2);
+      n.z = .3 + .7 * Math.max(0, Math.min(1, (sc - .6) / .7));
+      let x = W * .5 + (cx - W * .5) * .35 + x3 * sc + n.ox, y = cy + y2 * sc + n.oy;
+      if (form > 0) { const R = Math.min(W, H) * .26; const fx = cx + Math.cos(n.fa) * n.fr * R, fy = cy + Math.sin(n.fa) * n.fr * R; x += (fx - x) * form; y += (fy - y) * form; }
+      return [x, y];
+    };
+    const command = () => {
+      const A = anchors(), src = A[1] || { px: W * .72, py: H * .42, flash: 0 };
+      let best = null, bd = 1e9;
+      for (const n of nodes) { const [x, y] = pos(n); if (inside(x, y) || n.z < .5) continue; const d = Math.hypot(x - src.px, y - src.py); if (d < bd) { bd = d; best = n; } }
+      if (!best) return;
+      const dist = 150, seen = new Set([best]); let frontier = [best];
+      pulses.push({ a: src, b: best, t: 0 });
+      for (let hop = 0; hop < 3; hop++) {
+        const next = [];
+        for (const a of frontier) for (const b of nodes) {
+          if (seen.has(b)) continue;
+          const [ax, ay] = pos(a), [bx, by] = pos(b);
+          if (Math.hypot(ax - bx, ay - by) < dist) { seen.add(b); next.push(b); pulses.push({ a, b, t: -(hop + 1) * .55 }); if (pulses.length > 40) return; }
+        }
+        frontier = next; if (!frontier.length) break;
+      }
+    };
+    const tick = (ts) => {
+      this.raf = requestAnimationFrame(tick);
+      if (ts - last < 24) return; last = ts;
+      const A = anchors();
+      if (this.state.tick !== lastTick) { lastTick = this.state.tick; if (lastTick > 0 && collapse < .6) command(); }
+      const light = (this.state.theme ?? this.props.theme ?? "dark") === "light";
+      const c = light ? "10,143,175" : "62,231,255", hi = light ? "120,90,255" : "170,120,255";
+      const dist = 150, el_ = ts - t0;
+      form = this.reduced ? 0 : (el_ < 300 ? 0 : el_ < 1200 ? ease((el_ - 300) / 900) : el_ < 1900 ? 1 : el_ < 2800 ? 1 - ease((el_ - 1900) / 900) : 0);
+      const sy = this.scroller ? this.scroller.scrollTop : window.scrollY, vh = this.scroller ? this.scroller.clientHeight : window.innerHeight;
+      collapse = this.reduced ? 0 : Math.max(0, Math.min(1, sy / (vh * .75)));
+      if (mouse.tx >= 0) { if (mouse.x < 0) { mouse.x = mouse.tx; mouse.y = mouse.ty; } mouse.x += (mouse.tx - mouse.x) * .06; mouse.y += (mouse.ty - mouse.y) * .06; }
+      rot += .00003 * 24 * (1 + collapse * 5);
+      tilt += (((mouse.y >= 0 ? mouse.y : .5) - .5) * -.5 - tilt) * .05;
+      const tiltX = ((mouse.x >= 0 ? mouse.x : .5) - .5) * .6; rot += (tiltX - (this._tx || 0)) * .25; this._tx = tiltX;
+      const mX = mouse.x * W, mY = mouse.y * H, hasM = mouse.x >= 0 && mouse.y >= 0 && mouse.y <= 1 && collapse < .5;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, W, H);
+      ctx.globalAlpha = 1 - collapse;
+      for (const n of nodes) {
+        n.th += n.dth * 24; n.ph3 += n.dph * 24; if (Math.abs(n.ph3) > 1.4) n.dph *= -1; n.t1 = ts;
+        const [x, y] = pos(n);
+        if (hasM) { const dx = mX - x, dy = mY - y, d = Math.hypot(dx, dy); if (d < 200 && d > 1) { const f = (1 - d / 200) * 1.4; n.ox += dx / d * f; n.oy += dy / d * f; } }
+        n.ox *= .9; n.oy *= .9; n.flash *= .93;
+      }
+      const P = nodes.map(pos);
+      ctx.lineWidth = 1;
+      for (let i = 0; i < N; i++) for (let j = i + 1; j < N; j++) {
+        const a = nodes[i], b = nodes[j], [ax, ay] = P[i], [bx, by] = P[j], d = Math.hypot(ax - bx, ay - by);
+        if (d < dist) {
+          let al = (1 - d / dist) * (light ? .28 : .22) * Math.min(a.z, b.z);
+          if (hasM) { const md = Math.hypot((ax + bx) / 2 - mX, (ay + by) / 2 - mY); if (md < 220) al += (1 - md / 220) * .35; }
+          al += Math.max(a.flash, b.flash) * .5;
+          ctx.strokeStyle = `rgba(${c},${Math.min(.9, al)})`;
+          ctx.beginPath(); ctx.moveTo(ax, ay); ctx.lineTo(bx, by); ctx.stroke();
+        }
+      }
+      if (form === 0) for (const a of A) {
+        let best = -1, bd = 1e9; for (let i = 0; i < N; i++) { const [x, y] = P[i]; if (inside(x, y) || nodes[i].z < .5) continue; const d = Math.hypot(x - a.px, y - a.py); if (d < bd) { bd = d; best = i; } }
+        if (best >= 0 && bd < 280) { const [x, y] = P[best]; ctx.strokeStyle = `rgba(${c},${.45 * (1 - bd / 280) + .15})`; ctx.beginPath(); ctx.moveTo(a.px, a.py); ctx.lineTo(x, y); ctx.stroke(); ctx.fillStyle = `rgba(${c},.9)`; ctx.beginPath(); ctx.arc(a.px, a.py, 2, 0, 6.28); ctx.fill(); }
+      }
+      if (hasM) {
+        for (let i = 0; i < N; i++) { const [x, y] = P[i], d = Math.hypot(x - mX, y - mY); if (d < 170) { ctx.strokeStyle = `rgba(${hi},${(1 - d / 170) * .5})`; ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(mX, mY); ctx.stroke(); } }
+        ctx.fillStyle = `rgba(${hi},.9)`; ctx.shadowColor = `rgba(${hi},.9)`; ctx.shadowBlur = 16; ctx.beginPath(); ctx.arc(mX, mY, 2.5, 0, 6.28); ctx.fill(); ctx.shadowBlur = 0;
+      }
+      for (let i = 0; i < N; i++) {
+        const n = nodes[i], [x, y] = P[i], tw = .55 + .45 * Math.sin(ts / 900 + n.ph);
+        ctx.fillStyle = `rgba(${c},${(light ? .8 : .9) * tw * n.z})`;
+        ctx.beginPath(); ctx.arc(x, y, n.r * (.5 + n.z) + n.flash * 2, 0, 6.28); ctx.fill();
+        if (n.flash > .02) { ctx.strokeStyle = `rgba(${c},${n.flash * .8})`; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.arc(x, y, n.r + (1 - n.flash) * 22, 0, 6.28); ctx.stroke(); ctx.lineWidth = 1; }
+      }
+      for (let i = pulses.length - 1; i >= 0; i--) {
+        const p = pulses[i]; p.t += .045; if (p.t < 0) continue; if (p.t >= 1) { p.b.flash = 1; pulses.splice(i, 1); continue; }
+        const [ax, ay] = pos(p.a), [bx, by] = pos(p.b), x = ax + (bx - ax) * p.t, y = ay + (by - ay) * p.t;
+        ctx.strokeStyle = `rgba(${c},.7)`; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(ax + (bx - ax) * Math.max(0, p.t - .18), ay + (by - ay) * Math.max(0, p.t - .18)); ctx.lineTo(x, y); ctx.stroke(); ctx.lineWidth = 1;
+        ctx.fillStyle = `rgba(${c},.95)`; ctx.shadowColor = `rgba(${c},.9)`; ctx.shadowBlur = 12; ctx.beginPath(); ctx.arc(x, y, 2.4, 0, 6.28); ctx.fill(); ctx.shadowBlur = 0;
+      }
+      ctx.globalAlpha = 1;
+    };
+    this.raf = requestAnimationFrame(tick);
+  };
+  I18N = {
+    es: {
+      navAbout: "Sobre mí", navWork: "Experiencia", navProjects: "Proyectos", navContact: "Contacto",
+      eyebrow: "Software Engineer & AI Orchestrator · Argentina",
+      h1a: "Pienso el producto.", h1b: "Orquesto cómo se construye.",
+      heroSub: "Ocho años llevando apps a producción en agro, streaming y salud. Hoy dirijo equipos de agentes de IA con especificaciones claras y arquitectura sólida, para que cada idea llegue más lejos, más rápido.",
+      ctaWork: "Ver trayectoria", ctaContact: "Hablemos",
+      statYears: "años construyendo", statCompanies: "empresas principales", statPlatforms: "plataformas (web · mobile · TV)",
+      secAbout: "SOBRE MÍ",
+      aboutLead: "Me interesa menos qué tecnología usar y más qué problema resolver, para quién, y con qué arquitectura.",
+      aboutBody: "Empecé en mobile y backend, construyendo productos desde cero para startups y empresas. Con el tiempo entendí dónde aporto más valor: decidir qué construir, cómo estructurarlo y verificar que funcione. Hoy trabajo con Spec-Driven Development, coordinando agentes de IA que ejecutan mientras yo diseño, reviso y decido.",
+      principles: [
+        { n: "PRINCIPIO 01", h: "Criterio sobre herramientas", d: "El stack cambia cada año. Saber qué construir y por qué, no." },
+        { n: "PRINCIPIO 02", h: "Arquitectura primero", d: "Un buen plano permite que cualquier equipo, humano o agente, construya bien." },
+        { n: "PRINCIPIO 03", h: "Producto antes que features", d: "Cada decisión técnica responde a una necesidad concreta de alguien real." },
+      ],
+      secMethod: "CÓMO TRABAJO", stepVerbs: "PENSANDO|ESCRIBIENDO SPEC|DISEÑANDO EL PLAN|CODEANDO|DEPLOYANDO", cycleDone: "✓ EN PRODUCCIÓN", cycleIdle: "STAND BY · ESPERANDO INPUT",
+      methodTitle: "De la idea a producción, con un equipo de agentes.",
+      methodSub: "La especificación es el contrato. Los agentes ejecutan. Yo diseño la arquitectura, reviso el resultado y tomo las decisiones.",
+      steps: [
+        { n: "01", color: "#FF5C5C", h: "Idea", d: "Entender el problema, a quién afecta y qué significa resolverlo bien.", tool: "conversación · contexto" },
+        { n: "02", color: "#FF9F43", h: "Spec", d: "Definir el qué y el por qué, con criterios de aceptación verificables.", tool: "SDD · markdown" },
+        { n: "03", color: "#FFD64D", h: "Plan", d: "Arquitectura, tareas y qué agente se encarga de cada una.", tool: "plans · skills" },
+        { n: "04", color: "#9BE15D", h: "Agentes", d: "Ejecución en paralelo con revisión continua de código y diseño.", tool: "Claude Code · Codex" },
+        { n: "05", color: "#3DDC84", h: "Ship", d: "Validar contra la especificación y llevar a producción con observabilidad.", tool: "CI/CD · observabilidad" },
+      ],
+      secWork: "EXPERIENCIA",
+      workTitle: "Ocho años, cinco empresas, seis plataformas.",
+      alsoWith: "TAMBIÉN CON",
+      jobs: [
+        { abbr: "NR", company: "Nera", period: "abr. 2023 — hoy", role: "Software Engineer & AI Orchestrator", note: "Fintech que digitaliza pagos y financiamiento para el agro. Uno de los ingenieros con más recorrido en el equipo: estuve en cada etapa del producto, de la primera versión a la plataforma actual, construida hoy principalmente con IA.", stack: ["Mobile", "Web", "Backend", "Cloud", "AI Orchestration"], dot: "#3EE7FF", glow: "rgba(62,231,255,.6)" },
+        { abbr: "TC", company: "Telecentro · Tplay", period: "jul. 2022 — abr. 2023", role: "Full Stack Engineer Sr", note: "App de streaming con TV en vivo y on demand. Impulsé la nueva versión, un rediseño técnico y visual completo que dio vuelta las reseñas, en seis plataformas desde una sola base de código.", stack: ["Mobile", "Web", "Smart TV", "6 plataformas"], dot: "#5E6675", glow: "transparent" },
+        { abbr: "AP", company: "AgroPro", period: "feb. 2021 — jul. 2022", role: "Mobile Engineer Ssr", note: "Gestión agrícola en más de 500.000 hectáreas. Construí la app móvil desde cero, con sincronización offline del campo a la oficina, y el core de órdenes de trabajo.", stack: ["Mobile", "Web", "Backend", "Offline sync"], dot: "#5E6675", glow: "transparent" },
+        { abbr: "DP", company: "DePC Suite", period: "nov. 2020 — feb. 2021", role: "Freelance · Full Stack Engineer", note: "Software factory con presencia en cuatro países. Construí +Ushuaia de punta a punta, app móvil y backend, además de otros productos para clientes.", stack: ["Freelance", "Mobile", "Web", "Backend"], dot: "#5E6675", glow: "transparent" },
+        { abbr: "UC", company: "Ucosmos", period: "feb. 2020 — feb. 2021", role: "Full Stack Engineer", note: "Software factory de productos con IA y salud digital. Desarrollé Demedis, salud en tiempo real, y Hashme, analítica de Instagram, entre otros.", stack: ["Mobile", "Web", "Realtime", "Integraciones"], dot: "#5E6675", glow: "transparent" },
+      ],
+      secProjects: "PROYECTOS", projectsTitle: "Productos que salieron a producción.", projectsSub: "Con usuarios reales y equipos reales. Las capturas se reemplazan en la implementación.",
+      projects: [
+        { name: "Nera", kind: "AGTECH · WEB + MOBILE", host: "nera-agro.com", url: "https://nera-agro.com/", desc: "Fintech agro: 12.000+ productores, US$ 1.000M+ financiados." },
+        { name: "Tplay", kind: "STREAMING · 6 PLATAFORMAS", host: "telecentro.com.ar", url: "https://telecentro.com.ar/", desc: "Streaming en vivo y on demand en Mobile, Web y Smart TV." },
+        { name: "AgroPro", kind: "AGTECH · FULL-STACK", host: "agropro.ag", url: "https://agropro.ag", desc: "Gestión agrícola en 500.000+ hectáreas, con app offline." },
+        { name: "Creativa Media Lab", kind: "ESTUDIO CREATIVO · WEB", host: "creativamedialab.com", url: "https://creativamedialab.com", desc: "Sitio bilingüe de un estudio creativo de marcas." },
+        { name: "Kodai", kind: "NOVELA · LECTOR WEB", host: "kodaiverse.com", url: "https://kodaiverse.com", desc: "Novela ligera con lector en el navegador, en tres idiomas." },
+        { name: "+Ushuaia", kind: "GOBIERNO · MOBILE", host: "masushuaia.com", url: "https://masushuaia.com", desc: "Tarjeta de beneficios de la Municipalidad de Ushuaia. 10.000+ descargas." },
+      ],
+      secStack: "STACK", stackTitle: "Herramientas, no identidad.", stackSub: "Elijo lo que el problema necesita. Esto es lo que ya hablo con fluidez; lo que falte, se aprende en el camino.", stackCore: "USO A DIARIO", stackAlso: "TAMBIÉN HABLO",
+      secContact: "CONTACTO", contactTitle: "Si tenés algo que construir, hablemos.", contactSub: "Productos nuevos, equipos que quieren trabajar con agentes de IA, o una charla sobre arquitectura.",
+      footerSig: "Diseñado con criterio, construido con agentes.",
+    },
+    en: {
+      navAbout: "About", navWork: "Experience", navProjects: "Projects", navContact: "Contact",
+      eyebrow: "Software Engineer & AI Orchestrator · Argentina",
+      h1a: "I think the product.", h1b: "I orchestrate how it gets built.",
+      heroSub: "Eight years shipping apps in agtech, streaming and health. Today I lead teams of AI agents with clear specs and solid architecture, so every idea goes further, faster.",
+      ctaWork: "See the track record", ctaContact: "Let's talk",
+      statYears: "years building", statCompanies: "core companies", statPlatforms: "platforms (web · mobile · TV)",
+      secAbout: "ABOUT",
+      aboutLead: "I care less about which technology to use and more about which problem to solve, for whom, and with what architecture.",
+      aboutBody: "I started in mobile and backend, building products from scratch for startups and companies. Over time I learned where I add the most value: deciding what to build, how to structure it, and verifying it works. Today I work with Spec-Driven Development, coordinating AI agents that execute while I design, review and decide.",
+      principles: [
+        { n: "PRINCIPLE 01", h: "Judgment over tooling", d: "The stack changes every year. Knowing what to build and why does not." },
+        { n: "PRINCIPLE 02", h: "Architecture first", d: "A good blueprint lets any team, human or agent, build well." },
+        { n: "PRINCIPLE 03", h: "Product before features", d: "Every technical decision answers a concrete need of a real person." },
+      ],
+      secMethod: "HOW I WORK", stepVerbs: "THINKING|WRITING SPEC|CRAFTING PLAN|CODING|SHIPPING", cycleDone: "✓ LIVE IN PRODUCTION", cycleIdle: "STAND BY · AWAITING INPUT",
+      methodTitle: "From idea to production, with a team of agents.",
+      methodSub: "The spec is the contract. Agents execute. I design the architecture, review the output and make the calls.",
+      steps: [
+        { n: "01", color: "#FF5C5C", h: "Idea", d: "Understand the problem, who it affects and what solving it well means.", tool: "conversation · context" },
+        { n: "02", color: "#FF9F43", h: "Spec", d: "Define the what and the why, with verifiable acceptance criteria.", tool: "SDD · markdown" },
+        { n: "03", color: "#FFD64D", h: "Plan", d: "Architecture, tasks, and which agent owns each one.", tool: "plans · skills" },
+        { n: "04", color: "#9BE15D", h: "Agents", d: "Parallel execution with continuous review of code and design.", tool: "Claude Code · Codex" },
+        { n: "05", color: "#3DDC84", h: "Ship", d: "Validate against the spec and take it to production with observability.", tool: "CI/CD · observability" },
+      ],
+      secWork: "EXPERIENCE",
+      workTitle: "Eight years, five companies, six platforms.",
+      alsoWith: "ALSO WITH",
+      jobs: [
+        { abbr: "NR", company: "Nera", period: "Apr 2023 — now", role: "Software Engineer & AI Orchestrator", note: "Fintech digitizing payments and financing for agriculture. One of the longest-tenured engineers on the team: I have been in every stage of the product, from first version to today's platform, now built primarily with AI.", stack: ["Mobile", "Web", "Backend", "Cloud", "AI Orchestration"], dot: "#3EE7FF", glow: "rgba(62,231,255,.6)" },
+        { abbr: "TC", company: "Telecentro · Tplay", period: "Jul 2022 — Apr 2023", role: "Full Stack Engineer Sr", note: "Streaming app with live TV and on demand. I drove the new version, a full technical and visual redesign that turned reviews around, on six platforms from a single codebase.", stack: ["Mobile", "Web", "Smart TV", "6 platforms"], dot: "#5E6675", glow: "transparent" },
+        { abbr: "AP", company: "AgroPro", period: "Feb 2021 — Jul 2022", role: "Mobile Engineer Ssr", note: "Farm management across 500,000+ hectares. I built the mobile app from scratch, with offline sync from field to office, and the work-order core.", stack: ["Mobile", "Web", "Backend", "Offline sync"], dot: "#5E6675", glow: "transparent" },
+        { abbr: "DP", company: "DePC Suite", period: "Nov 2020 — Feb 2021", role: "Freelance · Full Stack Engineer", note: "Software factory present in four countries. I built +Ushuaia end to end, mobile app and backend, along with other client products.", stack: ["Freelance", "Mobile", "Web", "Backend"], dot: "#5E6675", glow: "transparent" },
+        { abbr: "UC", company: "Ucosmos", period: "Feb 2020 — Feb 2021", role: "Full Stack Engineer", note: "Software factory for AI and digital health products. I built Demedis, realtime health, and Hashme, Instagram analytics, among others.", stack: ["Mobile", "Web", "Realtime", "Integrations"], dot: "#5E6675", glow: "transparent" },
+      ],
+      secProjects: "PROJECTS", projectsTitle: "Products that shipped.", projectsSub: "With real users and real teams. Screenshots get replaced at implementation.",
+      projects: [
+        { name: "Nera", kind: "AGTECH · WEB + MOBILE", host: "nera-agro.com", url: "https://nera-agro.com/", desc: "Agri-fintech: 12,000+ farmers, US$1B+ financed." },
+        { name: "Tplay", kind: "STREAMING · 6 PLATFORMS", host: "telecentro.com.ar", url: "https://telecentro.com.ar/", desc: "Live and on-demand streaming on Mobile, Web and Smart TV." },
+        { name: "AgroPro", kind: "AGTECH · FULL-STACK", host: "agropro.ag", url: "https://agropro.ag", desc: "Farm management across 500,000+ hectares, offline-first app." },
+        { name: "Creativa Media Lab", kind: "CREATIVE STUDIO · WEB", host: "creativamedialab.com", url: "https://creativamedialab.com", desc: "Bilingual site for a brand studio." },
+        { name: "Kodai", kind: "NOVEL · WEB READER", host: "kodaiverse.com", url: "https://kodaiverse.com", desc: "Light novel with an in-browser reader, in three languages." },
+        { name: "+Ushuaia", kind: "GOVERNMENT · MOBILE", host: "masushuaia.com", url: "https://masushuaia.com", desc: "Benefits card by the City of Ushuaia. 10,000+ downloads." },
+      ],
+      secStack: "STACK", stackTitle: "Tools, not identity.", stackSub: "I pick what the problem needs. This is what I already speak fluently; whatever is missing gets learned along the way.", stackCore: "DAILY DRIVERS", stackAlso: "ALSO FLUENT",
+      secContact: "CONTACT", contactTitle: "If you have something to build, let's talk.", contactSub: "New products, teams that want to work with AI agents, or a conversation about architecture.",
+      footerSig: "Designed with judgment, built with agents.",
+    },
+  };
+  CORE = new Set(["TypeScript", "JavaScript", "React Native", "React", "Next.js", "Astro", "Tailwind", "Node.js", "NestJS", "Spring", "Claude Code", "Spec-Driven Development", "Agent orchestration", "PostgreSQL", "MongoDB", "AWS", "Google Cloud", "GitHub Actions", "Grafana", "Figma", "Amplitude"]);
+  ROWS = [
+    ["TypeScript", "Claude Code", "React Native", "Spec-Driven Development", "Node.js", "PostgreSQL", "Kotlin", "Codex", "Next.js", "AWS", "GraphQL", "Expo", "Vue", "Redis", "Android TV", "Playwright", "Go"],
+    ["Agent orchestration", "React", "NestJS", "Python", "MCP", "Firebase", "Tizen", "Laravel", "Docker", "Swift", "Context engineering", "MongoDB", "Astro", "WebOS", "Java", "Tailwind", "Fastlane"],
+    ["Antigravity", "JavaScript", "Google Cloud", "Express", "Cordova", "MySQL / MariaDB", "Spring", "Claude & OpenAI APIs", "Vercel", "GitHub Actions", "C#", "Django", "Grafana", "Figma", "Amplitude", "PHP", "Jest", "Prisma"],
+  ];
+  row(i) {
+    const items = this.ROWS[i].map(n => this.CORE.has(n)
+      ? { name: n, border: "light-dark(rgba(10,143,175,.45),rgba(62,231,255,.4))", color: "light-dark(#0A8FAF,#3EE7FF)", bg: "light-dark(rgba(10,143,175,.07),rgba(62,231,255,.07))" }
+      : { name: n, border: "light-dark(rgba(0,0,0,.1),rgba(255,255,255,.1))", color: "light-dark(#3C4453,#B8C0CF)", bg: "transparent" });
+    return [...items, ...items];
+  }
+  renderVals() {
+    const lang = this.state.lang ?? this.props.lang ?? "es";
+    const theme = this.state.theme ?? this.props.theme ?? "dark";
+    const d = new Date(), now = [d.getHours(), d.getMinutes(), d.getSeconds()].map(n => String(n).padStart(2, "0")).join(":");
+    const t = this.I18N[lang];
+    const typed = t.eyebrow.slice(0, this.state.typedN);
+    const alt = (this.props.typeface ?? 'geist') === 'manrope';
+    const MOJI = ["(⌐■_■)", "¯\\_(ツ)_/¯", "( ͡° ͜ʖ ͡°)", "ʕ•ᴥ•ʔ", "\\(^o^)/", "ᕕ( ᐛ )ᕗ", "(~˘▾˘)~", "(☞ﾟヮﾟ)☞", "(づ｡◕‿‿◕｡)づ", "(╯°□°)╯︵ ┻━┻", "┬─┬ノ( º _ ºノ)", "(•_•)>⌐■-■", "[¬º-°]¬", "(ง'̀-'́)ง", "⊂(◉‿◉)つ"];
+    return {
+      t, typed, moji: MOJI[this.state.mojiN % MOJI.length],
+      fontSans: alt ? "'Manrope',-apple-system,'Helvetica Neue',sans-serif" : "'Geist',-apple-system,'Helvetica Neue',sans-serif",
+      fontMono: alt ? "'IBM Plex Mono',monospace" : "'Geist Mono',monospace",
+      leadWords: t.aboutLead.split(" "),
+      principles: t.principles.map((p, i) => ({ ...p, delay: i * 110 })),
+      projects: t.projects.map((p, i) => ({ ...p, delay: (i % 3) * 90 })),
+      go: this.go, reveal: this.reveal, chip: this.chip, glitch: this.glitch, boot: this.boot,
+      brandRef: this.brandRef, brandHover: this.brandHover, wordRef: this.wordRef, aboutRef: this.aboutRef,
+      methodTrack: this.methodTrack, methodPin: this.methodPin, methodStatus: this.methodStatus, stepRef: this.stepRef,
+      scheme: theme === "light" ? "light" : "dark",
+      langLabel: lang === "es" ? "ES / en" : "EN / es",
+      toggleLang: () => this.setState({ lang: lang === "es" ? "en" : "es" }),
+      toggleTheme: () => this.setState({ theme: theme === "light" ? "dark" : "light" }),
+      showNetwork: ["both", "network"].includes(this.props.backdrop ?? "both"), showAurora: ["both", "aurora"].includes(this.props.backdrop ?? "both"), netRef: this.netRef, auroraRef: this.auroraRef, consoleRef: this.consoleRef,
+      showLinks: !this.props.compact,
+      navPadTop: "14px",
+      navTop: this.props.compact ? "54px" : "0",
+      lines: this.state.lines, now,
+      agents: 3 + (this.state.tick % 2), specs: 12 + Math.floor(this.state.tick / 11), shipped: 41 + Math.floor(this.state.tick / 6),
+      companies: ["Creativa Media Lab", "Kodai", "Hashme", "Demedis"],
+      stackRow1: this.row(0), stackRow2: this.row(1), stackRow3: this.row(2),
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<style>body{margin:0;background:#101216}a{color:#3EE7FF}a:hover{color:#fff}</style>
+</helmet>
+<div style="display:flex; flex-wrap:wrap; gap:56px; padding:56px; align-items:flex-start; min-height:100vh; background:#101216; font-family:'Geist',-apple-system,sans-serif">
+  <div style="display:flex; flex-direction:column; gap:14px">
+    <div style="font:500 12px/1 'Geist Mono',monospace; letter-spacing:.12em; color:#8B94A7">MOBILE · DARK · ES</div>
+    <x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" dark="{{ true }}" hint-size="402px,874px">
+      <dc-import name="Portfolio" compact="{{ true }}" theme="dark" lang="es" hint-size="100%,874px"></dc-import>
+    </x-import>
+  </div>
+  <div style="display:flex; flex-direction:column; gap:14px">
+    <div style="font:500 12px/1 'Geist Mono',monospace; letter-spacing:.12em; color:#8B94A7">MOBILE · LIGHT · EN</div>
+    <x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" hint-size="402px,874px">
+      <dc-import name="Portfolio" compact="{{ true }}" theme="light" lang="en" hint-size="100%,874px"></dc-import>
+    </x-import>
+  </div>
+</div>
+</x-dc>
+</body>
+</html>

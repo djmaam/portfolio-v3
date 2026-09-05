@@ -1,0 +1,572 @@
+{
+  "i18n": {
+    "es": {
+      "navAbout": "Sobre mí",
+      "navWork": "Experiencia",
+      "navProjects": "Proyectos",
+      "navContact": "Contacto",
+      "eyebrow": "Software Engineer & AI Orchestrator · Argentina",
+      "h1a": "Pienso el producto.",
+      "h1b": "Orquesto cómo se construye.",
+      "heroSub": "Ocho años llevando apps a producción en agro, streaming y salud. Hoy dirijo equipos de agentes de IA con especificaciones claras y arquitectura sólida, para que cada idea llegue más lejos, más rápido.",
+      "ctaWork": "Ver trayectoria",
+      "ctaContact": "Hablemos",
+      "statYears": "años construyendo",
+      "statCompanies": "empresas principales",
+      "statPlatforms": "plataformas (web · mobile · TV)",
+      "secAbout": "SOBRE MÍ",
+      "aboutLead": "Me interesa menos qué tecnología usar y más qué problema resolver, para quién, y con qué arquitectura.",
+      "aboutBody": "Empecé en mobile y backend, construyendo productos desde cero para startups y empresas. Con el tiempo entendí dónde aporto más valor: decidir qué construir, cómo estructurarlo y verificar que funcione. Hoy trabajo con Spec-Driven Development, coordinando agentes de IA que ejecutan mientras yo diseño, reviso y decido.",
+      "principles": [
+        {
+          "n": "PRINCIPIO 01",
+          "h": "Criterio sobre herramientas",
+          "d": "El stack cambia cada año. Saber qué construir y por qué, no."
+        },
+        {
+          "n": "PRINCIPIO 02",
+          "h": "Arquitectura primero",
+          "d": "Un buen plano permite que cualquier equipo, humano o agente, construya bien."
+        },
+        {
+          "n": "PRINCIPIO 03",
+          "h": "Producto antes que features",
+          "d": "Cada decisión técnica responde a una necesidad concreta de alguien real."
+        }
+      ],
+      "secMethod": "CÓMO TRABAJO",
+      "stepVerbs": "PENSANDO|ESCRIBIENDO SPEC|DISEÑANDO EL PLAN|CODEANDO|DEPLOYANDO",
+      "cycleDone": "✓ EN PRODUCCIÓN",
+      "cycleIdle": "STAND BY · ESPERANDO INPUT",
+      "methodTitle": "De la idea a producción, con un equipo de agentes.",
+      "methodSub": "La especificación es el contrato. Los agentes ejecutan. Yo diseño la arquitectura, reviso el resultado y tomo las decisiones.",
+      "steps": [
+        {
+          "n": "01",
+          "color": "#FF5C5C",
+          "h": "Idea",
+          "d": "Entender el problema, a quién afecta y qué significa resolverlo bien.",
+          "tool": "conversación · contexto"
+        },
+        {
+          "n": "02",
+          "color": "#FF9F43",
+          "h": "Spec",
+          "d": "Definir el qué y el por qué, con criterios de aceptación verificables.",
+          "tool": "SDD · markdown"
+        },
+        {
+          "n": "03",
+          "color": "#FFD64D",
+          "h": "Plan",
+          "d": "Arquitectura, tareas y qué agente se encarga de cada una.",
+          "tool": "plans · skills"
+        },
+        {
+          "n": "04",
+          "color": "#9BE15D",
+          "h": "Agentes",
+          "d": "Ejecución en paralelo con revisión continua de código y diseño.",
+          "tool": "Claude Code · Codex"
+        },
+        {
+          "n": "05",
+          "color": "#3DDC84",
+          "h": "Ship",
+          "d": "Validar contra la especificación y llevar a producción con observabilidad.",
+          "tool": "CI/CD · observabilidad"
+        }
+      ],
+      "secWork": "EXPERIENCIA",
+      "workTitle": "Ocho años, cinco empresas, seis plataformas.",
+      "alsoWith": "TAMBIÉN CON",
+      "jobs": [
+        {
+          "abbr": "NR",
+          "company": "Nera",
+          "period": "abr. 2023 — hoy",
+          "role": "Software Engineer & AI Orchestrator",
+          "note": "Fintech que digitaliza pagos y financiamiento para el agro. Uno de los ingenieros con más recorrido en el equipo: estuve en cada etapa del producto, de la primera versión a la plataforma actual, construida hoy principalmente con IA.",
+          "stack": [
+            "Mobile",
+            "Web",
+            "Backend",
+            "Cloud",
+            "AI Orchestration"
+          ],
+          "dot": "#3EE7FF",
+          "glow": "rgba(62,231,255,.6)"
+        },
+        {
+          "abbr": "TC",
+          "company": "Telecentro · Tplay",
+          "period": "jul. 2022 — abr. 2023",
+          "role": "Full Stack Engineer Sr",
+          "note": "App de streaming con TV en vivo y on demand. Impulsé la nueva versión, un rediseño técnico y visual completo que dio vuelta las reseñas, en seis plataformas desde una sola base de código.",
+          "stack": [
+            "Mobile",
+            "Web",
+            "Smart TV",
+            "6 plataformas"
+          ],
+          "dot": "#5E6675",
+          "glow": "transparent"
+        },
+        {
+          "abbr": "AP",
+          "company": "AgroPro",
+          "period": "feb. 2021 — jul. 2022",
+          "role": "Mobile Engineer Ssr",
+          "note": "Gestión agrícola en más de 500.000 hectáreas. Construí la app móvil desde cero, con sincronización offline del campo a la oficina, y el core de órdenes de trabajo.",
+          "stack": [
+            "Mobile",
+            "Web",
+            "Backend",
+            "Offline sync"
+          ],
+          "dot": "#5E6675",
+          "glow": "transparent"
+        },
+        {
+          "abbr": "DP",
+          "company": "DePC Suite",
+          "period": "nov. 2020 — feb. 2021",
+          "role": "Freelance · Full Stack Engineer",
+          "note": "Software factory con presencia en cuatro países. Construí +Ushuaia de punta a punta, app móvil y backend, además de otros productos para clientes.",
+          "stack": [
+            "Freelance",
+            "Mobile",
+            "Web",
+            "Backend"
+          ],
+          "dot": "#5E6675",
+          "glow": "transparent"
+        },
+        {
+          "abbr": "UC",
+          "company": "Ucosmos",
+          "period": "feb. 2020 — feb. 2021",
+          "role": "Full Stack Engineer",
+          "note": "Software factory de productos con IA y salud digital. Desarrollé Demedis, salud en tiempo real, y Hashme, analítica de Instagram, entre otros.",
+          "stack": [
+            "Mobile",
+            "Web",
+            "Realtime",
+            "Integraciones"
+          ],
+          "dot": "#5E6675",
+          "glow": "transparent"
+        }
+      ],
+      "secProjects": "PROYECTOS",
+      "projectsTitle": "Productos que salieron a producción.",
+      "projectsSub": "Con usuarios reales y equipos reales. Las capturas se reemplazan en la implementación.",
+      "projects": [
+        {
+          "name": "Nera",
+          "kind": "AGTECH · WEB + MOBILE",
+          "host": "nera-agro.com",
+          "url": "https://nera-agro.com/",
+          "desc": "Fintech agro: 12.000+ productores, US$ 1.000M+ financiados."
+        },
+        {
+          "name": "Tplay",
+          "kind": "STREAMING · 6 PLATAFORMAS",
+          "host": "telecentro.com.ar",
+          "url": "https://telecentro.com.ar/",
+          "desc": "Streaming en vivo y on demand en Mobile, Web y Smart TV."
+        },
+        {
+          "name": "AgroPro",
+          "kind": "AGTECH · FULL-STACK",
+          "host": "agropro.ag",
+          "url": "https://agropro.ag",
+          "desc": "Gestión agrícola en 500.000+ hectáreas, con app offline."
+        },
+        {
+          "name": "Creativa Media Lab",
+          "kind": "ESTUDIO CREATIVO · WEB",
+          "host": "creativamedialab.com",
+          "url": "https://creativamedialab.com",
+          "desc": "Sitio bilingüe de un estudio creativo de marcas."
+        },
+        {
+          "name": "Kodai",
+          "kind": "NOVELA · LECTOR WEB",
+          "host": "kodaiverse.com",
+          "url": "https://kodaiverse.com",
+          "desc": "Novela ligera con lector en el navegador, en tres idiomas."
+        },
+        {
+          "name": "+Ushuaia",
+          "kind": "GOBIERNO · MOBILE",
+          "host": "masushuaia.com",
+          "url": "https://masushuaia.com",
+          "desc": "Tarjeta de beneficios de la Municipalidad de Ushuaia. 10.000+ descargas."
+        }
+      ],
+      "secStack": "STACK",
+      "stackTitle": "Herramientas, no identidad.",
+      "stackSub": "Elijo lo que el problema necesita. Esto es lo que ya hablo con fluidez; lo que falte, se aprende en el camino.",
+      "stackCore": "USO A DIARIO",
+      "stackAlso": "TAMBIÉN HABLO",
+      "secContact": "CONTACTO",
+      "contactTitle": "Si tenés algo que construir, hablemos.",
+      "contactSub": "Productos nuevos, equipos que quieren trabajar con agentes de IA, o una charla sobre arquitectura.",
+      "footerSig": "Diseñado con criterio, construido con agentes."
+    },
+    "en": {
+      "navAbout": "About",
+      "navWork": "Experience",
+      "navProjects": "Projects",
+      "navContact": "Contact",
+      "eyebrow": "Software Engineer & AI Orchestrator · Argentina",
+      "h1a": "I think the product.",
+      "h1b": "I orchestrate how it gets built.",
+      "heroSub": "Eight years shipping apps in agtech, streaming and health. Today I lead teams of AI agents with clear specs and solid architecture, so every idea goes further, faster.",
+      "ctaWork": "See the track record",
+      "ctaContact": "Let's talk",
+      "statYears": "years building",
+      "statCompanies": "core companies",
+      "statPlatforms": "platforms (web · mobile · TV)",
+      "secAbout": "ABOUT",
+      "aboutLead": "I care less about which technology to use and more about which problem to solve, for whom, and with what architecture.",
+      "aboutBody": "I started in mobile and backend, building products from scratch for startups and companies. Over time I learned where I add the most value: deciding what to build, how to structure it, and verifying it works. Today I work with Spec-Driven Development, coordinating AI agents that execute while I design, review and decide.",
+      "principles": [
+        {
+          "n": "PRINCIPLE 01",
+          "h": "Judgment over tooling",
+          "d": "The stack changes every year. Knowing what to build and why does not."
+        },
+        {
+          "n": "PRINCIPLE 02",
+          "h": "Architecture first",
+          "d": "A good blueprint lets any team, human or agent, build well."
+        },
+        {
+          "n": "PRINCIPLE 03",
+          "h": "Product before features",
+          "d": "Every technical decision answers a concrete need of a real person."
+        }
+      ],
+      "secMethod": "HOW I WORK",
+      "stepVerbs": "THINKING|WRITING SPEC|CRAFTING PLAN|CODING|SHIPPING",
+      "cycleDone": "✓ LIVE IN PRODUCTION",
+      "cycleIdle": "STAND BY · AWAITING INPUT",
+      "methodTitle": "From idea to production, with a team of agents.",
+      "methodSub": "The spec is the contract. Agents execute. I design the architecture, review the output and make the calls.",
+      "steps": [
+        {
+          "n": "01",
+          "color": "#FF5C5C",
+          "h": "Idea",
+          "d": "Understand the problem, who it affects and what solving it well means.",
+          "tool": "conversation · context"
+        },
+        {
+          "n": "02",
+          "color": "#FF9F43",
+          "h": "Spec",
+          "d": "Define the what and the why, with verifiable acceptance criteria.",
+          "tool": "SDD · markdown"
+        },
+        {
+          "n": "03",
+          "color": "#FFD64D",
+          "h": "Plan",
+          "d": "Architecture, tasks, and which agent owns each one.",
+          "tool": "plans · skills"
+        },
+        {
+          "n": "04",
+          "color": "#9BE15D",
+          "h": "Agents",
+          "d": "Parallel execution with continuous review of code and design.",
+          "tool": "Claude Code · Codex"
+        },
+        {
+          "n": "05",
+          "color": "#3DDC84",
+          "h": "Ship",
+          "d": "Validate against the spec and take it to production with observability.",
+          "tool": "CI/CD · observability"
+        }
+      ],
+      "secWork": "EXPERIENCE",
+      "workTitle": "Eight years, five companies, six platforms.",
+      "alsoWith": "ALSO WITH",
+      "jobs": [
+        {
+          "abbr": "NR",
+          "company": "Nera",
+          "period": "Apr 2023 — now",
+          "role": "Software Engineer & AI Orchestrator",
+          "note": "Fintech digitizing payments and financing for agriculture. One of the longest-tenured engineers on the team: I have been in every stage of the product, from first version to today's platform, now built primarily with AI.",
+          "stack": [
+            "Mobile",
+            "Web",
+            "Backend",
+            "Cloud",
+            "AI Orchestration"
+          ],
+          "dot": "#3EE7FF",
+          "glow": "rgba(62,231,255,.6)"
+        },
+        {
+          "abbr": "TC",
+          "company": "Telecentro · Tplay",
+          "period": "Jul 2022 — Apr 2023",
+          "role": "Full Stack Engineer Sr",
+          "note": "Streaming app with live TV and on demand. I drove the new version, a full technical and visual redesign that turned reviews around, on six platforms from a single codebase.",
+          "stack": [
+            "Mobile",
+            "Web",
+            "Smart TV",
+            "6 platforms"
+          ],
+          "dot": "#5E6675",
+          "glow": "transparent"
+        },
+        {
+          "abbr": "AP",
+          "company": "AgroPro",
+          "period": "Feb 2021 — Jul 2022",
+          "role": "Mobile Engineer Ssr",
+          "note": "Farm management across 500,000+ hectares. I built the mobile app from scratch, with offline sync from field to office, and the work-order core.",
+          "stack": [
+            "Mobile",
+            "Web",
+            "Backend",
+            "Offline sync"
+          ],
+          "dot": "#5E6675",
+          "glow": "transparent"
+        },
+        {
+          "abbr": "DP",
+          "company": "DePC Suite",
+          "period": "Nov 2020 — Feb 2021",
+          "role": "Freelance · Full Stack Engineer",
+          "note": "Software factory present in four countries. I built +Ushuaia end to end, mobile app and backend, along with other client products.",
+          "stack": [
+            "Freelance",
+            "Mobile",
+            "Web",
+            "Backend"
+          ],
+          "dot": "#5E6675",
+          "glow": "transparent"
+        },
+        {
+          "abbr": "UC",
+          "company": "Ucosmos",
+          "period": "Feb 2020 — Feb 2021",
+          "role": "Full Stack Engineer",
+          "note": "Software factory for AI and digital health products. I built Demedis, realtime health, and Hashme, Instagram analytics, among others.",
+          "stack": [
+            "Mobile",
+            "Web",
+            "Realtime",
+            "Integrations"
+          ],
+          "dot": "#5E6675",
+          "glow": "transparent"
+        }
+      ],
+      "secProjects": "PROJECTS",
+      "projectsTitle": "Products that shipped.",
+      "projectsSub": "With real users and real teams. Screenshots get replaced at implementation.",
+      "projects": [
+        {
+          "name": "Nera",
+          "kind": "AGTECH · WEB + MOBILE",
+          "host": "nera-agro.com",
+          "url": "https://nera-agro.com/",
+          "desc": "Agri-fintech: 12,000+ farmers, US$1B+ financed."
+        },
+        {
+          "name": "Tplay",
+          "kind": "STREAMING · 6 PLATFORMS",
+          "host": "telecentro.com.ar",
+          "url": "https://telecentro.com.ar/",
+          "desc": "Live and on-demand streaming on Mobile, Web and Smart TV."
+        },
+        {
+          "name": "AgroPro",
+          "kind": "AGTECH · FULL-STACK",
+          "host": "agropro.ag",
+          "url": "https://agropro.ag",
+          "desc": "Farm management across 500,000+ hectares, offline-first app."
+        },
+        {
+          "name": "Creativa Media Lab",
+          "kind": "CREATIVE STUDIO · WEB",
+          "host": "creativamedialab.com",
+          "url": "https://creativamedialab.com",
+          "desc": "Bilingual site for a brand studio."
+        },
+        {
+          "name": "Kodai",
+          "kind": "NOVEL · WEB READER",
+          "host": "kodaiverse.com",
+          "url": "https://kodaiverse.com",
+          "desc": "Light novel with an in-browser reader, in three languages."
+        },
+        {
+          "name": "+Ushuaia",
+          "kind": "GOVERNMENT · MOBILE",
+          "host": "masushuaia.com",
+          "url": "https://masushuaia.com",
+          "desc": "Benefits card by the City of Ushuaia. 10,000+ downloads."
+        }
+      ],
+      "secStack": "STACK",
+      "stackTitle": "Tools, not identity.",
+      "stackSub": "I pick what the problem needs. This is what I already speak fluently; whatever is missing gets learned along the way.",
+      "stackCore": "DAILY DRIVERS",
+      "stackAlso": "ALSO FLUENT",
+      "secContact": "CONTACT",
+      "contactTitle": "If you have something to build, let's talk.",
+      "contactSub": "New products, teams that want to work with AI agents, or a conversation about architecture.",
+      "footerSig": "Designed with judgment, built with agents."
+    }
+  },
+  "stack": {
+    "core": [
+      "TypeScript",
+      "JavaScript",
+      "React Native",
+      "React",
+      "Next.js",
+      "Astro",
+      "Tailwind",
+      "Node.js",
+      "NestJS",
+      "Spring",
+      "Claude Code",
+      "Spec-Driven Development",
+      "Agent orchestration",
+      "PostgreSQL",
+      "MongoDB",
+      "AWS",
+      "Google Cloud",
+      "GitHub Actions",
+      "Grafana",
+      "Figma",
+      "Amplitude"
+    ],
+    "rows": [
+      [
+        "TypeScript",
+        "Claude Code",
+        "React Native",
+        "Spec-Driven Development",
+        "Node.js",
+        "PostgreSQL",
+        "Kotlin",
+        "Codex",
+        "Next.js",
+        "AWS",
+        "GraphQL",
+        "Expo",
+        "Vue",
+        "Redis",
+        "Android TV",
+        "Playwright",
+        "Go"
+      ],
+      [
+        "Agent orchestration",
+        "React",
+        "NestJS",
+        "Python",
+        "MCP",
+        "Firebase",
+        "Tizen",
+        "Laravel",
+        "Docker",
+        "Swift",
+        "Context engineering",
+        "MongoDB",
+        "Astro",
+        "WebOS",
+        "Java",
+        "Tailwind",
+        "Fastlane"
+      ],
+      [
+        "Antigravity",
+        "JavaScript",
+        "Google Cloud",
+        "Express",
+        "Cordova",
+        "MySQL / MariaDB",
+        "Spring",
+        "Claude & OpenAI APIs",
+        "Vercel",
+        "GitHub Actions",
+        "C#",
+        "Django",
+        "Grafana",
+        "Figma",
+        "Amplitude",
+        "PHP",
+        "Jest",
+        "Prisma"
+      ]
+    ]
+  },
+  "consoleLog": [
+    [
+      "spec",
+      "loaded  product/onboarding.md"
+    ],
+    [
+      "plan",
+      "4 tasks · 2 agents · 1 reviewer"
+    ],
+    [
+      "agent",
+      "claude-code → auth flow + tests"
+    ],
+    [
+      "agent",
+      "codex → e2e scenarios"
+    ],
+    [
+      "review",
+      "criteria 12/12 · arch ok"
+    ],
+    [
+      "ship",
+      "deploy → production ✓"
+    ],
+    [
+      "spec",
+      "loaded  mobile/offline-sync.md"
+    ],
+    [
+      "plan",
+      "6 tasks · 3 agents"
+    ],
+    [
+      "agent",
+      "antigravity → data layer"
+    ],
+    [
+      "review",
+      "perf budget met · a11y ok"
+    ],
+    [
+      "ship",
+      "release 2.4.0 → stores ✓"
+    ]
+  ],
+  "links": {
+    "email": "hi@marcosarrieta.dev",
+    "github": "https://github.com/djmaam",
+    "linkedin": "https://linkedin.com/in/djmaam",
+    "telegram": "https://t.me/djmaam",
+    "domain": "https://marcosarrieta.dev"
+  }
+}
