@@ -188,9 +188,16 @@ const figures = [
 <script>
   import { boot } from '../lib/motion/boot'
   import { typedLength } from '../lib/motion/math'
+  import { mountNetwork } from '../lib/motion/network'
   import { prefersReducedMotion } from '../lib/motion/reduced'
 
   boot()
+
+  // The canvas is a direct child of the full-bleed shell and is measured against the
+  // console card. `mountNetwork` creates nothing with `prefers-reduced-motion: reduce`.
+  const hero = document.querySelector<HTMLElement>('.hero')
+  const card = document.querySelector<HTMLElement>('[data-console]')
+  if (hero && card) mountNetwork(hero, card)
 
   const eyebrow = document.querySelector<HTMLElement>('[data-typed]')
   if (eyebrow && !prefersReducedMotion()) {

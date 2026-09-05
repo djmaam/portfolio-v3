@@ -2,6 +2,7 @@ import { expect, test } from 'bun:test'
 
 import {
   anchorOffset,
+  asteriskRadius,
   asteriskTarget,
   auroraStyle,
   bootDelay,
@@ -18,15 +19,20 @@ import {
   ellipsoidRadii,
   formationPhase,
   insideCard,
+  lerp,
   logWindow,
   median,
   metricsAt,
   nearestPoint,
+  nodeAlpha,
   nodeCountFor,
+  nodeRadius,
   projectNode,
   rotationStep,
   scrambleFrame,
+  twinkle,
   typedLength,
+  verticalDrift,
 } from '../src/lib/motion/math'
 
 test('docProgress is 0 at the top of the document and 1 at the bottom', () => {
@@ -479,4 +485,47 @@ test('median is the middle sample of the degradation window', () => {
   expect(median([9, 1, 5])).toBe(5)
   expect(median([4, 1, 3, 2])).toBe(2.5)
   expect(median([])).toBe(0)
+})
+
+test('lerp walks from a to b and keeps going past both ends', () => {
+  expect(lerp(10, 20, 0)).toBe(10)
+  expect(lerp(10, 20, 1)).toBe(20)
+  expect(lerp(10, 20, 0.25)).toBeCloseTo(12.5, 10)
+})
+
+test('verticalDrift is the ±9px bob of MOTION_SPEC §3', () => {
+  expect(verticalDrift(0, 0)).toBeCloseTo(0, 10)
+  expect(verticalDrift(Math.PI * 500, 0)).toBeCloseTo(9, 10)
+  for (let t = 0; t < 20000; t += 137) {
+    expect(Math.abs(verticalDrift(t, 1.7))).toBeLessThanOrEqual(9)
+  }
+})
+
+test('twinkle stays between .1 and 1, and the phase offsets it', () => {
+  for (let t = 0; t < 20000; t += 137) {
+    const value = twinkle(t, 0.4)
+    expect(value).toBeGreaterThanOrEqual(0.1)
+    expect(value).toBeLessThanOrEqual(1)
+  }
+  expect(twinkle(0, 0)).toBeCloseTo(0.55, 10)
+  expect(twinkle(0, Math.PI / 2)).toBeCloseTo(1, 10)
+})
+
+test('nodeRadius grows with the depth and with the flash', () => {
+  expect(nodeRadius(2, 1, 0)).toBeCloseTo(3, 10)
+  expect(nodeRadius(2, 0.3, 0)).toBeCloseTo(1.6, 10)
+  expect(nodeRadius(2, 1, 1)).toBeCloseTo(5, 10)
+  expect(nodeRadius(2, 0.3, 0)).toBeLessThan(nodeRadius(2, 1, 0))
+})
+
+test('nodeAlpha dims with the depth and is stronger in dark', () => {
+  expect(nodeAlpha(1, 1, true)).toBeCloseTo(0.9, 10)
+  expect(nodeAlpha(1, 1, false)).toBeCloseTo(0.8, 10)
+  expect(nodeAlpha(0.3, 1, true)).toBeLessThan(nodeAlpha(1, 1, true))
+  expect(nodeAlpha(1, 0.1, true)).toBeLessThan(nodeAlpha(1, 1, true))
+})
+
+test('asteriskRadius is 26% of the shorter side of the canvas', () => {
+  expect(asteriskRadius(1000, 800)).toBeCloseTo(208, 10)
+  expect(asteriskRadius(600, 900)).toBeCloseTo(156, 10)
 })

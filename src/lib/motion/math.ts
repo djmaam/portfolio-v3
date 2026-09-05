@@ -122,6 +122,8 @@ export const CONNECT_DIST = 150
 export const CURSOR_DIST = 200
 export const CURSOR_LINK_DIST = 170
 export const ANCHOR_DIST = 280
+/** Reach of the alpha boost the cursor gives to the connections around it. */
+export const CURSOR_BOOST_DIST = 220
 
 const clamp01 = (value: number) => Math.min(1, Math.max(0, value))
 
@@ -388,4 +390,34 @@ export function median(values: readonly number[]): number {
   return sorted.length % 2 === 1
     ? (sorted[mid] as number)
     : ((sorted[mid - 1] as number) + (sorted[mid] as number)) / 2
+}
+
+/** Straight interpolation from `a` to `b`; the ✳ formation pulls each node along one. */
+export function lerp(a: number, b: number, t: number): number {
+  return a + (b - a) * t
+}
+
+/** Radius of the ✳ the nodes converge into: 26% of the shorter side (`MOTION_SPEC` §3). */
+export function asteriskRadius(w: number, h: number): number {
+  return Math.min(w, h) * 0.26
+}
+
+/** The ±9px vertical bob every node rides, offset by its own phase. */
+export function verticalDrift(t: number, phase: number): number {
+  return Math.sin(t * 0.001 + phase) * 9
+}
+
+/** The slow brightness flicker of a node, in [.1, 1]. */
+export function twinkle(t: number, phase: number): number {
+  return 0.55 + 0.45 * Math.sin(t / 900 + phase)
+}
+
+/** Drawn radius of a node: its own size scaled by depth, swollen while it flashes. */
+export function nodeRadius(size: number, depth: number, flash: number): number {
+  return size * (0.5 + depth) + flash * 2
+}
+
+/** Alpha of a node's dot: its twinkle, dimmed by depth, stronger against a dark page. */
+export function nodeAlpha(depth: number, twinkleValue: number, dark: boolean): number {
+  return (dark ? 0.9 : 0.8) * twinkleValue * depth
 }
