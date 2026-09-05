@@ -48,6 +48,9 @@
   --color-accent-soft: light-dark(rgba(10, 143, 175, 0.08), rgba(62, 231, 255, 0.08));
   --color-violet: light-dark(rgb(120, 90, 255), rgb(170, 120, 255));
   --color-console-bg: light-dark(rgba(255, 255, 255, 0.75), rgba(14, 16, 22, 0.85));
+  /* The only drop shadow of the design (`DESIGN_SPEC §2`). Black in both themes, so it
+     cannot be mixed from a token: it is the one shadow color the site owns. */
+  --color-shadow-console: light-dark(rgba(0, 0, 0, 0.12), rgba(0, 0, 0, 0.6));
 
   /* The contact card inverts the theme. */
   --color-contact-card: light-dark(#0b0d12, #f3f5f9);
@@ -262,6 +265,18 @@
         opacity 0.9s cubic-bezier(0.2, 0.8, 0.2, 1),
         transform 0.9s cubic-bezier(0.2, 0.8, 0.2, 1),
         filter 0.9s cubic-bezier(0.2, 0.8, 0.2, 1);
+    }
+
+    /* The console arrives last and from further away (`MOTION_SPEC §2`): a card, not a
+       line of text, so it also scales up and takes 1100ms. It overrides the rule above,
+       which is why it lives next to it instead of in the component. */
+    .has-js [data-boot][data-console] {
+      transform: translateY(24px) scale(0.96);
+      filter: blur(10px);
+      transition:
+        opacity 1.1s cubic-bezier(0.2, 0.8, 0.2, 1),
+        transform 1.1s cubic-bezier(0.2, 0.8, 0.2, 1),
+        filter 1.1s cubic-bezier(0.2, 0.8, 0.2, 1);
     }
   }
 }

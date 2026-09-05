@@ -17,3 +17,19 @@ export const ui: Record<Lang, { themeToggle: string }> = {
  * derivable source.
  */
 export const stats = { years: '8+', companies: '5', platforms: '6' } as const
+
+/**
+ * The console's chrome (`DESIGN_SPEC` §3.2). Not page copy and not translated: a session
+ * label, a status word and three metric names that read the same in both languages —
+ * only the log lines themselves are content, and those live in `content.json`. The keys
+ * match the fields of `metricsAt`, which is what the footer renders.
+ */
+export const consoleChrome = {
+  session: 'orchestrator — session 0x4D41',
+  live: 'LIVE',
+  metrics: [
+    { key: 'agents', label: 'AGENTS' },
+    { key: 'specs', label: 'SPECS' },
+    { key: 'shipped', label: 'SHIPPED' },
+  ],
+} as const
