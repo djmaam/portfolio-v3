@@ -92,7 +92,7 @@ static files and not one variable file, contrary to what `ARCHITECTURE.md` said.
 
 ### 4. Keyframes
 
-The 12 from the mock, exactly as in `handoff/reference/Portfolio.dc.html`: `blink`,
+The 11 from the mock, exactly as in `handoff/reference/Portfolio.dc.html`: `blink`,
 `pulse`, `aur1`, `aur2`, `rise`, `think`, `sweep`, `spin`, `gridflow`, `shimmer`,
 `marquee`. They go in `app.css`, outside `@theme`. They are not used yet; each issue
 consumes them.
