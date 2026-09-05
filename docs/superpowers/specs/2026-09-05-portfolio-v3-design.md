@@ -38,6 +38,17 @@ el CSS entero, que se reescribe en Tailwind desde `DESIGN_SPEC.md`.
 **Corrección al handoff:** la decisión de fuente era Geist vs Manrope; queda
 **Manrope**, con `-apple-system, "Helvetica Neue", sans-serif` de fallback.
 
+**Sin framework de UI en v1.** No entra React ni ningún otro. Las secciones son HTML
+estático alimentado por `content.json` (cero estado de UI) y el motion es imperativo
+sobre el DOM (rAF, canvas, IntersectionObserver), donde un framework solo agrega una
+capa que después se esquiva con refs. El costo sería ~45 KB de JS contra un
+presupuesto de Lighthouse ≥ 90 mobile con el canvas corriendo.
+
+Único candidato: la consola-agente de v1.1, que sí tiene estado (historial,
+streaming, expandir/colapsar). Entra como **isla única** (`bunx astro add react` +
+un `.tsx` con `client:visible`) sin tocar nada de lo construido en v1. Decisión
+diferida a esa etapa.
+
 ## 3. Estructura
 
 ```
