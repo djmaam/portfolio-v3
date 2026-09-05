@@ -1,1 +1,231 @@
 @import "tailwindcss";
+
+/* ── Fonts ────────────────────────────────────────────────────────────────────
+   Self-hosted from /fonts (latin subset, U+0000-00FF: covers accents, ¿ and ¡).
+   IBM Plex Mono has no variable version on Google Fonts, hence two static cuts. */
+
+@font-face {
+  font-family: "Manrope";
+  src: url("/fonts/manrope-var.woff2") format("woff2");
+  font-weight: 200 800;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "IBM Plex Mono";
+  src: url("/fonts/ibm-plex-mono-400.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "IBM Plex Mono";
+  src: url("/fonts/ibm-plex-mono-500.woff2") format("woff2");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* ── Tokens ───────────────────────────────────────────────────────────────────
+   `static` forces Tailwind to emit every variable even when no utility uses it
+   yet: these are the design API the following issues build on.
+
+   Colors use `light-dark()`, so Tailwind's opacity modifiers (`bg-accent/45`)
+   do NOT work on them — Tailwind cannot recompute the alpha. Alpha variants the
+   design repeats get a token of their own; one-off ones are resolved in whichever
+   utility needs them with `color-mix(in srgb, var(--color-accent) 45%, transparent)`. */
+
+@theme static {
+  --color-bg: light-dark(#f4f5f7, #08090c);
+  --color-ink: light-dark(#0b0d12, #f3f5f9);
+  --color-dim: light-dark(#5e6675, #8b94a7);
+  --color-line: light-dark(rgba(0, 0, 0, 0.08), rgba(255, 255, 255, 0.08));
+  --color-surface: light-dark(rgba(255, 255, 255, 0.7), rgba(255, 255, 255, 0.035));
+  --color-glass: light-dark(rgba(244, 245, 247, 0.72), rgba(8, 9, 12, 0.6));
+  --color-accent: light-dark(#0a8faf, #3ee7ff);
+  --color-accent-soft: light-dark(rgba(10, 143, 175, 0.08), rgba(62, 231, 255, 0.08));
+  --color-violet: light-dark(rgb(120, 90, 255), rgb(170, 120, 255));
+  --color-console-bg: light-dark(rgba(255, 255, 255, 0.75), rgba(14, 16, 22, 0.85));
+
+  /* The contact card inverts the theme. */
+  --color-contact-card: light-dark(#0b0d12, #f3f5f9);
+  --color-contact-ink: light-dark(#f3f5f9, #0b0d12);
+
+  /* Traffic-light colors of the "How I work" steps: same in both themes. */
+  --color-step-1: #ff5c5c;
+  --color-step-2: #ff9f43;
+  --color-step-3: #ffd64d;
+  --color-step-4: #9be15d;
+  --color-step-5: #3ddc84;
+
+  --font-sans: Manrope, -apple-system, "Helvetica Neue", sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+
+  /* Type scale: the mock uses `cqw` against a 1200px container; these are the
+     equivalent `clamp()` values. */
+  --leading-h1: 1;
+  --tracking-h1: -0.04em;
+  --text-h1: clamp(36px, 5.5vw, 76px);
+  --text-h1--line-height: var(--leading-h1);
+  --text-h1--letter-spacing: var(--tracking-h1);
+  --text-h1--font-weight: 600;
+
+  --leading-h2: 1.02;
+  --tracking-h2: -0.035em;
+  --text-h2: clamp(32px, 4.5vw, 56px);
+  --text-h2--line-height: var(--leading-h2);
+  --text-h2--letter-spacing: var(--tracking-h2);
+  --text-h2--font-weight: 600;
+
+  --leading-h2-stack: 1.05;
+  --tracking-h2-stack: -0.035em;
+  --text-h2-stack: clamp(32px, 4.5vw, 48px);
+  --text-h2-stack--line-height: var(--leading-h2-stack);
+  --text-h2-stack--letter-spacing: var(--tracking-h2-stack);
+  --text-h2-stack--font-weight: 600;
+
+  --leading-h2-contact: 1;
+  --tracking-h2-contact: -0.04em;
+  --text-h2-contact: clamp(34px, 5vw, 64px);
+  --text-h2-contact--line-height: var(--leading-h2-contact);
+  --text-h2-contact--letter-spacing: var(--tracking-h2-contact);
+  --text-h2-contact--font-weight: 600;
+
+  --leading-lead: 1.2;
+  --tracking-lead: -0.025em;
+  --text-lead: clamp(26px, 3.4vw, 40px);
+  --text-lead--line-height: var(--leading-lead);
+  --text-lead--letter-spacing: var(--tracking-lead);
+  --text-lead--font-weight: 500;
+
+  --leading-hero-sub: 1.55;
+  --text-hero-sub: clamp(16px, 1.5vw, 19px);
+  --text-hero-sub--line-height: var(--leading-hero-sub);
+  --text-hero-sub--font-weight: 400;
+
+  --leading-body: 1.5;
+  --text-body: 17px;
+  --text-body--line-height: var(--leading-body);
+  --text-body--font-weight: 400;
+
+  --leading-card-title: 1.15;
+  --tracking-card-title: -0.02em;
+  --text-card-title: clamp(19px, 1.8vw, 22px);
+  --text-card-title--line-height: var(--leading-card-title);
+  --text-card-title--letter-spacing: var(--tracking-card-title);
+  --text-card-title--font-weight: 500;
+
+  --tracking-label: 0.14em;
+  --text-label: 12px;
+  --text-label--letter-spacing: var(--tracking-label);
+
+  --tracking-label-sm: 0.1em;
+  --text-label-sm: clamp(10px, 1vw, 11px);
+  --text-label-sm--letter-spacing: var(--tracking-label-sm);
+}
+
+@layer base {
+  /* Without `color-scheme`, `light-dark()` does not resolve. The inline script in
+     <head> overrides it; with no JS the theme follows prefers-color-scheme. */
+  :root {
+    color-scheme: light dark;
+  }
+
+  body {
+    background-color: var(--color-bg);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+}
+
+/* ── Keyframes ────────────────────────────────────────────────────────────────
+   The 11 from the mock (`handoff/reference/Portfolio.dc.html`). Unused so far:
+   each motion issue consumes its own. */
+
+@keyframes blink {
+  50% {
+    opacity: 0;
+  }
+}
+
+@keyframes pulse {
+  50% {
+    opacity: 0.3;
+    transform: scale(0.7);
+  }
+}
+
+@keyframes aur1 {
+  to {
+    transform: translate(-18%, 14%) scale(1.15);
+  }
+}
+
+@keyframes aur2 {
+  to {
+    transform: translate(22%, -12%) scale(0.9);
+  }
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+
+@keyframes think {
+  0% {
+    transform: rotate(0) scale(1);
+  }
+  30% {
+    transform: rotate(90deg) scale(0.72);
+  }
+  60% {
+    transform: rotate(200deg) scale(1.12);
+  }
+  100% {
+    transform: rotate(360deg) scale(1);
+  }
+}
+
+@keyframes sweep {
+  from {
+    top: -8%;
+    opacity: 0;
+  }
+  15% {
+    opacity: 1;
+  }
+  to {
+    top: 108%;
+    opacity: 0;
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes gridflow {
+  to {
+    background-position: 48px 48px;
+  }
+}
+
+@keyframes shimmer {
+  to {
+    transform: translateX(250%);
+  }
+}
+
+@keyframes marquee {
+  to {
+    transform: translateX(-50%);
+  }
+}

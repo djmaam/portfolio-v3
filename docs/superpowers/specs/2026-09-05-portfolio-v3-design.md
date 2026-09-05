@@ -1,70 +1,75 @@
-# portfolio-v3 — Diseño técnico
+# portfolio-v3 — Technical design
 
-Fecha: 2026-09-05 · Fuente de verdad de diseño: `handoff/`
+Date: 2026-09-05 · Design source of truth: `handoff/`
 
-## 1. Objetivo y alcance
+## 1. Goal and scope
 
-Construir `marcosarrieta.dev`: sitio estático bilingüe (ES/EN), tema claro/oscuro,
-con el diseño y las animaciones definidos en `handoff/DESIGN_SPEC.md` y
-`handoff/MOTION_SPEC.md`, y todo el copy desde `handoff/content.json`.
+Build `marcosarrieta.dev`: a bilingual static site (ES/EN), light/dark theme, with the
+design and animations defined in `handoff/DESIGN_SPEC.md` and
+`handoff/MOTION_SPEC.md`, and all the copy coming from `handoff/content.json`.
 
-**Dentro de v1:** las nueve secciones (nav, hero, consola decorativa, red de nodos,
-about, método, experiencia, proyectos, stack, contacto, footer), motion completo,
-i18n, tema, accesibilidad, tests, deploy en Cloudflare Pages.
+**Inside v1:** the nine sections (nav, hero, decorative console, node network, about,
+method, experience, projects, stack, contact, footer), full motion, i18n, theme,
+accessibility, tests, deploy to Cloudflare Pages.
 
-**Fuera de v1:** la consola-agente interactiva de `AGENT_CONSOLE_SPEC.md` (Worker +
-API de Anthropic). Se especifica y construye como v1.1 con su propio ciclo.
-El modo juego 3D (`/world`) no está en alcance ni reserva ruta todavía.
+**Outside v1:** the interactive agent console from `AGENT_CONSOLE_SPEC.md` (Worker +
+Anthropic API). It gets specced and built as v1.1 with its own cycle.
+The 3D game mode (`/world`) is not in scope and does not reserve a route yet.
 
 ## 2. Stack
 
-| Pieza | Decisión |
+| Piece | Decision |
 |---|---|
-| Framework | Astro 5, salida estática (`output: 'static'`) |
+| Framework | Astro 7, static output (`output: 'static'`) |
 | Runtime / PM / tests | Bun (`bun test`) |
-| Lenguaje | TypeScript strict |
-| Estilos | Tailwind v4 vía `@tailwindcss/vite`, tokens en `@theme` |
-| Motion | Vanilla TS (IntersectionObserver + rAF). Sin Framer, sin GSAP |
-| Fuentes | **Manrope** (sans) + **IBM Plex Mono** (mono), self-hosted woff2 variable en `public/fonts`, `font-display: swap`, `preload` de ambas |
+| Language | TypeScript strict |
+| Styles | Tailwind v4 via `@tailwindcss/vite`, tokens in `@theme` |
+| Motion | Vanilla TS (IntersectionObserver + rAF). No Framer, no GSAP |
+| Fonts | **Manrope** variable (sans, `wght 200..800`) + **IBM Plex Mono** static 400/500 (mono) — IBM Plex Mono has no variable version. Self-hosted woff2 in `public/fonts`, `font-display: swap` |
 | E2E | Playwright (smoke) |
-| Deploy | Cloudflare Pages, build estático |
+| Deploy | Cloudflare Pages, static build |
 
-**Corrección al handoff:** `handoff/reference/Portfolio.dc.html` no es JS vanilla —
-es un componente del runtime `dc` (clase con `setState` y refs, estilos inline).
-Portable: la *matemática* (proyección del canvas, scramble, progreso del scroll,
-cálculo de pasos, opacidad por palabra). No portable: el plumbing de estado/refs y
-el CSS entero, que se reescribe en Tailwind desde `DESIGN_SPEC.md`.
+**Correction to the handoff:** `handoff/reference/Portfolio.dc.html` is not vanilla JS —
+it is a component of the `dc` runtime (a class with `setState` and refs, inline styles).
+Portable: the *math* (canvas projection, scramble, scroll progress, step computation,
+per-word opacity). Not portable: the state/refs plumbing and the entire CSS, which gets
+rewritten in Tailwind from `DESIGN_SPEC.md`.
 
-**Corrección al handoff:** la decisión de fuente era Geist vs Manrope; queda
-**Manrope**, con `-apple-system, "Helvetica Neue", sans-serif` de fallback.
+**Correction to the handoff:** the font decision was Geist vs Manrope; it lands on
+**Manrope**, with `-apple-system, "Helvetica Neue", sans-serif` as fallback. The mono is
+IBM Plex Mono in static weights 400 and 500: there is no variable version.
 
-**Sin framework de UI en v1.** No entra React ni ningún otro. Las secciones son HTML
-estático alimentado por `content.json` (cero estado de UI) y el motion es imperativo
-sobre el DOM (rAF, canvas, IntersectionObserver), donde un framework solo agrega una
-capa que después se esquiva con refs. El costo sería ~45 KB de JS contra un
-presupuesto de Lighthouse ≥ 90 mobile con el canvas corriendo.
+**Correction to the handoff:** `ARCHITECTURE.md` says Astro 5, which was the current
+version when it was written. The project settled on **Astro 7**, the latest. Nothing
+that is planned depends on version 5 APIs.
 
-Único candidato: la consola-agente de v1.1, que sí tiene estado (historial,
-streaming, expandir/colapsar). Entra como **isla única** (`bunx astro add react` +
-un `.tsx` con `client:visible`) sin tocar nada de lo construido en v1. Decisión
-diferida a esa etapa.
+**No UI framework in v1.** Neither React nor any other one comes in. The sections are
+static HTML fed by `content.json` (zero UI state) and the motion is imperative over the
+DOM (rAF, canvas, IntersectionObserver), where a framework only adds a layer that then
+gets bypassed with refs. The cost would be ~45 KB of JS against a budget of Lighthouse
+≥ 90 mobile with the canvas running.
 
-## 3. Estructura
+The only candidate: the v1.1 agent console, which does have state (history, streaming,
+expand/collapse). It comes in as a **single island** (`bunx astro add react` +
+a `.tsx` with `client:visible`) without touching anything built in v1. Decision
+deferred to that stage.
+
+## 3. Structure
 
 ```
 src/
-  styles/app.css          # @import tailwindcss; @theme tokens; keyframes; utilidades sueltas
+  styles/app.css          # @import tailwindcss; @theme tokens; keyframes; loose utilities
   lib/
-    content.ts            # import tipado de handoff/content.json
-    i18n.ts               # Lang, rutas hermanas, detección/persistencia
+    content.ts            # typed import of handoff/content.json
+    i18n.ts               # Lang, sibling routes, detection/persistence
     motion/
-      network.ts          # canvas de nodos (clase + funciones puras de proyección)
+      network.ts          # node canvas (class + pure projection functions)
       scramble.ts
       reveal.ts           # IntersectionObserver + [data-reveal] + [data-delay]
-      scroll.ts           # único listener rAF: aurora + about + método
-      boot.ts             # secuencia del hero
-      consoleLog.ts       # ciclo del log decorativo + métricas
-      math.ts             # funciones puras compartidas (testeadas sin DOM)
+      scroll.ts           # single rAF listener: aurora + about + method
+      boot.ts             # hero sequence
+      consoleLog.ts       # decorative log cycle + metrics
+      math.ts             # shared pure functions (tested without DOM)
   layouts/Base.astro
   components/
     Nav.astro Hero.astro Console.astro About.astro Method.astro
@@ -74,13 +79,13 @@ src/
 public/fonts/ public/logos/ public/previews/ public/og.png public/favicon.svg
 tests/                    # bun test
 e2e/                      # Playwright
-docs/superpowers/specs/   # este doc + una spec por issue
+docs/superpowers/specs/   # this doc + one spec per issue
 ```
 
-## 4. Tokens y tema
+## 4. Tokens and theme
 
-Los tokens de `DESIGN_SPEC.md §2` viven en `@theme` de Tailwind como variables CSS
-con `light-dark(light, dark)`. El `:root` lleva `color-scheme`.
+The tokens from `DESIGN_SPEC.md §2` live in Tailwind's `@theme` as CSS variables with
+`light-dark(light, dark)`. `:root` carries `color-scheme`.
 
 ```css
 @theme {
@@ -92,21 +97,21 @@ con `light-dark(light, dark)`. El `:root` lleva `color-scheme`.
 }
 ```
 
-Regla: **ningún color literal en un componente**. Solo `text-ink`, `bg-bg`,
-`border-line`, etc. Un test de lint (grep en CI) falla si aparece un hex fuera de
+Rule: **no literal color in a component**. Only `text-ink`, `bg-bg`,
+`border-line`, etc. A lint test (grep in CI) fails if a hex shows up outside
 `app.css`.
 
-Tema: script inline en `<head>` de `Base.astro`, antes de cualquier CSS, que lee
-`localStorage.theme` o `prefers-color-scheme` y setea `color-scheme` en `<html>`.
-El toggle escribe `localStorage` y actualiza el atributo. Sin flash.
+Theme: inline script in the `<head>` of `Base.astro`, before any CSS, that reads
+`localStorage.theme` or `prefers-color-scheme` and sets `color-scheme` on `<html>`.
+The toggle writes `localStorage` and updates the attribute. No flash.
 
-Escala tipográfica: `clamp()` equivalente a los `cqw` del mock (`DESIGN_SPEC.md §2`),
-declarada como `--text-*` en `@theme`.
+Typographic scale: `clamp()` equivalent to the mock's `cqw` (`DESIGN_SPEC.md §2`),
+declared as `--text-*` in `@theme`.
 
-## 5. Contenido e i18n
+## 5. Content and i18n
 
-`handoff/content.json` sigue siendo la única fuente. `src/lib/content.ts` lo importa
-y exporta tipos derivados:
+`handoff/content.json` remains the single source. `src/lib/content.ts` imports it and
+exports derived types:
 
 ```ts
 import raw from '../../handoff/content.json'
@@ -116,29 +121,29 @@ export const content: Record<Lang, Content> = raw.i18n
 export const { links, stack, consoleLog } = raw
 ```
 
-Rutas: `/` (es) y `/en` (en). Cada página pasa `t = content[lang]` a los componentes.
-Toggle de idioma = `<a>` real a la ruta hermana + `localStorage.lang`; en el primer
-load, si `localStorage.lang` no coincide con la ruta, se redirige una sola vez.
-`<link rel="alternate" hreflang>` en ambas.
+Routes: `/` (es) and `/en` (en). Each page passes `t = content[lang]` to the components.
+Language toggle = a real `<a>` to the sibling route + `localStorage.lang`; on the first
+load, if `localStorage.lang` does not match the route, it redirects a single time.
+`<link rel="alternate" hreflang>` on both.
 
-Invariante testeada: las claves de `es` y `en` son idénticas, y `jobs`, `projects`,
-`steps`, `principles`, `stepVerbs` tienen el mismo largo en ambos idiomas.
+Tested invariant: the keys of `es` and `en` are identical, and `jobs`, `projects`,
+`steps`, `principles`, `stepVerbs` have the same length in both languages.
 
 ## 6. Motion
 
-Todo el motion vive detrás de `@media (prefers-reduced-motion: no-preference)` y de
-un guard en JS (`matchMedia('(prefers-reduced-motion: reduce)')`). Con `reduce`: el
-contenido está visible desde el primer frame y el canvas no se monta.
+All the motion lives behind `@media (prefers-reduced-motion: no-preference)` and a
+guard in JS (`matchMedia('(prefers-reduced-motion: reduce)')`). With `reduce`: the
+content is visible from the first frame and the canvas does not mount.
 
-Progressive enhancement: los estados iniciales `opacity:0` se aplican solo bajo
-`html.has-js` (clase que setea el script inline del head). Sin JS, el sitio se lee
-entero.
+Progressive enhancement: the initial `opacity:0` states apply only under
+`html.has-js` (a class set by the inline script in the head). Without JS, the site
+reads in full.
 
-Un solo listener de scroll rAF-throttled (`scroll.ts`) alimenta aurora, palabras de
-"Sobre mí" y el sticky de "Cómo trabajo".
+A single rAF-throttled scroll listener (`scroll.ts`) feeds the aurora, the "Sobre mí"
+words and the "Cómo trabajo" sticky.
 
-**Estrategia de testeo del motion:** toda la matemática sale a funciones puras en
-`motion/math.ts`, testeables con `bun test` sin DOM:
+**Motion testing strategy:** all the math moves out into pure functions in
+`motion/math.ts`, testable with `bun test` without a DOM:
 
 - `stepFromProgress(p) → { active, done }` (`MOTION_SPEC §7`)
 - `wordOpacity(i, n, p) → number` (`§6`)
@@ -147,89 +152,91 @@ Un solo listener de scroll rAF-throttled (`scroll.ts`) alimenta aurora, palabras
 - `projectNode(node, cam) → { x, y, sc, alpha }` (`§3`)
 - `bootDelay(n) → ms` (`§2`)
 
-Lo que toca el DOM (observers, canvas, listeners) se cubre con el smoke de Playwright.
+Whatever touches the DOM (observers, canvas, listeners) is covered by the Playwright
+smoke.
 
-## 7. Accesibilidad
+## 7. Accessibility
 
-- Focus visible en todo lo interactivo: anillo `2px` accent, offset 2px (no está en
-  el mock; se agrega).
-- Toggles con `aria-label` y `aria-pressed`. Íconos decorativos `aria-hidden`.
-- Canvas del hero `aria-hidden` + `pointer-events: none`.
-- Contraste `dim` sobre `bg` ≥ 4.5:1 en ambos temas, verificado en el issue de a11y.
-- Cian como color de texto solo en ≥ 15px o peso 500.
+- Visible focus on everything interactive: `2px` accent ring, 2px offset (not in the
+  mock; it gets added).
+- Toggles with `aria-label` and `aria-pressed`. Decorative icons `aria-hidden`.
+- Hero canvas `aria-hidden` + `pointer-events: none`.
+- `dim` on `bg` contrast ≥ 4.5:1 in both themes, verified in the a11y issue.
+- Cyan as a text color only at ≥ 15px or weight 500.
 
-## 8. Proyectos: previews
+## 8. Projects: previews
 
-Chequeo de headers hecho el 2026-09-05:
+Header check done on 2026-09-05:
 
-| Sitio | Resultado | Preview |
+| Site | Result | Preview |
 |---|---|---|
-| nera-agro.com | sin restricción | iframe |
-| agropro.ag | sin restricción | iframe |
-| kodaiverse.com | sin restricción | iframe |
-| masushuaia.com | sin restricción | iframe |
-| creativamedialab.com | `X-Frame-Options: DENY` + `frame-ancestors 'none'` | screenshot en `public/previews` |
-| telecentro.com.ar | no responde a `curl` (WAF) | screenshot en `public/previews` |
+| nera-agro.com | no restriction | iframe |
+| agropro.ag | no restriction | iframe |
+| kodaiverse.com | no restriction | iframe |
+| masushuaia.com | no restriction | iframe |
+| creativamedialab.com | `X-Frame-Options: DENY` + `frame-ancestors 'none'` | screenshot in `public/previews` |
+| telecentro.com.ar | does not respond to `curl` (WAF) | screenshot in `public/previews` |
 
 iframe: `loading="lazy"`, `sandbox`, `pointer-events:none`, `aria-hidden`,
-`transform: scale(.25)` dentro de un contenedor 16:11. Fallback declarativo por
-proyecto en un campo del componente, no por detección en runtime.
+`transform: scale(.25)` inside a 16:11 container. Declarative per-project fallback in a
+component field, not by runtime detection.
 
-## 9. Calidad y CI
+## 9. Quality and CI
 
-- `bun test` — content (paridad es/en) y `motion/math.ts`.
-- `bun run lint` — ESLint + Prettier + el grep anti-hex.
-- `bun run build` — Astro estático.
-- Playwright smoke: boot del hero visible, toggle de tema, toggle de idioma navega a
-  `/en`, un reveal dispara al scrollear, el sticky del método avanza de paso.
-- Lighthouse CI ≥ 90 en las cuatro métricas, mobile. Si Performance no llega,
-  degradar en orden: shimmer → aurora → nodos.
-- GitHub Actions corre lint + test + build en cada PR.
+- `bun test` — content (es/en parity) and `motion/math.ts`.
+- `bun run lint` — ESLint + Prettier + the anti-hex grep.
+- `bun run build` — static Astro.
+- Playwright smoke: hero boot visible, theme toggle, language toggle navigates to
+  `/en`, a reveal fires on scroll, the method sticky advances a step.
+- Lighthouse CI ≥ 90 on the four metrics, mobile. If Performance falls short,
+  degrade in this order: shimmer → aurora → nodes.
+- GitHub Actions runs lint + test + build on every PR.
 
-## 10. Flujo de trabajo (SDD + TDD)
+## 10. Workflow (SDD + TDD)
 
-Un issue de Linear = un bloque = una PR. Por issue:
+One Linear issue = one block = one PR. Per issue:
 
-1. Se escribe la spec en `docs/superpowers/specs/NN-<bloque>.md` con criterios de
-   aceptación verificables. La spec se commitea antes de codear.
-2. Rama `feat/NN-<bloque>`.
-3. Un subagente implementa con tests primero (los criterios de aceptación son los
-   tests). Elección de subagente por tipo de tarea:
-   - `feature-dev:code-architect` cuando la spec necesita diseño previo
-   - `general-purpose` para implementación
-   - `feature-dev:code-reviewer` antes del merge
-4. Review, merge a `main`, issue a Done.
+1. The spec is written in `docs/superpowers/specs/NN-<block>.md` with verifiable
+   acceptance criteria. The spec is committed before coding.
+2. Branch `feat/NN-<block>`.
+3. A subagent implements with tests first (the acceptance criteria are the tests).
+   Subagent choice by task type:
+   - `feature-dev:code-architect` when the spec needs design up front
+   - `general-purpose` for implementation
+   - `feature-dev:code-reviewer` before the merge
+4. Review, merge into `main`, issue to Done.
 
-Se paralelizan solo bloques que no tocan los mismos archivos (Experiencia +
-Proyectos sí; cualquier cosa contra Base o tokens, no).
+Only blocks that do not touch the same files get parallelized (Experience + Projects
+do; anything against Base or tokens, no).
 
 ## 11. Backlog
 
-| # | Bloque | Depende de |
+| # | Block | Depends on |
 |---|---|---|
 | 00 | Scaffold: Bun + Astro + TS strict + Tailwind v4 + ESLint/Prettier + CI | — |
-| 01 | Tokens, escala tipográfica, tema claro/oscuro sin flash, fuentes Manrope + IBM Plex Mono | 00 |
-| 02 | `content.ts` + i18n + rutas `/` y `/en` + toggle | 00 |
-| 03 | `Base.astro`: head, preload de fuentes, aurora, contenedor, separadores | 01, 02 |
-| 04 | Nav: glass, links, scramble de la marca, ✳, toggles | 03 |
-| 05 | Hero: markup, H1, CTAs, stats, secuencia de boot | 03 |
-| 06 | Consola decorativa: log cíclico, métricas, scanlines, sweep | 05 |
-| 07 | Canvas de red de nodos: elipsoide, conexiones, formación ✳, comandos, cursor, colapso | 06 |
-| 08 | Sobre mí: lead con palabras que se iluminan, párrafo, 3 principios | 03 |
-| 09 | Cómo trabajo: sticky de 5 pasos, semáforo, indicador de estado | 03 |
-| 10 | Experiencia: timeline, dots, chips, scramble de empresa, caja "también con" | 03 |
-| 11 | Proyectos: grid, previews (iframe/screenshot), shimmer, hover | 03 |
-| 12 | Stack: 3 marquesinas, pausa en hover, máscaras, leyenda | 03 |
-| 13 | Contacto: tarjeta invertida, borde cónico girando, grilla, email, pills | 03 |
-| 14 | Footer: firma, ✳, ASCIImoji rotativo | 03 |
-| 15 | Logos de empresas (placeholder → assets reales) — *a planificar, sin definir* | 10 |
-| 16 | A11y: focus rings, contraste, aria, auditoría de reduced-motion | 04–14 |
+| 01 | Tokens, typographic scale, light/dark theme without flash, Manrope + IBM Plex Mono fonts | 00 |
+| 02 | `content.ts` + i18n + `/` and `/en` routes + toggle | 00 |
+| 03 | `Base.astro`: head, font preload, aurora, container, separators | 01, 02 |
+| 04 | Nav: glass, links, brand scramble, ✳, toggles | 03 |
+| 05 | Hero: markup, H1, CTAs, stats, boot sequence | 03 |
+| 06 | Decorative console: cyclic log, metrics, scanlines, sweep | 05 |
+| 07 | Node network canvas: ellipsoid, connections, ✳ formation, commands, cursor, collapse | 06 |
+| 08 | Sobre mí: lead with words that light up, paragraph, 3 principles | 03 |
+| 09 | Cómo trabajo: 5-step sticky, traffic light, status indicator | 03 |
+| 10 | Experience: timeline, dots, chips, company scramble, "también con" box | 03 |
+| 11 | Projects: grid, previews (iframe/screenshot), shimmer, hover | 03 |
+| 12 | Stack: 3 marquees, pause on hover, masks, legend | 03 |
+| 13 | Contact: inverted card, spinning conic border, grid, email, pills | 03 |
+| 14 | Footer: signature, ✳, rotating ASCIImoji | 03 |
+| 15 | Company logos (placeholder → real assets) — *to be planned, undefined* | 10 |
+| 16 | A11y: focus rings, contrast, aria, reduced-motion audit | 04–14 |
 | 17 | Playwright smoke + Lighthouse CI | 16 |
-| 18 | Deploy en Cloudflare Pages + dominio + Email Routing | 17 |
+| 18 | Deploy to Cloudflare Pages + domain + Email Routing | 17 |
 
-## 12. Pendientes del usuario (no bloquean)
+## 12. Pending from the user (not blocking)
 
-- Fecha de inicio en Nera (hoy "abr. 2023 — hoy").
-- Rol y stack definitivos de Creativa Media Lab y Kodai (los del mock son supuestos).
-- Logos de empresas (issue 15) y screenshots de los dos previews que no aceptan iframe.
-- Renovar `marcosarrieta.ar` y redirigir 301 al `.dev` si tuvo tráfico.
+- Start date at Nera (today "abr. 2023 — hoy").
+- Definitive role and stack for Creativa Media Lab and Kodai (the mock's are guesses).
+- Company logos (issue 15) and screenshots of the two previews that do not accept
+  iframe.
+- Renew `marcosarrieta.ar` and 301-redirect it to the `.dev` one if it had traffic.
