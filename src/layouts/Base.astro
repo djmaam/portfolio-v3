@@ -1,5 +1,6 @@
 ---
 import '../styles/app.css'
+import Footer from '../components/Footer.astro'
 import { content, links, site } from '../lib/content'
 import type { Lang } from '../lib/content'
 import { siblingPath } from '../lib/i18n'
@@ -87,7 +88,12 @@ const title = `${site.name} · ${t.eyebrow}`
     <div class="relative z-[1]">
       <slot name="nav" />
       <main><slot /></main>
-      <slot name="footer" />
+      {
+        /* Rendered here rather than passed in from the pages: Base already knows `lang`,
+          which is all the footer needs, and this keeps the pages out of the diff. Nav
+          keeps its slot; unifying the two is a later cleanup. */
+      }
+      <Footer lang={lang} />
     </div>
 
     <script>

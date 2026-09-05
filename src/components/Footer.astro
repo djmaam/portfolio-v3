@@ -1,0 +1,102 @@
+---
+import { MOJI } from '../lib/asciimoji'
+import { content, links, site } from '../lib/content'
+import type { Lang } from '../lib/content'
+
+interface Props {
+  lang: Lang
+}
+
+const { lang } = Astro.props
+const t = content[lang]
+
+// Evaluated at build time, which is right for a year and wrong for the console's clock:
+// a year is stable for months and the site rebuilds on every deploy, while `hh:mm:ss`
+// would be visibly stale a minute after the build.
+const year = new Date().getFullYear()
+---
+
+<footer class="footer container-page section-divider font-mono text-label-sm">
+  <span>
+    {/* One expression: Astro drops the whitespace between two of them on separate lines. */}
+    {`© ${year} ${site.name} · `}
+    <a class="handle" href={links.github} target="_blank" rel="noopener">{site.handle}</a>
+  </span>
+
+  <span class="sig">
+    <span class="glyph" aria-hidden="true">✳</span>
+    {t.footerSig}
+    {
+      /* Decoration: it reads as garbage to a screen reader. The first face ships in the
+        markup, so the footer is complete before — and without — JavaScript. The other
+        fourteen ship invisible underneath it: they are what sizes the box, so it is
+        always as wide as the widest face and the rotation never nudges the line. */
+    }
+    <span class="moji" aria-hidden="true">
+      {MOJI.slice(1).map((face) => <span class="ghost">{face}</span>)}
+      <span data-moji>{MOJI[0]}</span>
+    </span>
+  </span>
+</footer>
+
+<style>
+  .footer {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 12px 28px;
+    align-items: center;
+    padding-block: 28px 40px;
+    color: var(--color-dim);
+  }
+
+  .handle:hover {
+    color: var(--color-accent);
+  }
+
+  .sig {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .glyph {
+    color: var(--color-accent);
+    text-shadow: 0 0 10px var(--color-accent);
+  }
+
+  /* `min-width: 9ch` is the floor of `MOTION_SPEC` §12, but it is not enough on its own:
+     the faces mix half- and full-width glyphs and mostly fall back out of IBM Plex Mono,
+     so measured widths run from 39px to 109px against a 9ch ≈ 59px. All fifteen are
+     therefore stacked in one grid cell — `visibility: hidden` still sizes the track — and
+     the box ends up as wide as the widest face in whatever font the visitor resolves. */
+  .moji {
+    display: inline-grid;
+    justify-items: end;
+    min-width: 9ch;
+    color: var(--color-ink);
+  }
+
+  .moji > * {
+    grid-area: 1 / 1;
+    white-space: nowrap;
+  }
+
+  .ghost {
+    visibility: hidden;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .glyph {
+      display: inline-block;
+      animation: think 2.6s cubic-bezier(0.6, 0.05, 0.3, 1) infinite;
+    }
+  }
+</style>
+
+<script>
+  import { rotateMoji } from '../lib/asciimoji'
+
+  const moji = document.querySelector<HTMLElement>('[data-moji]')
+  if (moji) rotateMoji((face) => (moji.textContent = face))
+</script>
