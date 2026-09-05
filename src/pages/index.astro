@@ -1,21 +1,13 @@
 ---
+import Hero from '../components/Hero.astro'
 import Nav from '../components/Nav.astro'
 import Base from '../layouts/Base.astro'
-import { content } from '../lib/content'
 import type { Lang } from '../lib/content'
 
 const lang: Lang = 'es'
-const t = content[lang]
 ---
 
 <Base lang={lang}>
   <Nav slot="nav" lang={lang} />
-  {/* Wiring scaffold: issues 05-14 replace this markup with real components. */}
-  <div class="container-page section-y">
-    <h1 class="text-h1 font-sans mt-6">{t.h1a}<br /><span class="text-accent">{t.h1b}</span></h1>
-    <p class="text-hero-sub text-dim mt-6">{t.heroSub}</p>
-    <ul class="text-body mt-10">
-      {t.jobs.map((job) => <li>{job.company}</li>)}
-    </ul>
-  </div>
+  <Hero lang={lang} />
 </Base>

@@ -61,3 +61,21 @@ export function scrambleFrame(target: string, p: number, rand: () => number = Ma
 export function anchorOffset(top: number, navH: number): number {
   return Math.max(0, top - navH)
 }
+
+/**
+ * When the element with `data-boot="n"` is revealed (`MOTION_SPEC` §2): 500ms for the
+ * page to settle, then 170ms per step. The console skips to `n = 10`, i.e. 2200ms, which
+ * leaves room for more elements in the text column without moving it.
+ */
+export function bootDelay(n: number): number {
+  return 500 + n * 170
+}
+
+/**
+ * Characters of the typed eyebrow visible after `elapsed` ms at `perChar` ms each
+ * (`MOTION_SPEC` §2). A negative `elapsed` — the wait before the first character — yields
+ * 0, so the driver expresses its delay as an offset instead of a timer of its own.
+ */
+export function typedLength(elapsed: number, perChar: number, total: number): number {
+  return Math.min(total, Math.max(0, Math.floor(elapsed / perChar)))
+}

@@ -91,8 +91,12 @@ const title = `${site.name} · ${t.eyebrow}`
     </div>
 
     <script>
+      import { bindAnchors } from '../lib/motion/anchors'
       import { auroraStyle } from '../lib/motion/math'
       import { onScroll } from '../lib/motion/scroll'
+
+      // Delegated on document, so it also covers the links every later issue adds.
+      bindAnchors()
 
       const aurora = document.querySelector<HTMLElement>('.aurora')
       if (aurora) {

@@ -14,7 +14,8 @@ const t = content[lang]
 const siblingHref = siblingPath(Astro.url.pathname, otherLang)
 
 // The sections these point at arrive with issues 08-13. Until then the links are inert
-// by design: the click handler no-ops when the target is missing.
+// by design: the delegated handler of `motion/anchors.ts` no-ops when the target is
+// missing. The links only carry `data-nav-link`; the behavior is not owned here.
 const sections = [
   { href: '#about', label: t.navAbout },
   { href: '#work', label: t.navWork },
@@ -175,30 +176,8 @@ const sections = [
 </style>
 
 <script>
-  import { anchorOffset } from '../lib/motion/math'
-  import { prefersReducedMotion } from '../lib/motion/reduced'
   import { scramble } from '../lib/motion/scramble'
   import { toggleTheme } from '../lib/theme'
-
-  // One number for the sticky height and the scroll offset: app.css owns it.
-  const navH = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--nav-h'))
-
-  for (const link of document.querySelectorAll<HTMLAnchorElement>('[data-nav-link]')) {
-    link.addEventListener('click', (event) => {
-      const hash = link.getAttribute('href') ?? ''
-      const target = hash === '#top' ? null : document.getElementById(hash.slice(1))
-      // The sections land in issues 08-13. Until then the link falls back to the browser,
-      // which does nothing with a fragment it cannot resolve.
-      if (hash !== '#top' && !target) return
-
-      event.preventDefault()
-      const top = target ? target.getBoundingClientRect().top + window.scrollY : 0
-      window.scrollTo({
-        top: anchorOffset(top, navH),
-        behavior: prefersReducedMotion() ? 'auto' : 'smooth',
-      })
-    })
-  }
 
   const brand = document.querySelector<HTMLElement>('[data-brand]')
   const brandText = document.querySelector<HTMLElement>('[data-brand-text]')

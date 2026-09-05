@@ -115,7 +115,7 @@ toggle anchor.
 - [ ] `bun test`: `scrambleFrame(s, p, rand)` preserves length and space positions for p ∈ {0, .25, .5, .75, 1}.
 - [ ] `bun test`: `scrambleFrame(s, 1, rand) === s`, and at p=0 every non-space character comes from the glyph pool.
 - [ ] `bun test`: the resolved prefix grows monotonically with p, and `n = floor(p² · len)` exactly.
-- [ ] `bun test`: `anchorOffset(top, navH)` — the scroll target maths — returns `top - navH`, and 0 for `#top`.
+- [ ] `bun test`: `anchorOffset(top, navH)` — the scroll target math — returns `top - navH`, and 0 for `#top`.
 - [ ] `bun test`: with `reduce`, `scramble` leaves `textContent` untouched.
 - [ ] Nav copy comes from `content.json`; the theme-toggle label from `ui.ts`. No literal strings in the component.
 - [ ] The theme toggle's `aria-pressed` matches `documentElement.dataset.theme` on load, in both themes, and flips on click.

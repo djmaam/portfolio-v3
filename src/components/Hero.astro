@@ -1,0 +1,198 @@
+---
+import { content } from '../lib/content'
+import type { Lang } from '../lib/content'
+import { stats } from '../lib/ui'
+
+interface Props {
+  lang: Lang
+}
+
+const { lang } = Astro.props
+const t = content[lang]
+
+// The numbers are facts in `ui.ts`, the labels are copy in `content.json`.
+const figures = [
+  { value: stats.years, label: t.statYears },
+  { value: stats.companies, label: t.statCompanies },
+  { value: stats.platforms, label: t.statPlatforms },
+]
+---
+
+<section class="hero container-page">
+  <div class="column">
+    <p class="eyebrow font-mono text-label" data-boot="0">
+      <span class="rule" aria-hidden="true"></span>
+      <span>
+        {/* Server-rendered whole: the typing driver empties it, so with no JS it reads. */}
+        <span data-typed>{t.eyebrow}</span><span class="cursor" aria-hidden="true"></span>
+      </span>
+    </p>
+
+    <h1 class="text-h1" data-boot="1">
+      {t.h1a}<br /><span class="accent">{t.h1b}</span>
+    </h1>
+
+    <p class="sub text-hero-sub text-dim" data-boot="2">{t.heroSub}</p>
+
+    <div class="ctas" data-boot="3">
+      <a class="cta primary" href="#work" data-nav-link>{t.ctaWork}</a>
+      <a class="cta secondary" href="#contact" data-nav-link>{t.ctaContact}</a>
+    </div>
+
+    <p class="stats font-mono" data-boot="4">
+      {
+        figures.map(({ value, label }) => (
+          <span>
+            <b>{value}</b> {label}
+          </span>
+        ))
+      }
+    </p>
+  </div>
+
+  {/* The console (issue 06) fills this column; it is here so the grid is already two. */}
+  <div></div>
+</section>
+
+<style>
+  /* The only two-column grid with a 380px floor, and the only block with this vertical
+     padding: both appear once in the site, so neither becomes a utility. */
+  .hero {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 380px), 1fr));
+    gap: clamp(32px, 5vw, 72px);
+    align-items: center;
+    padding-block: clamp(72px, 10vw, 140px) clamp(64px, 8vw, 110px);
+  }
+
+  .column {
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+    min-width: 0;
+  }
+
+  .eyebrow {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    text-transform: uppercase;
+    color: var(--color-dim);
+  }
+
+  .rule {
+    flex: none;
+    width: 28px;
+    height: 1px;
+    background: var(--color-accent);
+  }
+
+  /* Its own element, so it blinks forever regardless of how far the typing got. */
+  .cursor {
+    display: inline-block;
+    width: 7px;
+    height: 12px;
+    margin-left: 6px;
+    vertical-align: -1px;
+    background: var(--color-accent);
+  }
+
+  h1 {
+    text-wrap: balance;
+  }
+
+  /* A one-off alpha pair, so it is mixed here instead of becoming a token (app.css §2). */
+  .accent {
+    color: var(--color-accent);
+    text-shadow: 0 0 40px
+      light-dark(
+        color-mix(in srgb, var(--color-accent) 30%, transparent),
+        color-mix(in srgb, var(--color-accent) 45%, transparent)
+      );
+  }
+
+  .sub {
+    max-width: 480px;
+  }
+
+  .ctas {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 6px;
+  }
+
+  .cta {
+    padding: 14px 22px;
+    border-radius: 999px;
+    font-size: 15px;
+    font-weight: 500;
+    transition:
+      transform 0.2s,
+      border-color 0.2s;
+  }
+
+  .primary {
+    background: var(--color-ink);
+    color: var(--color-bg);
+  }
+
+  .primary:hover {
+    transform: translateY(-1px);
+  }
+
+  .secondary {
+    border: 1px solid color-mix(in srgb, var(--color-ink) 14%, transparent);
+    color: var(--color-ink);
+  }
+
+  .secondary:hover {
+    border-color: var(--color-accent);
+  }
+
+  .stats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px 24px;
+    margin-top: 10px;
+    font-size: var(--text-label);
+    white-space: nowrap;
+    color: var(--color-dim);
+  }
+
+  .stats b {
+    color: var(--color-ink);
+    font-weight: 500;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .cursor {
+      animation: blink 1s steps(1) infinite;
+    }
+  }
+</style>
+
+<script>
+  import { boot } from '../lib/motion/boot'
+  import { typedLength } from '../lib/motion/math'
+  import { prefersReducedMotion } from '../lib/motion/reduced'
+
+  boot()
+
+  const eyebrow = document.querySelector<HTMLElement>('[data-typed]')
+  if (eyebrow && !prefersReducedMotion()) {
+    const text = eyebrow.textContent ?? ''
+    eyebrow.textContent = ''
+
+    // rAF, not an interval: the 700ms wait is an offset on the elapsed time, so the
+    // typing stays in step with the boot transitions instead of drifting past them.
+    let start: number | undefined
+    const step = (now: number) => {
+      start ??= now
+      const n = typedLength(now - start - 700, 28, text.length)
+      eyebrow.textContent = text.slice(0, n)
+      if (n < text.length) requestAnimationFrame(step)
+    }
+    requestAnimationFrame(step)
+  }
+</script>

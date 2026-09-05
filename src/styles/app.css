@@ -247,6 +247,25 @@
   }
 }
 
+/* ── Boot ─────────────────────────────────────────────────────────────────────
+   Resting state of the boot sequence (`MOTION_SPEC §2`): hidden only when JS is
+   there to reveal it and motion is welcome, so the page reads without either.
+   `motion/boot.ts` clears the three properties at `bootDelay(n)`. */
+
+@layer components {
+  @media (prefers-reduced-motion: no-preference) {
+    .has-js [data-boot] {
+      opacity: 0;
+      transform: translateY(14px);
+      filter: blur(8px);
+      transition:
+        opacity 0.9s cubic-bezier(0.2, 0.8, 0.2, 1),
+        transform 0.9s cubic-bezier(0.2, 0.8, 0.2, 1),
+        filter 0.9s cubic-bezier(0.2, 0.8, 0.2, 1);
+    }
+  }
+}
+
 /* ── Keyframes ────────────────────────────────────────────────────────────────
    The 11 from the mock (`handoff/reference/Portfolio.dc.html`). Unused so far:
    each motion issue consumes its own. */

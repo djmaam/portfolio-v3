@@ -1,6 +1,13 @@
 import { expect, test } from 'bun:test'
 
-import { anchorOffset, auroraStyle, docProgress, scrambleFrame } from '../src/lib/motion/math'
+import {
+  anchorOffset,
+  auroraStyle,
+  bootDelay,
+  docProgress,
+  scrambleFrame,
+  typedLength,
+} from '../src/lib/motion/math'
 
 test('docProgress is 0 at the top of the document and 1 at the bottom', () => {
   expect(docProgress(0, 5000, 800)).toBe(0)
@@ -101,4 +108,25 @@ test('anchorOffset lands the target below the nav, and never above the document'
   // `#top` reports a document top of 0, which is where it must land — never at -64.
   expect(anchorOffset(0, 64)).toBe(0)
   expect(anchorOffset(30, 64)).toBe(0)
+})
+
+test('bootDelay staggers the hero 170ms per step after a 500ms wait', () => {
+  expect([0, 1, 2, 3, 4].map((n) => bootDelay(n))).toEqual([500, 670, 840, 1010, 1180])
+  // The console's slot (issue 06) jumps to n=10, which is the 2200ms of MOTION_SPEC §2.
+  expect(bootDelay(10)).toBe(2200)
+})
+
+test('typedLength shows nothing before the first character and clamps at the total', () => {
+  expect(typedLength(-700, 28, 46)).toBe(0)
+  expect(typedLength(0, 28, 46)).toBe(0)
+  expect(typedLength(27, 28, 46)).toBe(0)
+  expect(typedLength(46 * 28, 28, 46)).toBe(46)
+  expect(typedLength(99999, 28, 46)).toBe(46)
+})
+
+test('typedLength advances exactly one character per perChar ms', () => {
+  for (let n = 0; n <= 46; n++) {
+    expect(typedLength(n * 28, 28, 46)).toBe(n)
+    expect(typedLength(n * 28 + 27, 28, 46)).toBe(n)
+  }
 })
