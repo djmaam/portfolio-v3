@@ -9,3 +9,11 @@ export const ui: Record<Lang, { themeToggle: string }> = {
   es: { themeToggle: 'Cambiar el tema' },
   en: { themeToggle: 'Toggle the theme' },
 }
+
+/**
+ * The hero stats. Language-independent facts, absent from the read-only `content.json`,
+ * which pairs each number with its label. `companies` is asserted against
+ * `content.jobs.length` in the tests; `years` and `platforms` are editorial and have no
+ * derivable source.
+ */
+export const stats = { years: '8+', companies: '5', platforms: '6' } as const
