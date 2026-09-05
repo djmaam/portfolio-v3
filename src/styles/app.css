@@ -32,7 +32,7 @@
    `static` forces Tailwind to emit every variable even when no utility uses it
    yet: these are the design API the following issues build on.
 
-   Colours use `light-dark()`, so Tailwind's opacity modifiers (`bg-accent/45`)
+   Colors use `light-dark()`, so Tailwind's opacity modifiers (`bg-accent/45`)
    do NOT work on them — Tailwind cannot recompute the alpha. Alpha variants the
    design repeats get a token of their own; one-off ones are resolved in whichever
    utility needs them with `color-mix(in srgb, var(--color-accent) 45%, transparent)`. */
@@ -53,7 +53,7 @@
   --color-contact-card: light-dark(#0b0d12, #f3f5f9);
   --color-contact-ink: light-dark(#f3f5f9, #0b0d12);
 
-  /* Traffic-light colours of the "How I work" steps: same in both themes. */
+  /* Traffic-light colors of the "How I work" steps: same in both themes. */
   --color-step-1: #ff5c5c;
   --color-step-2: #ff9f43;
   --color-step-3: #ffd64d;

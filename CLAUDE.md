@@ -5,11 +5,9 @@ TypeScript strict + Tailwind v4. No UI framework.
 
 ## Language
 
-**All code is written in English** — comments, identifiers, commit messages, script
-output, test names. This includes code written by subagents.
-
-**All documentation is written in English too** — `README.md`, `CLAUDE.md` and the
-specs under `docs/superpowers/specs/`.
+**Everything is written in American English** — code comments, identifiers, commit
+messages, script output, test names, `README.md`, `CLAUDE.md` and the specs under
+`docs/superpowers/specs/`. This applies to code written by subagents too.
 
 The only exception is `handoff/`, which stays in Spanish on purpose: it is the
 read-only design source of truth, and `handoff/content.json` holds the site copy in
@@ -24,11 +22,11 @@ Spanish and English (that is product content, not code).
 
 ## Conventions
 
-- **No literal colours outside `src/styles/app.css`.** Components consume `@theme`
+- **No literal colors outside `src/styles/app.css`.** Components consume `@theme`
   tokens only; `bun run lint` fails otherwise (`scripts/check-tokens.ts`).
 - **No hardcoded copy.** Every string comes from `handoff/content.json` through
   `src/lib/content.ts`.
-- **Motion maths lives in pure functions** (`src/lib/motion/math.ts`) so `bun test`
+- **Motion math lives in pure functions** (`src/lib/motion/math.ts`) so `bun test`
   covers it without a DOM. Only DOM plumbing is left untested by unit tests.
 - **One scroll listener** for the whole site, rAF-throttled, in
   `src/lib/motion/scroll.ts`.

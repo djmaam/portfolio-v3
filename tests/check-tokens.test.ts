@@ -28,7 +28,7 @@ test('passes on a file that only uses tokens', async () => {
   expect(exitCode).toBe(0)
 })
 
-test('fails on a hex literal and reports file, line and colour', async () => {
+test('fails on a hex literal and reports file, line and color', async () => {
   const { exitCode, output } = await check({
     'components/Card.astro': 'ok\n<div style="color: #3EE7FF">hola</div>\n',
   })
@@ -46,7 +46,7 @@ test.each(['#abc', '#0B0D12', '#3EE7FF80', 'rgb(1,2,3)', 'rgba(1,2,3,.5)', 'hsl(
   },
 )
 
-test('app.css is the one file allowed to hold literal colours', async () => {
+test('app.css is the one file allowed to hold literal colors', async () => {
   const { exitCode } = await check({
     'styles/app.css': '@theme { --color-ink: light-dark(#0B0D12, #F3F5F9); }\n',
   })

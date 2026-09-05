@@ -31,7 +31,7 @@ The 3D game mode (`/world`) is not in scope and does not reserve a route yet.
 
 **Correction to the handoff:** `handoff/reference/Portfolio.dc.html` is not vanilla JS —
 it is a component of the `dc` runtime (a class with `setState` and refs, inline styles).
-Portable: the *maths* (canvas projection, scramble, scroll progress, step computation,
+Portable: the *math* (canvas projection, scramble, scroll progress, step computation,
 per-word opacity). Not portable: the state/refs plumbing and the entire CSS, which gets
 rewritten in Tailwind from `DESIGN_SPEC.md`.
 
@@ -97,7 +97,7 @@ The tokens from `DESIGN_SPEC.md §2` live in Tailwind's `@theme` as CSS variable
 }
 ```
 
-Rule: **no literal colour in a component**. Only `text-ink`, `bg-bg`,
+Rule: **no literal color in a component**. Only `text-ink`, `bg-bg`,
 `border-line`, etc. A lint test (grep in CI) fails if a hex shows up outside
 `app.css`.
 
@@ -142,7 +142,7 @@ reads in full.
 A single rAF-throttled scroll listener (`scroll.ts`) feeds the aurora, the "Sobre mí"
 words and the "Cómo trabajo" sticky.
 
-**Motion testing strategy:** all the maths moves out into pure functions in
+**Motion testing strategy:** all the math moves out into pure functions in
 `motion/math.ts`, testable with `bun test` without a DOM:
 
 - `stepFromProgress(p) → { active, done }` (`MOTION_SPEC §7`)
@@ -162,7 +162,7 @@ smoke.
 - Toggles with `aria-label` and `aria-pressed`. Decorative icons `aria-hidden`.
 - Hero canvas `aria-hidden` + `pointer-events: none`.
 - `dim` on `bg` contrast ≥ 4.5:1 in both themes, verified in the a11y issue.
-- Cyan as a text colour only at ≥ 15px or weight 500.
+- Cyan as a text color only at ≥ 15px or weight 500.
 
 ## 8. Projects: previews
 
@@ -206,7 +206,7 @@ One Linear issue = one block = one PR. Per issue:
    - `feature-dev:code-reviewer` before the merge
 4. Review, merge into `main`, issue to Done.
 
-Only blocks that do not touch the same files get parallelised (Experience + Projects
+Only blocks that do not touch the same files get parallelized (Experience + Projects
 do; anything against Base or tokens, no).
 
 ## 11. Backlog

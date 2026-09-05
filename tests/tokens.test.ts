@@ -2,7 +2,7 @@ import { expect, test } from 'bun:test'
 
 const css = await Bun.file(new URL('../src/styles/app.css', import.meta.url)).text()
 
-/** Every `--name: value;` declaration in app.css, whitespace-normalised. */
+/** Every `--name: value;` declaration in app.css, whitespace-normalized. */
 const declarations = new Map(
   [...css.matchAll(/(--[\w-]+)\s*:\s*([^;}]+)[;}]/g)].map(([, name, value]) => [
     name!,
@@ -33,7 +33,7 @@ const STEP_COLORS: Record<string, string> = {
   '--color-step-5': '#3DDC84',
 }
 
-/** `rgba(0,0,0,.08)` and `rgba(0, 0, 0, 0.08)` are the same colour. */
+/** `rgba(0,0,0,.08)` and `rgba(0, 0, 0, 0.08)` are the same color. */
 const canonical = (value: string) =>
   value
     .toLowerCase()
@@ -68,7 +68,7 @@ test.each(Object.entries(STEP_COLORS))('%s is a theme-independent literal', (tok
 })
 
 test('the alpha variants used more than once are their own tokens', () => {
-  // Tailwind v4 cannot recompute alpha on a light-dark() colour, so `bg-accent/8`
+  // Tailwind v4 cannot recompute alpha on a light-dark() color, so `bg-accent/8`
   // is impossible: every repeated alpha variant needs a token of its own.
   for (const token of ['--color-accent-soft', '--color-line', '--color-surface']) {
     expect(declarations.has(token)).toBe(true)

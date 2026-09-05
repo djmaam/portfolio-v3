@@ -6,7 +6,7 @@ Design: `docs/superpowers/specs/2026-09-05-portfolio-v3-design.md` §4 · `hando
 ## Goal
 
 The complete design system, consumable by any later component. After this block, no
-issue defines a colour, a font size or a keyframe again.
+issue defines a color, a font size or a keyframe again.
 
 ## Context
 
@@ -16,7 +16,7 @@ placeholder that can be used as a test bench and issue 02 replaces it.
 
 ## Scope
 
-### 1. Colour tokens
+### 1. Color tokens
 
 In `@theme`, all of the ones from `DESIGN_SPEC.md` §2 with `light-dark(light, dark)`:
 
@@ -41,7 +41,7 @@ In `@theme`, all of the ones from `DESIGN_SPEC.md` §2 with `light-dark(light, d
 `:root` carries `color-scheme` — without it `light-dark()` does not resolve.
 
 **Important Tailwind v4 constraint:** the opacity modifiers
-(`bg-accent/45`) **do not work** on a colour declared with `light-dark()`, because
+(`bg-accent/45`) **do not work** on a color declared with `light-dark()`, because
 Tailwind cannot recompute the alpha. That is why every alpha variant the design uses
 more than once goes in as its own token. The ones that show up a single time (hover
 borders at `.45`, `.06`, `.07`) are resolved with `color-mix(in srgb, var(--color-accent) 45%, transparent)`
@@ -124,9 +124,9 @@ button that uses them belongs to issue 04.
 
 ### 6. Anti-hex lint
 
-`scripts/check-tokens.ts`, run by `bun run lint`: fails if a literal colour
+`scripts/check-tokens.ts`, run by `bun run lint`: fails if a literal color
 (`#rgb`, `#rrggbb`, `#rrggbbaa`, `rgb(`, `rgba(`, `hsl(`) shows up in `src/`,
-**except** in `src/styles/app.css`. It reports file, line and the colour found.
+**except** in `src/styles/app.css`. It reports file, line and the color found.
 
 Ignores: `handoff/`, `public/`, `dist/`, `node_modules/`, `tests/`.
 
