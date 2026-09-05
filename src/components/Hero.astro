@@ -19,45 +19,58 @@ const figures = [
 ]
 ---
 
-<section class="hero container-page">
-  <div class="column">
-    <p class="eyebrow font-mono text-label" data-boot="0">
-      <span class="rule" aria-hidden="true"></span>
-      <span>
-        {/* Server-rendered whole: the typing driver empties it, so with no JS it reads. */}
-        <span data-typed>{t.eyebrow}</span><span class="cursor" aria-hidden="true"></span>
-      </span>
-    </p>
+<section class="hero">
+  {/* The canvas of the node network is appended here, as a direct child of the shell. */}
+  <div class="columns container-page">
+    <div class="column">
+      <p class="eyebrow font-mono text-label" data-boot="0">
+        <span class="rule" aria-hidden="true"></span>
+        <span>
+          {/* Server-rendered whole: the typing driver empties it, so with no JS it reads. */}
+          <span data-typed>{t.eyebrow}</span><span class="cursor" aria-hidden="true"></span>
+        </span>
+      </p>
 
-    <h1 class="text-h1" data-boot="1">
-      {t.h1a}<br /><span class="accent">{t.h1b}</span>
-    </h1>
+      <h1 class="text-h1" data-boot="1">
+        {t.h1a}<br /><span class="accent">{t.h1b}</span>
+      </h1>
 
-    <p class="sub text-hero-sub text-dim" data-boot="2">{t.heroSub}</p>
+      <p class="sub text-hero-sub text-dim" data-boot="2">{t.heroSub}</p>
 
-    <div class="ctas" data-boot="3">
-      <a class="cta primary" href="#work" data-nav-link>{t.ctaWork}</a>
-      <a class="cta secondary" href="#contact" data-nav-link>{t.ctaContact}</a>
+      <div class="ctas" data-boot="3">
+        <a class="cta primary" href="#work" data-nav-link>{t.ctaWork}</a>
+        <a class="cta secondary" href="#contact" data-nav-link>{t.ctaContact}</a>
+      </div>
+
+      <p class="stats font-mono" data-boot="4">
+        {
+          figures.map(({ value, label }) => (
+            <span>
+              <b>{value}</b> {label}
+            </span>
+          ))
+        }
+      </p>
     </div>
 
-    <p class="stats font-mono" data-boot="4">
-      {
-        figures.map(({ value, label }) => (
-          <span>
-            <b>{value}</b> {label}
-          </span>
-        ))
-      }
-    </p>
+    <Console />
   </div>
-
-  <Console />
 </section>
 
 <style>
+  /* Full width and its own stacking context: the canvas paints at z-index 0 above the
+     fixed aurora, the columns at z-index 1 above the canvas, and no z-index in the hero
+     can reach past the section. */
+  .hero {
+    position: relative;
+    isolation: isolate;
+  }
+
   /* The only two-column grid with a 380px floor, and the only block with this vertical
      padding: both appear once in the site, so neither becomes a utility. */
-  .hero {
+  .columns {
+    position: relative;
+    z-index: 1;
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(min(100%, 380px), 1fr));
     gap: clamp(32px, 5vw, 72px);
@@ -175,9 +188,16 @@ const figures = [
 <script>
   import { boot } from '../lib/motion/boot'
   import { typedLength } from '../lib/motion/math'
+  import { mountNetwork } from '../lib/motion/network'
   import { prefersReducedMotion } from '../lib/motion/reduced'
 
   boot()
+
+  // The canvas is a direct child of the full-bleed shell and is measured against the
+  // console card. `mountNetwork` creates nothing with `prefers-reduced-motion: reduce`.
+  const hero = document.querySelector<HTMLElement>('.hero')
+  const card = document.querySelector<HTMLElement>('[data-console]')
+  if (hero && card) mountNetwork(hero, card)
 
   const eyebrow = document.querySelector<HTMLElement>('[data-typed]')
   if (eyebrow && !prefersReducedMotion()) {
