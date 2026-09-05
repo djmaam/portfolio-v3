@@ -20,12 +20,12 @@ El modo juego 3D (`/world`) no está en alcance ni reserva ruta todavía.
 
 | Pieza | Decisión |
 |---|---|
-| Framework | Astro 5, salida estática (`output: 'static'`) |
+| Framework | Astro 7, salida estática (`output: 'static'`) |
 | Runtime / PM / tests | Bun (`bun test`) |
 | Lenguaje | TypeScript strict |
 | Estilos | Tailwind v4 vía `@tailwindcss/vite`, tokens en `@theme` |
 | Motion | Vanilla TS (IntersectionObserver + rAF). Sin Framer, sin GSAP |
-| Fuentes | **Manrope** (sans) + **IBM Plex Mono** (mono), self-hosted woff2 variable en `public/fonts`, `font-display: swap`, `preload` de ambas |
+| Fuentes | **Manrope** variable (sans, `wght 200..800`) + **IBM Plex Mono** estático 400/500 (mono) — IBM Plex Mono no tiene versión variable. Self-hosted woff2 en `public/fonts`, `font-display: swap` |
 | E2E | Playwright (smoke) |
 | Deploy | Cloudflare Pages, build estático |
 
@@ -36,7 +36,12 @@ cálculo de pasos, opacidad por palabra). No portable: el plumbing de estado/ref
 el CSS entero, que se reescribe en Tailwind desde `DESIGN_SPEC.md`.
 
 **Corrección al handoff:** la decisión de fuente era Geist vs Manrope; queda
-**Manrope**, con `-apple-system, "Helvetica Neue", sans-serif` de fallback.
+**Manrope**, con `-apple-system, "Helvetica Neue", sans-serif` de fallback. La mono es
+IBM Plex Mono en pesos estáticos 400 y 500: no existe una versión variable.
+
+**Corrección al handoff:** `ARCHITECTURE.md` dice Astro 5, que era la versión vigente
+cuando se escribió. El proyecto quedó en **Astro 7**, la última. Nada de lo planificado
+depende de APIs de la 5.
 
 **Sin framework de UI en v1.** No entra React ni ningún otro. Las secciones son HTML
 estático alimentado por `content.json` (cero estado de UI) y el motion es imperativo
