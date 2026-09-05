@@ -10,5 +10,12 @@ export type Content = (typeof raw)['i18n']['es']
 
 export const LANGS = ['es', 'en'] as const satisfies readonly Lang[]
 
+/**
+ * Identity, not copy: the same in both languages and absent from content.json, which
+ * only holds translatable strings. Nav, footer, and <title> all read it from here so
+ * the name still lives in exactly one place.
+ */
+export const site = { name: 'Marcos Arrieta', handle: '@djmaam' } as const
+
 export const content: Record<Lang, Content> = raw.i18n
 export const { links, stack, consoleLog } = raw

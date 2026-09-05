@@ -1,6 +1,6 @@
 ---
 import '../../styles/app.css'
-import { content, links } from '../../lib/content'
+import { content, links, site } from '../../lib/content'
 import type { Lang } from '../../lib/content'
 import { siblingPath } from '../../lib/i18n'
 
@@ -16,7 +16,7 @@ const siblingHref = siblingPath(Astro.url.pathname, otherLang)
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <title>{t.eyebrow}</title>
+    <title>{`${site.name} · ${t.eyebrow}`}</title>
 
     <link rel="alternate" hreflang="es" href={`${links.domain}/`} />
     <link rel="alternate" hreflang="en" href={`${links.domain}/en`} />
