@@ -1,0 +1,269 @@
+---
+import { consoleLog } from '../lib/content'
+import { MAX_LINES } from '../lib/motion/consoleLog'
+import { logWindow, metricsAt } from '../lib/motion/math'
+import { consoleChrome } from '../lib/ui'
+
+// The first six of the cycle, so the markup and the first client frame agree.
+const lines = logWindow(MAX_LINES, consoleLog.length, MAX_LINES).map((index) => consoleLog[index])
+
+// Nothing has ticked yet — and with `prefers-reduced-motion: reduce` nothing ever will,
+// so these base values are also the final ones.
+const metrics = metricsAt(0)
+---
+
+<div class="card" data-boot="10" data-console>
+  {/* Crosses the card once as it arrives (`MOTION_SPEC` §2). */}
+  <div class="sweep" aria-hidden="true"></div>
+
+  <div class="header font-mono text-label-sm">
+    <span class="dots" aria-hidden="true"><i></i><i></i><i class="live-dot"></i></span>
+    <span class="session">{consoleChrome.session}</span>
+    <span class="live"><i aria-hidden="true"></i>{consoleChrome.live}</span>
+  </div>
+
+  {
+    /*
+    `aria-live="off"`, not `polite`: this log cycles forever with no user input, so a
+    live region would announce a line every 1.4 seconds and bury the rest of the page.
+    The decorative log carries nothing the visitor needs. v1.1 flips it to `polite`,
+    when the lines become answers to a question the visitor asked.
+  */
+  }
+  <div class="log font-mono" role="log" aria-live="off" data-log>
+    {
+      lines.map(([key, value]) => (
+        <div class="line">
+          {/* Empty on purpose: a build-time clock would freeze into the static HTML. */}
+          <span class="time" />
+          <span class="key">{key}</span>
+          <span class="value">{value}</span>
+        </div>
+      ))
+    }
+  </div>
+
+  <div class="metrics">
+    {
+      consoleChrome.metrics.map(({ key, label }) => (
+        <div class="metric">
+          <div class="font-mono label">{label}</div>
+          <div class="figure" data-metric={key}>
+            {metrics[key]}
+          </div>
+        </div>
+      ))
+    }
+  </div>
+</div>
+
+<style>
+  /* The site's only card with this radius and its only drop shadow (`DESIGN_SPEC` §2),
+     so both stay here instead of becoming utilities. */
+  .card {
+    position: relative;
+    min-width: 0;
+    overflow: hidden;
+    border: 1px solid var(--color-line);
+    border-radius: 28px;
+    background: var(--color-console-bg);
+    backdrop-filter: blur(20px);
+    box-shadow: 0 30px 80px var(--color-shadow-console);
+  }
+
+  .sweep {
+    position: absolute;
+    left: 0;
+    right: 0;
+    z-index: 2;
+    height: 2px;
+    opacity: 0;
+    pointer-events: none;
+    background: linear-gradient(90deg, transparent, var(--color-accent), transparent);
+    box-shadow: 0 0 18px var(--color-accent);
+  }
+
+  .header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--color-line);
+    color: var(--color-dim);
+  }
+
+  .dots {
+    display: flex;
+    gap: 6px;
+  }
+
+  .dots i {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    /* One-off alpha of the ink, not a repeated variant: mixed here (app.css §2). */
+    background: color-mix(in srgb, var(--color-ink) 12%, transparent);
+  }
+
+  .dots .live-dot {
+    background: var(--color-accent);
+  }
+
+  .session {
+    flex: 1;
+    overflow: hidden;
+    text-align: center;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .live {
+    display: flex;
+    flex: none;
+    align-items: center;
+    gap: 6px;
+    color: var(--color-accent);
+  }
+
+  .live i {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: currentcolor;
+    box-shadow: 0 0 8px currentcolor;
+  }
+
+  /* Bottom-aligned over a fixed height: new lines push the log up instead of resizing
+     the card. The scanlines are the CRT texture of `DESIGN_SPEC` §3.2. */
+  .log {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    min-height: 210px;
+    padding: 18px 20px 16px;
+    font-size: 12.5px;
+    line-height: 1.85;
+    background-image: repeating-linear-gradient(
+      180deg,
+      light-dark(
+          color-mix(in srgb, var(--color-ink) 1.5%, transparent),
+          color-mix(in srgb, var(--color-ink) 2.5%, transparent)
+        )
+        0 1px,
+      transparent 1px 3px
+    );
+  }
+
+  .line {
+    display: flex;
+    gap: 12px;
+    overflow: hidden;
+    white-space: nowrap;
+  }
+
+  .time {
+    flex: none;
+    color: var(--color-dim);
+  }
+
+  .key {
+    flex: none;
+    width: 64px;
+    color: var(--color-accent);
+  }
+
+  .value {
+    overflow: hidden;
+    color: var(--color-ink);
+    text-overflow: ellipsis;
+  }
+
+  .metrics {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    border-top: 1px solid var(--color-line);
+  }
+
+  .metric {
+    padding: 14px 18px;
+  }
+
+  .metric + .metric {
+    border-left: 1px solid var(--color-line);
+  }
+
+  .label {
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    color: var(--color-dim);
+  }
+
+  .figure {
+    font-size: 20px;
+    font-weight: 500;
+    letter-spacing: -0.02em;
+  }
+
+  .metric:last-child .figure {
+    color: var(--color-accent);
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .sweep {
+      animation: sweep 1.4s cubic-bezier(0.4, 0, 0.2, 1) 1.1s both;
+      animation-iteration-count: 1;
+    }
+
+    .line {
+      animation: rise 0.35s ease both;
+    }
+  }
+</style>
+
+<script>
+  import { INTERVAL_MS, MAX_LINES, onLogLine } from '../lib/motion/consoleLog'
+  import { metricsAt } from '../lib/motion/math'
+  import { prefersReducedMotion } from '../lib/motion/reduced'
+
+  const log = document.querySelector<HTMLElement>('[data-log]')
+  const template = log?.lastElementChild
+  const figures = document.querySelectorAll<HTMLElement>('[data-metric]')
+
+  // With `reduce` the six server-rendered lines are the whole console: no cycle drives
+  // the clock, so the time cells honestly stay empty (spec 06 §8).
+  if (log && template && !prefersReducedMotion()) {
+    /** Local `hh:mm:ss`. Never rendered on the server: a static build would freeze it. */
+    const clock = (at: number) => new Date(at).toTimeString().slice(0, 8)
+
+    // Backdate the six lines already on screen, so they read as a log that has been
+    // running rather than six events that happened in the same second.
+    const first = Date.now() - (MAX_LINES - 1) * INTERVAL_MS
+    Array.from(log.children).forEach((line, index) => {
+      const time = line.firstElementChild
+      if (time) time.textContent = clock(first + index * INTERVAL_MS)
+    })
+
+    let tick = MAX_LINES
+    onLogLine(({ key, value }) => {
+      tick++
+
+      // Cloning the last line keeps the row markup in exactly one place, and a fresh
+      // node is what replays the `rise` entry animation.
+      const line = template.cloneNode(true) as HTMLElement
+      const cells = [clock(Date.now()), key, value]
+      Array.from(line.children).forEach((cell, index) => {
+        cell.textContent = cells[index] ?? ''
+      })
+
+      log.append(line)
+      while (log.children.length > MAX_LINES) log.firstElementChild?.remove()
+
+      const metrics = metricsAt(tick)
+      for (const figure of figures) {
+        const name = figure.dataset.metric
+        if (name && name in metrics)
+          figure.textContent = String(metrics[name as keyof typeof metrics])
+      }
+    })
+  }
+</script>

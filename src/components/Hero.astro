@@ -1,4 +1,5 @@
 ---
+import Console from './Console.astro'
 import { content } from '../lib/content'
 import type { Lang } from '../lib/content'
 import { stats } from '../lib/ui'
@@ -50,8 +51,7 @@ const figures = [
     </p>
   </div>
 
-  {/* The console (issue 06) fills this column; it is here so the grid is already two. */}
-  <div></div>
+  <Console />
 </section>
 
 <style>

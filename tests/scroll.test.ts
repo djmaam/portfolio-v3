@@ -1,8 +1,25 @@
+import { Glob } from 'bun'
 import { afterEach, expect, test } from 'bun:test'
 
 import { onScroll } from '../src/lib/motion/scroll'
 
 type Listener = () => void
+
+const src = new URL('../src/', import.meta.url)
+const sources = await Array.fromAsync(
+  (async function* () {
+    for await (const name of new Glob('**/*.{astro,ts}').scan(src.pathname)) {
+      yield { name, text: await Bun.file(new URL(name, src)).text() }
+    }
+  })(),
+)
+
+test('exactly one module attaches a scroll listener', () => {
+  // Every new block subscribes through `onScroll`; a second listener anywhere is the
+  // regression this guards (`MOTION_SPEC` §13).
+  const attachers = sources.filter((file) => /addEventListener\(\s*'scroll'/.test(file.text))
+  expect(attachers.map((file) => file.name)).toEqual(['lib/motion/scroll.ts'])
+})
 
 /**
  * The site's scroll engine is pure DOM plumbing, so the test stubs the three globals it

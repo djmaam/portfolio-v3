@@ -79,3 +79,28 @@ export function bootDelay(n: number): number {
 export function typedLength(elapsed: number, perChar: number, total: number): number {
   return Math.min(total, Math.max(0, Math.floor(elapsed / perChar)))
 }
+
+/**
+ * The console metrics at a given tick, exactly as the mock computes them
+ * (`Portfolio.dc.html:696`): `agents` flips between 3 and 4, `specs` gains one per full
+ * pass of the 11-message log, and `shipped` one per six lines. Only ever counts up.
+ */
+export function metricsAt(tick: number): { agents: number; specs: number; shipped: number } {
+  return {
+    agents: 3 + (tick % 2),
+    specs: 12 + Math.floor(tick / 11),
+    shipped: 41 + Math.floor(tick / 6),
+  }
+}
+
+/**
+ * Indices into the console log of the at most `max` lines still visible after `tick` of
+ * them have been emitted, over a source of `length` messages that cycles forever
+ * (`MOTION_SPEC` §2). The oldest line drops as the newest enters, so the window never
+ * grows past `max`. `Console.astro` renders `logWindow(max, …)` — the first six of the
+ * cycle — so the markup and the first client frame agree.
+ */
+export function logWindow(tick: number, length: number, max: number): number[] {
+  const from = Math.max(0, tick - max)
+  return Array.from({ length: tick - from }, (_, i) => (from + i) % length)
+}
