@@ -1,0 +1,148 @@
+---
+import { content } from '../lib/content'
+import type { Lang } from '../lib/content'
+import { revealDelay } from '../lib/motion/math'
+
+interface Props {
+  lang: Lang
+}
+
+const { lang } = Astro.props
+const t = content[lang]
+
+// Split at build time, not in the browser: the lead has to read at full opacity with no
+// JavaScript, so the spans ship in the HTML. The words stay inline and the space that
+// separates two of them lives inside the second one — a flex item is a block box, and a
+// copied block box brings a line break instead of the space, which would leave the lead
+// unreadable in the clipboard. Manrope's word space is the .26em gap of the design.
+const words = t.aboutLead.split(' ').map((word, index) => (index === 0 ? word : ` ${word}`))
+---
+
+<section id="about" class="section-y section-divider">
+  <div class="about container-page">
+    <p class="font-mono text-label text-dim">01 / {t.secAbout}</p>
+
+    <div class="content">
+      <p class="text-lead" data-lead>
+        {words.map((word) => <span data-word>{word}</span>)}
+      </p>
+
+      {
+        /* The reveal goes on a wrapper of its own, never on an element with a hover
+        transform (`MOTION_SPEC` §5). This paragraph has none, but the rule is the rule. */
+      }
+      <div data-reveal>
+        <p class="body text-body text-dim">{t.aboutBody}</p>
+      </div>
+
+      <ul class="principles">
+        {
+          t.principles.map((principle, index) => (
+            <li data-reveal data-delay={revealDelay(index)}>
+              <article class="card">
+                <p class="font-mono text-label-sm accent">{principle.n}</p>
+                <h3 class="text-card-title">{principle.h}</h3>
+                <p class="text-body text-dim">{principle.d}</p>
+              </article>
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+  </div>
+</section>
+
+<style>
+  /* One column until the nav links themselves drop (`DESIGN_SPEC` §5), then the grid of
+     the design: the label takes the first track and the content every remaining one, so
+     it lands on the 2/3 the design asks for as soon as three tracks fit. */
+  .about {
+    display: grid;
+    gap: clamp(28px, 4vw, 64px);
+    align-items: start;
+  }
+
+  @media (width >= 720px) {
+    .about {
+      grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr));
+    }
+
+    .content {
+      grid-column: 2 / -1;
+    }
+  }
+
+  .content {
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+    min-width: 0;
+  }
+
+  .body {
+    max-width: 640px;
+  }
+
+  .principles {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr));
+    gap: 14px;
+    margin-top: 8px;
+  }
+
+  /* The hover transform sits here, one level below the `[data-reveal]` on the `<li>`:
+     two transforms on one element fight (`MOTION_SPEC` §5). */
+  .card {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    height: 100%;
+    padding: 20px;
+    border-radius: 20px;
+    background: var(--color-surface);
+    border: 1px solid var(--color-line);
+    transition:
+      transform 0.25s,
+      border-color 0.25s,
+      box-shadow 0.25s;
+  }
+
+  .card:hover {
+    transform: translateY(-4px);
+    border-color: color-mix(in srgb, var(--color-accent) 45%, transparent);
+    box-shadow: 0 20px 60px var(--color-shadow-card);
+  }
+
+  .accent {
+    color: var(--color-accent);
+  }
+</style>
+
+<script>
+  import { aboutProgress, wordOpacity } from '../lib/motion/math'
+  import { onScroll } from '../lib/motion/scroll'
+
+  const lead = document.querySelector<HTMLElement>('[data-lead]')
+  const words = lead ? [...lead.querySelectorAll<HTMLElement>('[data-word]')] : []
+
+  if (lead && words.length > 0) {
+    // The lead's document top is measured once and re-measured only when the viewport
+    // changes size — a resize already produces a frame of the scroll engine, so the
+    // illumination needs no listener of its own, and no layout read per frame.
+    let top = 0
+    let measured = ''
+
+    onScroll(({ scrollY, vh }) => {
+      const viewport = `${window.innerWidth}x${vh}`
+      if (viewport !== measured) {
+        measured = viewport
+        top = lead.getBoundingClientRect().top + scrollY
+      }
+
+      const p = aboutProgress(top - scrollY, vh)
+      words.forEach((word, index) => {
+        word.style.opacity = String(wordOpacity(index, words.length, p))
+      })
+    })
+  }
+</script>
