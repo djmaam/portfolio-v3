@@ -8,9 +8,12 @@ TypeScript strict + Tailwind v4. No UI framework.
 **All code is written in English** — comments, identifiers, commit messages, script
 output, test names. This includes code written by subagents.
 
-The two exceptions: `handoff/content.json` holds the site copy in Spanish and English
-(that is product content, not code), and the specs under `docs/superpowers/specs/` are
-written in Spanish.
+**All documentation is written in English too** — `README.md`, `CLAUDE.md` and the
+specs under `docs/superpowers/specs/`.
+
+The only exception is `handoff/`, which stays in Spanish on purpose: it is the
+read-only design source of truth, and `handoff/content.json` holds the site copy in
+Spanish and English (that is product content, not code).
 
 ## Sources of truth
 

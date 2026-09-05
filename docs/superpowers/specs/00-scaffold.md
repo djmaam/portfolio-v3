@@ -1,25 +1,25 @@
 # 00 · Scaffold — spec
 
-Issue: [PV3-5](https://linear.app/portfolio-djmaam-v3/issue/PV3-5) · Rama: `feat/00-scaffold`
-Diseño: `docs/superpowers/specs/2026-09-05-portfolio-v3-design.md` §2, §3, §9
+Issue: [PV3-5](https://linear.app/portfolio-djmaam-v3/issue/PV3-5) · Branch: `feat/00-scaffold`
+Design: `docs/superpowers/specs/2026-09-05-portfolio-v3-design.md` §2, §3, §9
 
-## Objetivo
+## Goal
 
-Dejar el repo listo para que cualquier issue posterior solo agregue componentes y
-estilos. Nada de contenido, diseño ni motion en este bloque.
+Leave the repo ready so that any later issue only adds components and styles. No
+content, design or motion in this block.
 
-## Contexto
+## Context
 
-El repo hoy tiene `handoff/` (fuente de verdad de diseño, **no se toca**), `docs/` y
-`README.md`. Bun 1.4.0 instalado. Rama `main`, limpia.
+The repo today has `handoff/` (design source of truth, **not to be touched**), `docs/`
+and `README.md`. Bun 1.4.0 installed. Branch `main`, clean.
 
-## Alcance
+## Scope
 
-### 1. Proyecto Astro
+### 1. Astro project
 
 `bunx create-astro@latest . --template minimal --typescript strict --no-install --no-git --skip-houston --yes`
-sobre el directorio existente, cuidando de no pisar `handoff/`, `docs/`, `README.md`
-ni `.git`. Después `bun install`.
+over the existing directory, taking care not to overwrite `handoff/`, `docs/`, `README.md`
+or `.git`. Then `bun install`.
 
 `astro.config.mjs`:
 
@@ -34,18 +34,18 @@ export default defineConfig({
 })
 ```
 
-`tsconfig.json`: extiende `astro/tsconfigs/strict`. Alias `@/*` → `src/*`.
+`tsconfig.json`: extends `astro/tsconfigs/strict`. Alias `@/*` → `src/*`.
 
 ### 2. Tailwind v4
 
-`@tailwindcss/vite` (no el plugin de PostCSS, no `astro add tailwind`).
-`src/styles/app.css` con **solo** `@import "tailwindcss";` — los tokens son del
-issue 01. Importado desde una página para que entre al build.
+`@tailwindcss/vite` (not the PostCSS plugin, not `astro add tailwind`).
+`src/styles/app.css` with **only** `@import "tailwindcss";` — the tokens belong to
+issue 01. Imported from a page so it makes it into the build.
 
-### 3. Estructura
+### 3. Structure
 
-Crear los directorios de la spec §3 que van a existir sí o sí. Los vacíos llevan
-`.gitkeep`:
+Create the directories from spec §3 that are going to exist no matter what. The empty
+ones carry a `.gitkeep`:
 
 ```
 src/styles/app.css
@@ -60,45 +60,45 @@ public/previews/    .gitkeep
 tests/scaffold.test.ts
 ```
 
-`src/pages/index.astro` es un placeholder mínimo con una clase de Tailwind aplicada,
-suficiente para probar que el pipeline funciona. Lo reemplaza el issue 02.
+`src/pages/index.astro` is a minimal placeholder with one Tailwind class applied,
+enough to prove the pipeline works. Issue 02 replaces it.
 
-### 4. Herramientas
+### 4. Tooling
 
-- **Prettier** con `prettier-plugin-astro`. Config en `.prettierrc`.
-- **ESLint** flat config (`eslint.config.js`) con `typescript-eslint` +
-  `eslint-plugin-astro`. Sin reglas custom más allá de los recommended.
-- Scripts en `package.json`:
+- **Prettier** with `prettier-plugin-astro`. Config in `.prettierrc`.
+- **ESLint** flat config (`eslint.config.js`) with `typescript-eslint` +
+  `eslint-plugin-astro`. No custom rules beyond the recommended ones.
+- Scripts in `package.json`:
   - `dev`, `build`, `preview` (Astro)
   - `lint` → `eslint . && prettier --check .`
   - `format` → `prettier --write .`
   - `test` → `bun test`
 - `.gitignore`: `node_modules`, `dist`, `.astro`, `.DS_Store`, `.env*`.
-- **Borrar el `.DS_Store` que está commiteado en la raíz.**
+- **Delete the `.DS_Store` that is committed at the root.**
 
 ### 5. CI
 
-`.github/workflows/ci.yml`, en `push` a `main` y en `pull_request`:
+`.github/workflows/ci.yml`, on `push` to `main` and on `pull_request`:
 `oven-sh/setup-bun` → `bun install --frozen-lockfile` → `bun run lint` →
 `bun test` → `bun run build`.
 
 ### 6. Test
 
-`tests/scaffold.test.ts`: un test real, no trivial — que `astro.config.mjs` declare
-`output: 'static'` y que `package.json` tenga los cinco scripts. Es el primer test de
-la suite y prueba que `bun test` funciona.
+`tests/scaffold.test.ts`: a real test, not a trivial one — that `astro.config.mjs`
+declares `output: 'static'` and that `package.json` has the five scripts. It is the
+first test of the suite and proves that `bun test` works.
 
-## Criterios de aceptación
+## Acceptance criteria
 
-- [ ] `bun run build` genera `dist/` sin errores ni warnings de TypeScript.
-- [ ] `bun test` pasa.
-- [ ] `bun run lint` pasa sobre el repo entero.
-- [ ] La clase de Tailwind de `index.astro` aparece en el CSS de `dist/`.
-- [ ] `handoff/`, `docs/` y `README.md` quedan intactos (`git diff` no los toca).
-- [ ] El `.DS_Store` de la raíz ya no está trackeado.
-- [ ] El workflow de Actions corre verde en la PR.
+- [ ] `bun run build` generates `dist/` with no TypeScript errors or warnings.
+- [ ] `bun test` passes.
+- [ ] `bun run lint` passes over the whole repo.
+- [ ] The Tailwind class from `index.astro` shows up in the CSS in `dist/`.
+- [ ] `handoff/`, `docs/` and `README.md` are left intact (`git diff` does not touch them).
+- [ ] The root `.DS_Store` is no longer tracked.
+- [ ] The Actions workflow runs green on the PR.
 
-## Fuera de alcance
+## Out of scope
 
-Tokens, fuentes, tema, contenido, i18n, componentes, motion, Playwright, Lighthouse.
-Todo eso tiene su propio issue.
+Tokens, fonts, theme, content, i18n, components, motion, Playwright, Lighthouse.
+All of that has its own issue.

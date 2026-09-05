@@ -1,25 +1,24 @@
-# 01 · Tokens, tipografía y tema — spec
+# 01 · Tokens, typography and theme — spec
 
-Issue: [PV3-6](https://linear.app/portfolio-djmaam-v3/issue/PV3-6) · Rama: `feat/01-tokens-tema`
-Diseño: `docs/superpowers/specs/2026-09-05-portfolio-v3-design.md` §4 · `handoff/DESIGN_SPEC.md` §2
+Issue: [PV3-6](https://linear.app/portfolio-djmaam-v3/issue/PV3-6) · Branch: `feat/01-tokens-tema`
+Design: `docs/superpowers/specs/2026-09-05-portfolio-v3-design.md` §4 · `handoff/DESIGN_SPEC.md` §2
 
-## Objetivo
+## Goal
 
-El sistema de diseño completo, consumible por cualquier componente posterior. Después
-de este bloque, ningún issue vuelve a definir un color, un tamaño de fuente ni un
-keyframe.
+The complete design system, consumable by any later component. After this block, no
+issue defines a colour, a font size or a keyframe again.
 
-## Contexto
+## Context
 
-`src/styles/app.css` hoy tiene solo `@import "tailwindcss";`. Tailwind 4.3.3 vía
-`@tailwindcss/vite`. No hay layout ni componentes todavía: `src/pages/index.astro` es
-un placeholder que se puede usar como banco de pruebas y lo reemplaza el issue 02.
+`src/styles/app.css` today has only `@import "tailwindcss";`. Tailwind 4.3.3 via
+`@tailwindcss/vite`. There is no layout or components yet: `src/pages/index.astro` is a
+placeholder that can be used as a test bench and issue 02 replaces it.
 
-## Alcance
+## Scope
 
-### 1. Tokens de color
+### 1. Colour tokens
 
-En `@theme`, todos los de `DESIGN_SPEC.md` §2 con `light-dark(light, dark)`:
+In `@theme`, all of the ones from `DESIGN_SPEC.md` §2 with `light-dark(light, dark)`:
 
 ```css
 @theme {
@@ -39,23 +38,23 @@ En `@theme`, todos los de `DESIGN_SPEC.md` §2 con `light-dark(light, dark)`:
 }
 ```
 
-`:root` lleva `color-scheme` — sin eso `light-dark()` no resuelve.
+`:root` carries `color-scheme` — without it `light-dark()` does not resolve.
 
-**Restricción importante de Tailwind v4:** los modificadores de opacidad
-(`bg-accent/45`) **no funcionan** sobre un color declarado con `light-dark()`, porque
-Tailwind no puede recalcular el alfa. Por eso cada variante con alfa que el diseño usa
-más de una vez va como token propio. Las que aparecen una sola vez (bordes de hover a
-`.45`, `.06`, `.07`) se resuelven con `color-mix(in srgb, var(--color-accent) 45%, transparent)`
-en la utilidad que las necesite, no con el modificador de Tailwind.
+**Important Tailwind v4 constraint:** the opacity modifiers
+(`bg-accent/45`) **do not work** on a colour declared with `light-dark()`, because
+Tailwind cannot recompute the alpha. That is why every alpha variant the design uses
+more than once goes in as its own token. The ones that show up a single time (hover
+borders at `.45`, `.06`, `.07`) are resolved with `color-mix(in srgb, var(--color-accent) 45%, transparent)`
+in the utility that needs them, not with the Tailwind modifier.
 
-### 2. Escala tipográfica
+### 2. Typographic scale
 
-Los tamaños de la tabla de `DESIGN_SPEC.md` §2 como `--text-*` en `@theme`. El mock usa
-`cqw` sobre un contenedor de 1200px; acá van como `clamp()` equivalente:
+The sizes from the `DESIGN_SPEC.md` §2 table as `--text-*` in `@theme`. The mock uses
+`cqw` over a 1200px container; here they go in as the equivalent `clamp()`:
 
-| Token | Valor |
+| Token | Value |
 |---|---|
-| `--text-h1` | `clamp(36px, 5.5vw, 76px)` · peso 600 · tracking `-.04em` · línea 1.0 |
+| `--text-h1` | `clamp(36px, 5.5vw, 76px)` · weight 600 · tracking `-.04em` · line 1.0 |
 | `--text-h2` | `clamp(32px, 4.5vw, 56px)` · 600 · `-.035em` · 1.02 |
 | `--text-h2-stack` | `clamp(32px, 4.5vw, 48px)` · 600 · `-.035em` · 1.05 |
 | `--text-h2-contact` | `clamp(34px, 5vw, 64px)` · 600 · `-.04em` · 1.0 |
@@ -66,40 +65,41 @@ Los tamaños de la tabla de `DESIGN_SPEC.md` §2 como `--text-*` en `@theme`. El
 | `--text-label` | `12px` mono · tracking `.14em` |
 | `--text-label-sm` | `clamp(10px, 1vw, 11px)` mono · tracking `.1em` |
 
-Tracking y line-height van como `--tracking-*` / `--leading-*` acompañando cada rol.
+Tracking and line-height go in as `--tracking-*` / `--leading-*` accompanying each role.
 
-### 3. Fuentes
+### 3. Fonts
 
-Self-hosted en `public/fonts`, descargadas de Google Fonts, subset **latin**
-(`U+0000-00FF` cubre todos los acentos del español, `¿` y `¡`):
+Self-hosted in `public/fonts`, downloaded from Google Fonts, **latin** subset
+(`U+0000-00FF` covers every Spanish accent, `¿` and `¡`):
 
-| Archivo | Origen | Uso |
+| File | Source | Use |
 |---|---|---|
 | `manrope-var.woff2` | `https://fonts.gstatic.com/s/manrope/v20/xn7gYHE41ni1AdIRggexSvfedN4.woff2` | variable, `font-weight: 200 800` |
 | `ibm-plex-mono-400.woff2` | `https://fonts.gstatic.com/s/ibmplexmono/v20/-F6qfjptAgt5VM-kVkqdyU8n3twJwlBFgsAXHNk.woff2` | mono 400 |
 | `ibm-plex-mono-500.woff2` | `https://fonts.gstatic.com/s/ibmplexmono/v20/-F6qfjptAgt5VM-kVkqdyU8n3twJwl5FgsAXHNlYzg.woff2` | mono 500 |
 
-`@font-face` a mano con `font-display: swap`. Tokens `--font-sans` (Manrope +
-`-apple-system, "Helvetica Neue", sans-serif`) y `--font-mono` (IBM Plex Mono +
+Hand-written `@font-face` with `font-display: swap`. Tokens `--font-sans` (Manrope +
+`-apple-system, "Helvetica Neue", sans-serif`) and `--font-mono` (IBM Plex Mono +
 `ui-monospace, monospace`).
 
-`preload` de **dos** archivos: `manrope-var.woff2` y `ibm-plex-mono-400.woff2`. El 500
-no se precarga (aparece más abajo en la página). Como todavía no hay layout, los
-`<link rel="preload">` van en `src/pages/index.astro` y el issue 03 los mueve a
+`preload` of **two** files: `manrope-var.woff2` and `ibm-plex-mono-400.woff2`. The 500
+is not preloaded (it shows up further down the page). Since there is no layout yet, the
+`<link rel="preload">` tags go in `src/pages/index.astro` and issue 03 moves them to
 `Base.astro`.
 
-**IBM Plex Mono no tiene versión variable en Google Fonts** — por eso van dos estáticos
-y no un archivo variable, contra lo que decía `ARCHITECTURE.md`.
+**IBM Plex Mono has no variable version on Google Fonts** — that is why there are two
+static files and not one variable file, contrary to what `ARCHITECTURE.md` said.
 
 ### 4. Keyframes
 
-Los 12 del mock, tal cual `handoff/reference/Portfolio.dc.html`: `blink`, `pulse`,
-`aur1`, `aur2`, `rise`, `think`, `sweep`, `spin`, `gridflow`, `shimmer`, `marquee`.
-Van en `app.css`, fuera de `@theme`. No se usan todavía; cada issue los consume.
+The 12 from the mock, exactly as in `handoff/reference/Portfolio.dc.html`: `blink`,
+`pulse`, `aur1`, `aur2`, `rise`, `think`, `sweep`, `spin`, `gridflow`, `shimmer`,
+`marquee`. They go in `app.css`, outside `@theme`. They are not used yet; each issue
+consumes them.
 
-### 5. Tema sin flash
+### 5. Theme without flash
 
-Script inline en el `<head>`, **antes** de cualquier `<link rel="stylesheet">`:
+Inline script in the `<head>`, **before** any `<link rel="stylesheet">`:
 
 ```js
 ;(function () {
@@ -113,35 +113,35 @@ Script inline en el `<head>`, **antes** de cualquier `<link rel="stylesheet">`:
 })()
 ```
 
-Mientras no exista `Base.astro`, va en `index.astro`; el issue 03 lo mueve.
+While `Base.astro` does not exist, it goes in `index.astro`; issue 03 moves it.
 
-`src/lib/theme.ts` exporta `getTheme()`, `setTheme(t)` y `toggleTheme()` — escriben
-`localStorage.theme`, `documentElement.style.colorScheme` y `dataset.theme`. El botón
-que las usa es del issue 04.
+`src/lib/theme.ts` exports `getTheme()`, `setTheme(t)` and `toggleTheme()` — they write
+`localStorage.theme`, `documentElement.style.colorScheme` and `dataset.theme`. The
+button that uses them belongs to issue 04.
 
-`.has-js` existe para el progressive enhancement de los issues de motion: los estados
-iniciales `opacity: 0` se aplican solo bajo esa clase.
+`.has-js` exists for the progressive enhancement of the motion issues: the initial
+`opacity: 0` states apply only under that class.
 
-### 6. Lint anti-hex
+### 6. Anti-hex lint
 
-`scripts/check-tokens.ts`, corrido por `bun run lint`: falla si aparece un color
-literal (`#rgb`, `#rrggbb`, `#rrggbbaa`, `rgb(`, `rgba(`, `hsl(`) en `src/`,
-**excepto** en `src/styles/app.css`. Reporta archivo, línea y el color encontrado.
+`scripts/check-tokens.ts`, run by `bun run lint`: fails if a literal colour
+(`#rgb`, `#rrggbb`, `#rrggbbaa`, `rgb(`, `rgba(`, `hsl(`) shows up in `src/`,
+**except** in `src/styles/app.css`. It reports file, line and the colour found.
 
-Ignora: `handoff/`, `public/`, `dist/`, `node_modules/`, `tests/`.
+Ignores: `handoff/`, `public/`, `dist/`, `node_modules/`, `tests/`.
 
-## Criterios de aceptación
+## Acceptance criteria
 
-- [ ] `bun test`: cada token de `DESIGN_SPEC.md` §2 existe en `app.css` (el test parsea el CSS y compara contra la lista esperada, no es un snapshot).
-- [ ] `bun test`: los 11 keyframes están declarados.
-- [ ] `bun test`: `getTheme()` devuelve el valor de `localStorage` si es válido, y cae a `prefers-color-scheme` si no lo es o no existe.
-- [ ] `bun test`: el script anti-hex falla sobre un archivo de prueba con un hex y pasa sobre uno con `var(--color-*)`.
-- [ ] Con `localStorage.theme = 'dark'` y red throttleada, no hay flash claro antes del primer paint.
-- [ ] Sin `localStorage.theme`, el tema sigue a `prefers-color-scheme`.
-- [ ] Las tres fuentes cargan desde `/fonts/`; cero requests a `fonts.googleapis.com` o `fonts.gstatic.com` en el network panel.
-- [ ] `bun run lint`, `bun test` y `bun run build` pasan.
+- [ ] `bun test`: every token from `DESIGN_SPEC.md` §2 exists in `app.css` (the test parses the CSS and compares against the expected list, it is not a snapshot).
+- [ ] `bun test`: the 11 keyframes are declared.
+- [ ] `bun test`: `getTheme()` returns the `localStorage` value if it is valid, and falls back to `prefers-color-scheme` if it is not or does not exist.
+- [ ] `bun test`: the anti-hex script fails on a test file with a hex and passes on one with `var(--color-*)`.
+- [ ] With `localStorage.theme = 'dark'` and a throttled network, there is no light flash before the first paint.
+- [ ] Without `localStorage.theme`, the theme follows `prefers-color-scheme`.
+- [ ] The three fonts load from `/fonts/`; zero requests to `fonts.googleapis.com` or `fonts.gstatic.com` in the network panel.
+- [ ] `bun run lint`, `bun test` and `bun run build` pass.
 
-## Fuera de alcance
+## Out of scope
 
-Componentes, layout, nav, toggles visibles, motion, contenido. El botón de tema es del
-issue 04; acá solo queda la API en `theme.ts`.
+Components, layout, nav, visible toggles, motion, content. The theme button belongs to
+issue 04; here only the API in `theme.ts` is left.
