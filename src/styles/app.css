@@ -131,6 +131,10 @@
      <head> overrides it; with no JS the theme follows prefers-color-scheme. */
   :root {
     color-scheme: light dark;
+
+    /* Nav height. Lives on the root because two places need the same number: the sticky
+       bar itself and the anchor-scroll offset, which Nav.astro reads from here. */
+    --nav-h: 64px;
   }
 
   body {
