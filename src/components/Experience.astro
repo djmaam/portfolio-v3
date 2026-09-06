@@ -1,0 +1,273 @@
+---
+import { content } from '../lib/content'
+import { alsoWithCompanies } from '../lib/ui'
+import type { Lang } from '../lib/content'
+
+interface Props {
+  lang: Lang
+}
+
+const { lang } = Astro.props
+const t = content[lang]
+
+// `dot` and `glow` in content.json hold literal colors: the *dark* accent and its halo,
+// wrong in light mode and already owned by the token system. `check-tokens` never sees
+// them because it only scans source, so the rule is kept here instead — they are read as
+// a flag and never emitted. The one job whose `glow` is a real color is the current
+// role; its dot is drawn with `--color-accent`, every other one with `--color-line`.
+const isCurrent = (job: (typeof t.jobs)[number]) => job.glow !== 'transparent'
+---
+
+<section id="work" class="section-y section-divider">
+  <div class="container-page">
+    <div class="head" data-reveal>
+      <p class="font-mono text-label text-dim">03 / {t.secWork}</p>
+      <h2 class="text-h2">{t.workTitle}</h2>
+    </div>
+
+    <ol class="timeline">
+      {
+        t.jobs.map((job) => (
+          <li class="job" data-reveal>
+            <div class="rail" aria-hidden="true">
+              <span class:list={['dot', isCurrent(job) && 'current']} />
+            </div>
+
+            {/* The hover transform lives here, one level below the `[data-reveal]` on
+            the `<li>`: two transforms on one element fight (`MOTION_SPEC` §5). */}
+            <article class="card">
+              <div class="who">
+                {/* Placeholder: the real logos are issue 15 and still undecided, so
+                nothing is invented here. The company name follows it, which is why the
+                abbreviation is decoration to a screen reader. */}
+                <span class="logo font-mono" aria-hidden="true">
+                  {job.abbr}
+                </span>
+                <div class="names">
+                  <h3 class="company text-card-title" data-company>
+                    {job.company}
+                  </h3>
+                  <p class="period font-mono text-dim">{job.period}</p>
+                </div>
+              </div>
+
+              <div class="what">
+                <p class="role">{job.role}</p>
+                <p class="note text-dim">{job.note}</p>
+                <ul class="chips">
+                  {job.stack.map((item) => (
+                    <li class="chip font-mono">{item}</li>
+                  ))}
+                </ul>
+              </div>
+            </article>
+          </li>
+        ))
+      }
+    </ol>
+
+    {
+      /* `alsoWith` is only the label; the names come from `ui.ts`, which sources them
+      from the mock. `content.json` is read-only and never carried them. */
+    }
+    <div class="also" data-reveal>
+      <span class="font-mono text-label text-dim">{t.alsoWith}</span>
+      <ul class="also-list">
+        {alsoWithCompanies.map((name) => <li>{name}</li>)}
+      </ul>
+    </div>
+  </div>
+</section>
+
+<style>
+  .head {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    margin-bottom: 48px;
+  }
+
+  .timeline {
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* The rail column of the design, then the content. */
+  .job {
+    display: grid;
+    grid-template-columns: 44px minmax(0, 1fr);
+    gap: clamp(12px, 3vw, 32px);
+  }
+
+  .rail {
+    position: relative;
+    display: flex;
+    justify-content: center;
+  }
+
+  /* One 1px line per item, spanning its full height: stacked, they read as a single
+     rail running down the whole timeline. */
+  .rail::before {
+    content: '';
+    position: absolute;
+    inset-block: 0;
+    width: 1px;
+    background: var(--color-line);
+  }
+
+  .dot {
+    position: relative;
+    margin-top: 28px;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: var(--color-bg);
+    border: 2px solid var(--color-line);
+    /* The ring in the page color is what hides the rail behind the dot. */
+    box-shadow: 0 0 0 4px var(--color-bg);
+  }
+
+  .dot.current {
+    border-color: var(--color-accent);
+    box-shadow:
+      0 0 0 4px var(--color-bg),
+      0 0 16px var(--color-accent);
+  }
+
+  /* Borderless at rest like the mock; the card of `DESIGN_SPEC` §4 materializes on
+     hover. The bottom margin is inside the grid row, so the rail keeps spanning it. */
+  .card {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr));
+    gap: 20px;
+    align-items: start;
+    min-width: 0;
+    padding: 20px;
+    margin-bottom: 16px;
+    border: 1px solid transparent;
+    border-radius: 20px;
+    transition:
+      transform 0.25s,
+      border-color 0.25s,
+      background 0.25s,
+      box-shadow 0.25s;
+  }
+
+  .card:hover {
+    transform: translateY(-4px);
+    background: var(--color-surface);
+    border-color: color-mix(in srgb, var(--color-accent) 45%, transparent);
+    box-shadow: 0 20px 60px var(--color-shadow-card);
+  }
+
+  .who {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+    min-width: 0;
+  }
+
+  .logo {
+    flex: none;
+    display: grid;
+    place-items: center;
+    width: 56px;
+    height: 56px;
+    border-radius: 16px;
+    border: 1px solid var(--color-line);
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    color: var(--color-dim);
+    background: repeating-linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--color-ink) 5%, transparent) 0 4px,
+      transparent 4px 9px
+    );
+  }
+
+  .names {
+    min-width: 0;
+  }
+
+  /* The scramble preserves the length, so `nowrap` costs nothing and rules out a rewrap
+     mid-animation; the ellipsis is the safety valve on the narrowest column. */
+  .company {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .period {
+    margin-top: 4px;
+    font-size: 12px;
+  }
+
+  .what {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    min-width: 0;
+  }
+
+  .role {
+    font-size: 17px;
+    font-weight: 500;
+    color: var(--color-accent);
+  }
+
+  .note {
+    font-size: 15px;
+    line-height: var(--leading-body);
+  }
+
+  .chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 4px;
+  }
+
+  .chip {
+    font-size: 11px;
+    padding: 4px 10px;
+    border: 1px solid var(--color-line);
+    border-radius: 8px;
+  }
+
+  .also {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 14px 28px;
+    margin-top: 20px;
+    padding: 24px 28px;
+    border: 1px dashed color-mix(in srgb, var(--color-ink) 14%, transparent);
+    border-radius: 20px;
+  }
+</style>
+
+<script>
+  import { prefersReducedMotion } from '../lib/motion/reduced'
+  import { scramble } from '../lib/motion/scramble'
+
+  // The company name scrambles as its item enters the viewport (`MOTION_SPEC` §8).
+  // `bindReveals` already owns the opacity of the wrapper but cannot drive text, so this
+  // is the section's own observer; each name is unobserved as it fires, so it scrambles
+  // once. With `reduce` nothing is observed and the names stay resolved from the markup.
+  if (!prefersReducedMotion()) {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (!entry.isIntersecting) continue
+          observer.unobserve(entry.target)
+          scramble(entry.target as HTMLElement, 1000)
+        }
+      },
+      { threshold: 0.15, rootMargin: '0px 0px -8% 0px' },
+    )
+
+    for (const name of document.querySelectorAll<HTMLElement>('[data-company]')) {
+      observer.observe(name)
+    }
+  }
+</script>
