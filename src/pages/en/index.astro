@@ -2,6 +2,11 @@
 import About from '../../components/About.astro'
 import Hero from '../../components/Hero.astro'
 import Nav from '../../components/Nav.astro'
+// section-import: method
+// section-import: experience
+// section-import: projects
+// section-import: stack
+// section-import: contact
 import Base from '../../layouts/Base.astro'
 import type { Lang } from '../../lib/content'
 
@@ -12,4 +17,9 @@ const lang: Lang = 'en'
   <Nav slot="nav" lang={lang} />
   <Hero lang={lang} />
   <About lang={lang} />
+  {/* section: method */}
+  {/* section: experience */}
+  {/* section: projects */}
+  {/* section: stack */}
+  {/* section: contact */}
 </Base>
