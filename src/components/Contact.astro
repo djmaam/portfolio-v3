@@ -18,7 +18,7 @@ const socials = (['github', 'linkedin', 'telegram'] as const).map((key) => ({
 }))
 ---
 
-<section id="contact" class="section-y section-divider">
+<section id="contact" class="section-y section-divider" aria-labelledby="contact-title">
   <div class="container-page">
     {
       /* The reveal goes on the outermost wrapper: the card underneath is what carries
@@ -38,7 +38,7 @@ const socials = (['github', 'linkedin', 'telegram'] as const).map((key) => ({
           <div class="cols">
             <div class="intro">
               <p class="font-mono text-label accent">06 / {t.secContact}</p>
-              <h2 class="text-h2-contact">{t.contactTitle}</h2>
+              <h2 id="contact-title" class="text-h2-contact">{t.contactTitle}</h2>
               <p class="text-body sub">{t.contactSub}</p>
             </div>
 

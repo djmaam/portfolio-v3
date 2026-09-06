@@ -18,7 +18,7 @@ if (verbs.length !== t.steps.length) {
 }
 ---
 
-<section id="method" class="section-divider">
+<section id="method" class="section-divider" aria-labelledby="method-title">
   {
     /* The track is the scrollable height the pinned block rides on. It only becomes one
       on a wide enough viewport that also fits the block — see the `@media` below and the
@@ -30,7 +30,7 @@ if (verbs.length !== t.steps.length) {
         <header class="head">
           <div class="head-left" data-reveal>
             <p class="font-mono text-label text-dim">02 / {t.secMethod}</p>
-            <h2 class="text-h2 title">{t.methodTitle}</h2>
+            <h2 id="method-title" class="text-h2 title">{t.methodTitle}</h2>
           </div>
 
           <div class="head-right" data-reveal>

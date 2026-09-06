@@ -14,12 +14,12 @@ const t = content[lang]
 const core = new Set<string>(stack.core)
 ---
 
-<section id="stack" class="section-y section-divider">
+<section id="stack" class="section-y section-divider" aria-labelledby="stack-title">
   <div class="container-page stack">
     <header data-reveal>
       <div class="headline">
         <p class="font-mono text-label text-dim">05 / {t.secStack}</p>
-        <h2 class="text-h2-stack">{t.stackTitle}</h2>
+        <h2 id="stack-title" class="text-h2-stack">{t.stackTitle}</h2>
       </div>
       <p class="text-body text-dim">{t.stackSub}</p>
     </header>

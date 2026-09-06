@@ -27,12 +27,12 @@ const projects = t.projects.map((project, index) => {
 })
 ---
 
-<section id="projects" class="section-y section-divider">
+<section id="projects" class="section-y section-divider" aria-labelledby="projects-title">
   <div class="container-page">
     <div class="head" data-reveal>
       <div class="heading">
         <p class="font-mono text-label text-dim">04 / {t.secProjects}</p>
-        <h2 class="text-h2">{t.projectsTitle}</h2>
+        <h2 id="projects-title" class="text-h2">{t.projectsTitle}</h2>
       </div>
       <p class="sub text-dim">{t.projectsSub}</p>
     </div>
