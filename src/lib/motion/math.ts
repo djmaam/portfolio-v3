@@ -421,3 +421,32 @@ export function nodeRadius(size: number, depth: number, flash: number): number {
 export function nodeAlpha(depth: number, twinkleValue: number, dark: boolean): number {
   return (dark ? 0.9 : 0.8) * twinkleValue * depth
 }
+
+// ── About (`MOTION_SPEC` §6) ─────────────────────────────────────────────────
+
+/**
+ * How far the lead has travelled through its illumination ramp: 0 while its top is
+ * still below 80% of the viewport, 1 once it has risen .45 viewports past that. A
+ * viewport of no height has no ramp, so it reports 0 instead of dividing by zero.
+ */
+export function aboutProgress(top: number, vh: number): number {
+  if (vh <= 0) return 0
+  return clamp01((0.8 * vh - top) / (0.45 * vh))
+}
+
+/**
+ * Opacity of word `index` of `total` at progress `p` (`MOTION_SPEC` §6). The ramp is
+ * `total + 3` words long, so the sentence finishes lighting up a little before the
+ * progress does; a word never falls below the .16 it rests at.
+ */
+export function wordOpacity(index: number, total: number, p: number): number {
+  return Math.min(1, Math.max(0.16, p * (total + 3) - index))
+}
+
+/**
+ * Stagger of reveal `i` within its group, in ms (`MOTION_SPEC` §5): the principles use
+ * 110 per card, which `reveal.ts` reads back from `data-delay`.
+ */
+export function revealDelay(index: number): number {
+  return 110 * index
+}

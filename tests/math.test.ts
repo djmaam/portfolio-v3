@@ -1,6 +1,7 @@
 import { expect, test } from 'bun:test'
 
 import {
+  aboutProgress,
   anchorOffset,
   asteriskRadius,
   asteriskTarget,
@@ -28,11 +29,13 @@ import {
   nodeCountFor,
   nodeRadius,
   projectNode,
+  revealDelay,
   rotationStep,
   scrambleFrame,
   twinkle,
   typedLength,
   verticalDrift,
+  wordOpacity,
 } from '../src/lib/motion/math'
 
 test('docProgress is 0 at the top of the document and 1 at the bottom', () => {
@@ -528,4 +531,59 @@ test('nodeAlpha dims with the depth and is stronger in dark', () => {
 test('asteriskRadius is 26% of the shorter side of the canvas', () => {
   expect(asteriskRadius(1000, 800)).toBeCloseTo(208, 10)
   expect(asteriskRadius(600, 900)).toBeCloseTo(156, 10)
+})
+
+// ── About (`MOTION_SPEC` §6) ─────────────────────────────────────────────────
+
+test('aboutProgress is 0 below the trigger and 1 once the lead has risen past it', () => {
+  // The ramp runs from `top = .8·vh` down to `top = .35·vh`, i.e. over .45 viewports.
+  expect(aboutProgress(800, 1000)).toBe(0)
+  expect(aboutProgress(801, 1000)).toBe(0)
+  expect(aboutProgress(350, 1000)).toBe(1)
+  expect(aboutProgress(575, 1000)).toBeCloseTo(0.5, 10)
+})
+
+test('aboutProgress clamps beyond both ends', () => {
+  expect(aboutProgress(4000, 1000)).toBe(0)
+  expect(aboutProgress(-4000, 1000)).toBe(1)
+  // A viewport of no height has no ramp, so it reports 0 instead of dividing by zero.
+  expect(aboutProgress(0, 0)).toBe(0)
+})
+
+test('wordOpacity rests at .16 before the lead is reached', () => {
+  for (let i = 0; i < 12; i++) expect(wordOpacity(i, 12, 0)).toBe(0.16)
+})
+
+test('wordOpacity lights the first word as soon as p·(N+3) reaches 1', () => {
+  const total = 12
+  expect(wordOpacity(0, total, 1 / (total + 3))).toBeCloseTo(1, 10)
+  expect(wordOpacity(0, total, 0.5 / (total + 3))).toBeCloseTo(0.5, 10)
+})
+
+test('wordOpacity carries the +3 lead-in, so the last word is lit before p reaches 1', () => {
+  const total = 12
+  // At p = 1 the ramp has run (N+3) - (N-1) = 4 words past the end of the sentence.
+  expect(wordOpacity(total - 1, total, 1)).toBe(1)
+  // The +3 is what makes the last word arrive early: without it, it would need p = 1.
+  expect(wordOpacity(total - 1, total, (total - 1) / (total + 3))).toBe(0.16)
+  expect(wordOpacity(total - 1, total, total / (total + 3))).toBeCloseTo(1, 10)
+})
+
+test('wordOpacity clamps at both ends and lights the words left to right', () => {
+  const total = 12
+  const p = 0.4
+  const values = Array.from({ length: total }, (_, i) => wordOpacity(i, total, p))
+  for (const value of values) {
+    expect(value).toBeGreaterThanOrEqual(0.16)
+    expect(value).toBeLessThanOrEqual(1)
+  }
+  for (let i = 1; i < total; i++) {
+    expect(values[i]!).toBeLessThanOrEqual(values[i - 1]!)
+  }
+})
+
+test('revealDelay staggers 110ms per index', () => {
+  expect(revealDelay(0)).toBe(0)
+  expect(revealDelay(1)).toBe(110)
+  expect(revealDelay(2)).toBe(220)
 })

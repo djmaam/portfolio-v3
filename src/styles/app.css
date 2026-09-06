@@ -51,6 +51,9 @@
   /* The only drop shadow of the design (`DESIGN_SPEC §2`). Black in both themes, so it
      cannot be mixed from a token: it is the one shadow color the site owns. */
   --color-shadow-console: light-dark(rgba(0, 0, 0, 0.12), rgba(0, 0, 0, 0.6));
+  /* The other one: what a card lifts on hover (`DESIGN_SPEC` §2, §4). Black too, and
+     for the same reason it cannot be mixed from a token. */
+  --color-shadow-card: light-dark(rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.5));
 
   /* The contact card inverts the theme. */
   --color-contact-card: light-dark(#0b0d12, #f3f5f9);
@@ -138,6 +141,14 @@
     /* Nav height. Lives on the root because two places need the same number: the sticky
        bar itself and the anchor-scroll offset, which Nav.astro reads from here. */
     --nav-h: 64px;
+  }
+
+  /* The nav is sticky, so a native fragment jump (no JS, or a middle-click) would
+     land the section underneath it. `anchors.ts` applies the same offset when it
+     handles the click; this covers the case where it does not run. */
+  :target,
+  [id] {
+    scroll-margin-top: var(--nav-h);
   }
 
   body {
@@ -300,6 +311,37 @@
         opacity 1.1s cubic-bezier(0.2, 0.8, 0.2, 1),
         transform 1.1s cubic-bezier(0.2, 0.8, 0.2, 1),
         filter 1.1s cubic-bezier(0.2, 0.8, 0.2, 1);
+    }
+  }
+}
+
+/* ── Reveals ──────────────────────────────────────────────────────────────────
+   Resting state of every `[data-reveal]` (`MOTION_SPEC §5`), shared by every section
+   below the hero, and of the words of the "Sobre mí" lead (`MOTION_SPEC §6`). Both
+   hide only when JS is there to bring them back and motion is welcome, so the page
+   reads without either. `motion/reveal.ts` clears the three properties on the first
+   intersection, staggered by `data-delay`; the lead's driver writes the opacity of
+   each word from the scroll.
+
+   Here and not in a component, like `[data-boot]`: they are shared, and the cascade
+   order against a scoped style should not be load-bearing. The reveal always goes on
+   a wrapper — never on the element that also has a `transform` on hover. */
+
+@layer components {
+  @media (prefers-reduced-motion: no-preference) {
+    .has-js [data-reveal] {
+      opacity: 0;
+      transform: translateY(18px);
+      filter: blur(6px);
+      transition:
+        opacity 0.8s cubic-bezier(0.2, 0.8, 0.2, 1),
+        transform 0.8s cubic-bezier(0.2, 0.8, 0.2, 1),
+        filter 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
+    }
+
+    .has-js [data-word] {
+      opacity: 0.16;
+      transition: opacity 0.35s ease;
     }
   }
 }
