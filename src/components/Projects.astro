@@ -48,11 +48,17 @@ const projects = t.projects.map((project, index) => {
             <a class="card" href={project.url} target="_blank" rel="noopener noreferrer">
               <div class="preview">
                 {/* Decoration, not content: sandboxed, out of the tab order and out of
-                the accessibility tree, and never loaded before it is scrolled to. */}
+                the accessibility tree, and never loaded before it is scrolled to.
+
+                `data-src`, not `src`: `loading="lazy"` is a hint, and on a mobile
+                viewport Chrome ignores it here and fetches all four cross-origin
+                previews on load — 50 third-party requests, other people's analytics
+                and cookies included, 5700px before anyone reaches the section. The
+                script below is what actually keeps that promise. */}
                 {project.iframe && (
                   <iframe
                     class="frame"
-                    src={project.url}
+                    data-src={project.url}
                     sandbox=""
                     loading="lazy"
                     aria-hidden="true"
@@ -246,3 +252,30 @@ const projects = t.projects.map((project, index) => {
     }
   }
 </style>
+
+<script>
+  // The other half of the `data-src` above. Not the shared `[data-reveal]` observer of
+  // `reveal.ts`: that one is motion and steps aside under `prefers-reduced-motion`, and
+  // a preview must still load for a visitor who asked for no motion. One viewport of
+  // margin, so the preview is already painted by the time the card is on screen.
+  //
+  // With no JS the striped placeholder stays, which is the same fallback a project whose
+  // site refuses to be framed already gets.
+  const previews = document.querySelectorAll<HTMLIFrameElement>('iframe[data-src]')
+
+  if (previews.length > 0) {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (!entry.isIntersecting) continue
+          const frame = entry.target as HTMLIFrameElement
+          observer.unobserve(frame)
+          frame.src = frame.dataset.src ?? ''
+        }
+      },
+      { rootMargin: '100% 0px' },
+    )
+
+    for (const frame of previews) observer.observe(frame)
+  }
+</script>
