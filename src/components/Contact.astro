@@ -122,6 +122,14 @@ const socials = (['github', 'linkedin', 'telegram'] as const).map((key) => ({
     color: var(--color-contact-ink);
   }
 
+  /* The exception that proves the global rule of `app.css`: the card inverts the theme,
+     so `--color-accent` resolves against a background it was never measured on — the
+     contrast bug of issue 13. Inside the card the ring takes the inverted accent, which
+     is the token that was measured there. */
+  .card :focus-visible {
+    outline-color: var(--color-contact-accent);
+  }
+
   .grid {
     position: absolute;
     inset: 0;

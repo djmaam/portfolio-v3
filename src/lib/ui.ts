@@ -5,9 +5,9 @@ import type { Lang } from './content'
  * read-only and holds page copy only, so accessible names for controls live here. Same
  * rationale as `site` in `content.ts` — this is UI, not content.
  */
-export const ui: Record<Lang, { themeToggle: string }> = {
-  es: { themeToggle: 'Cambiar el tema' },
-  en: { themeToggle: 'Toggle the theme' },
+export const ui: Record<Lang, { themeToggle: string; skipToContent: string }> = {
+  es: { themeToggle: 'Cambiar el tema', skipToContent: 'Saltar al contenido' },
+  en: { themeToggle: 'Toggle the theme', skipToContent: 'Skip to content' },
 }
 
 /**
