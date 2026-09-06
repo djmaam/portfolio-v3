@@ -117,12 +117,15 @@ const metrics = metricsAt(0)
     white-space: nowrap;
   }
 
+  /* Weight 500 on both accent-colored cells of the console: at 10-12.5px the cyan is
+     only legal as text at weight 500 (`DESIGN_SPEC` §6). */
   .live {
     display: flex;
     flex: none;
     align-items: center;
     gap: 6px;
     color: var(--color-accent);
+    font-weight: 500;
   }
 
   .live i {
@@ -170,6 +173,7 @@ const metrics = metricsAt(0)
     flex: none;
     width: 64px;
     color: var(--color-accent);
+    font-weight: 500;
   }
 
   .value {

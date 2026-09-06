@@ -125,10 +125,14 @@ if (verbs.length !== t.steps.length) {
 
   /* ── Status indicator ─────────────────────────────────────────────────────── */
 
+  /* Weight 500 for every state, not only the accent one: the indicator must not change
+     weight mid-cycle, and at 10-11px the accent is only legal as text at 500
+     (`DESIGN_SPEC` §6). */
   .status {
     display: flex;
     align-items: center;
     gap: 10px;
+    font-weight: 500;
     color: var(--color-dim);
     transition: color 0.4s;
   }

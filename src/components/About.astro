@@ -113,8 +113,11 @@ const words = t.aboutLead.split(' ').map((word, index) => (index === 0 ? word : 
     box-shadow: 0 20px 60px var(--color-shadow-card);
   }
 
+  /* A 10-11px mono label: weight 500 is what makes the accent legal as text here
+     (`DESIGN_SPEC` §6). */
   .accent {
     color: var(--color-accent);
+    font-weight: 500;
   }
 </style>
 

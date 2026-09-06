@@ -119,10 +119,12 @@ const core = new Set<string>(stack.core)
     white-space: nowrap;
   }
 
+  /* 12px, so the highlighted chips carry the accent at weight 500 (`DESIGN_SPEC` §6). */
   .chip.core {
     border-color: color-mix(in srgb, var(--color-accent) 40%, transparent);
     background: var(--color-accent-soft);
     color: var(--color-accent);
+    font-weight: 500;
   }
 
   .legend {

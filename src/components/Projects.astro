@@ -195,6 +195,8 @@ const projects = t.projects.map((project, index) => {
     border-radius: 999px;
     background: var(--color-glass);
     color: var(--color-accent);
+    /* 10-11px, so the accent needs weight 500 to be legal as text (`DESIGN_SPEC` §6). */
+    font-weight: 500;
     border: 1px solid color-mix(in srgb, var(--color-accent) 30%, transparent);
   }
 
@@ -221,6 +223,7 @@ const projects = t.projects.map((project, index) => {
   .arrow {
     flex: none;
     font-size: 12px;
+    font-weight: 500;
     color: var(--color-accent);
   }
 

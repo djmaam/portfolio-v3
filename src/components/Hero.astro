@@ -114,9 +114,13 @@ const figures = [
     text-wrap: balance;
   }
 
-  /* A one-off alpha pair, so it is mixed here instead of becoming a token (app.css §2). */
+  /* A one-off alpha pair, so it is mixed here instead of becoming a token (app.css §2).
+     The weight is the h1's own, restated: the accent only clears the contrast threshold
+     as text at ≥15px or weight ≥500 (`DESIGN_SPEC` §6), and this is the rule that says
+     which of the two this one leans on. */
   .accent {
     color: var(--color-accent);
+    font-weight: 600;
     text-shadow: 0 0 40px
       light-dark(
         color-mix(in srgb, var(--color-accent) 30%, transparent),
