@@ -135,6 +135,24 @@ test('the timeline is legible with JavaScript disabled', () => {
   expect(styles).not.toMatch(/visibility:\s*hidden/)
 })
 
+test("the rail dot's position is derived from the logo and card tokens, not a guessed constant", () => {
+  // `.dot`'s offset used to be a hand-picked `margin-top: 28px` that did not track what
+  // it was supposed to mark. It must now be computed from the shared tokens `.card` and
+  // `.logo` also read from, so a future change to either recomputes the dot with it.
+  expect(styles).toMatch(/--logo-size:\s*56px/)
+  const dotBlock = /\.dot\s*\{([\s\S]*?)\n {2}\}/.exec(styles)?.[1] ?? ''
+  expect(dotBlock).toMatch(/margin-top:\s*calc\(/)
+  expect(dotBlock).toMatch(/var\(--logo-size\)/)
+  expect(styles).not.toMatch(/margin-top:\s*28px/)
+})
+
+test('the also-with list lays its items out in a row', () => {
+  // No rule at all used to leave it at the UA default `display: block`, stacking the
+  // four company names into a column instead of the row `DESIGN_SPEC` §5 describes.
+  expect(styles).toMatch(/\.also-list\s*\{[^}]*display:\s*flex/)
+  expect(styles).toMatch(/\.also-list\s*\{[^}]*flex-wrap:\s*wrap/)
+})
+
 test('the section is the anchor the nav already links to', () => {
   expect(markup).toMatch(/<section id="work"/)
 })

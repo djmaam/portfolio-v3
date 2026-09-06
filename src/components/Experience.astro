@@ -97,6 +97,12 @@ const isCurrent = (job: (typeof t.jobs)[number]) => job.glow !== 'transparent'
     display: grid;
     grid-template-columns: 44px minmax(0, 1fr);
     gap: clamp(12px, 3vw, 32px);
+    /* What `.dot`'s position is derived from below, shared with `.card` and `.logo` so
+       the alignment survives a change to either — including the pending issue 15 swap
+       of the placeholder logo for a real one. */
+    --card-pad: 20px;
+    --card-border: 1px;
+    --logo-size: 56px;
   }
 
   .rail {
@@ -117,9 +123,15 @@ const isCurrent = (job: (typeof t.jobs)[number]) => job.glow !== 'transparent'
 
   .dot {
     position: relative;
-    margin-top: 28px;
-    width: 12px;
-    height: 12px;
+    --dot-size: 12px;
+    /* Centered on `.who`'s row: the logo's center, measured from the card's border-box
+       top (`--card-border` + `--card-pad`), minus half the dot's own size. A calc() of
+       the same tokens `.card` and `.logo` read from below, not a guessed pixel offset. */
+    margin-top: calc(
+      var(--card-border) + var(--card-pad) + var(--logo-size) / 2 - var(--dot-size) / 2
+    );
+    width: var(--dot-size);
+    height: var(--dot-size);
     border-radius: 50%;
     background: var(--color-bg);
     border: 2px solid var(--color-line);
@@ -142,9 +154,9 @@ const isCurrent = (job: (typeof t.jobs)[number]) => job.glow !== 'transparent'
     gap: 20px;
     align-items: start;
     min-width: 0;
-    padding: 20px;
+    padding: var(--card-pad);
     margin-bottom: 16px;
-    border: 1px solid transparent;
+    border: var(--card-border) solid transparent;
     border-radius: 20px;
     transition:
       border-color 0.25s,
@@ -185,8 +197,8 @@ const isCurrent = (job: (typeof t.jobs)[number]) => job.glow !== 'transparent'
     flex: none;
     display: grid;
     place-items: center;
-    width: 56px;
-    height: 56px;
+    width: var(--logo-size);
+    height: var(--logo-size);
     border-radius: 16px;
     border: 1px solid var(--color-line);
     font-size: 11px;
@@ -257,6 +269,16 @@ const isCurrent = (job: (typeof t.jobs)[number]) => job.glow !== 'transparent'
     padding: 24px 28px;
     border: 1px dashed color-mix(in srgb, var(--color-ink) 14%, transparent);
     border-radius: 20px;
+  }
+
+  /* Same gap family as `.also` itself, so the row of names matches the row it sits in.
+     No explicit width: the automatic minimum size of a wrapping flex container is its
+     widest single item, so this shrinks and wraps at a narrow viewport instead of
+     pushing `.also` wider than it is. */
+  .also-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px 28px;
   }
 </style>
 

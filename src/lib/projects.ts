@@ -29,6 +29,19 @@ export function previewMode(host: string): PreviewMode {
   return PREVIEWS[host] ?? 'screenshot'
 }
 
+// Same host-keyed policy as `PREVIEWS`, for the rare project whose `content.json` URL is
+// not what it should link to. `content.json` is read-only, so a mismatch is fixed here:
+// `telecentro.com.ar` hardcodes the site root, but the product the owner built — and what
+// the card's own description claims — is `/t-play`. Both the capture script's `goto` and
+// the card's `href` resolve through `projectUrl`, so the two never drift apart.
+export const URL_OVERRIDES: Record<string, string> = {
+  'telecentro.com.ar': 'https://telecentro.com.ar/t-play',
+}
+
+export function projectUrl(host: string, fallback: string): string {
+  return URL_OVERRIDES[host] ?? fallback
+}
+
 /**
  * Reveal stagger of the projects grid (`MOTION_SPEC` §9): 90ms per column, restarting
  * on every row, so a card is never held back by the rows above it. Three columns is the
