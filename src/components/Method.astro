@@ -1,0 +1,317 @@
+---
+import { content } from '../lib/content'
+import type { Lang } from '../lib/content'
+
+interface Props {
+  lang: Lang
+}
+
+const { lang } = Astro.props
+const t = content[lang]
+
+// `stepVerbs` is one pipe-separated string, so the split has to yield one verb per step:
+// a missing pipe would shift every label of the indicator by one and nothing else on the
+// page would notice. Fail the build instead.
+const verbs = t.stepVerbs.split('|')
+if (verbs.length !== t.steps.length) {
+  throw new Error(`stepVerbs holds ${verbs.length} verbs for ${t.steps.length} steps (${lang})`)
+}
+---
+
+<section id="method" class="section-divider">
+  {
+    /* The track is the scrollable height the pinned block rides on. It only becomes one
+      on a wide enough viewport that also fits the block — see the `@media` below and the
+      `flow` class the driver toggles. */
+  }
+  <div class="track" data-method-track>
+    <div class="pin">
+      <div class="inner container-page" data-method-inner>
+        <header class="head">
+          <div class="head-left" data-reveal>
+            <p class="font-mono text-label text-dim">02 / {t.secMethod}</p>
+            <h2 class="text-h2 title">{t.methodTitle}</h2>
+          </div>
+
+          <div class="head-right" data-reveal>
+            <p class="text-body text-dim">{t.methodSub}</p>
+            {
+              /* The three strings the driver needs travel on the element itself: the
+                client script imports no copy, and the server rendered the idle line. */
+            }
+            <p
+              class="status font-mono text-label-sm"
+              data-method-status
+              data-state="idle"
+              data-verbs={t.stepVerbs}
+              data-idle={t.cycleIdle}
+              data-done={t.cycleDone}
+            >
+              <span class="dot" aria-hidden="true"></span>
+              <span data-method-text>{t.cycleIdle}</span>
+            </p>
+          </div>
+        </header>
+
+        <ol class="steps">
+          {
+            /* Index → token: the five hexes of `steps[].color` already live in `app.css`
+              as `--color-step-1…5`, and that is the only place a color may be written. */
+            t.steps.map((step, index) => (
+              <li
+                class="step"
+                data-step
+                data-state="upcoming"
+                style={`--step: var(--color-step-${index + 1})`}
+              >
+                <p class="row font-mono text-label-sm text-dim">
+                  <span>{step.n}</span>
+                  <span class="dot" aria-hidden="true" />
+                </p>
+                <h3 class="text-card-title">{step.h}</h3>
+                <p class="text-body text-dim body">{step.d}</p>
+                <p class="tool font-mono text-label-sm text-dim">{step.tool}</p>
+              </li>
+            ))
+          }
+        </ol>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  /* In flow the section pads like every other one; pinned, it pads 32px and centers
+     itself in the viewport (`MOTION_SPEC` §7). The padding lives on `.pin` so `.inner`
+     measures the bare content, which is what the fit test needs. */
+  .pin {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding-block: clamp(56px, 7vw, 100px);
+  }
+
+  .inner {
+    display: flex;
+    flex-direction: column;
+    gap: 40px;
+  }
+
+  .head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 24px;
+  }
+
+  .head-left {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .head-right {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+    max-width: 380px;
+  }
+
+  .title {
+    max-width: 720px;
+  }
+
+  /* ── Status indicator ─────────────────────────────────────────────────────── */
+
+  .status {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--color-dim);
+    transition: color 0.4s;
+  }
+
+  /* The driver writes `--step` from the active step's token; done takes the accent. */
+  .status[data-state='active'] {
+    --lit: var(--step);
+
+    color: var(--step);
+  }
+
+  .status[data-state='done'] {
+    --lit: var(--color-accent);
+
+    color: var(--color-accent);
+  }
+
+  /* ── The five cards ───────────────────────────────────────────────────────── */
+
+  .steps {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 150px), 1fr));
+    gap: 10px;
+  }
+
+  .step {
+    --lit: var(--step);
+
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    min-height: 200px;
+    padding: 22px 20px 20px;
+    border: 1px solid var(--color-line);
+    border-radius: 20px;
+    background: var(--color-surface);
+    transition:
+      opacity 0.6s cubic-bezier(0.2, 0.8, 0.2, 1),
+      transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1),
+      border-color 0.6s,
+      box-shadow 0.6s,
+      background 0.6s;
+  }
+
+  .step[data-state='active'] {
+    transform: translateY(-6px) scale(1.03);
+    border-color: var(--lit);
+    box-shadow:
+      0 0 0 1px var(--lit),
+      0 20px 60px var(--color-shadow-card);
+  }
+
+  /* Every card at once, whatever step it was: the cycle has shipped. */
+  .step[data-state='done'] {
+    --lit: var(--color-accent);
+
+    border-color: color-mix(in srgb, var(--color-accent) 65%, transparent);
+    background: var(--color-accent-soft);
+    box-shadow: 0 0 44px color-mix(in srgb, var(--color-accent) 20%, transparent);
+  }
+
+  .row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .body {
+    flex: 1;
+  }
+
+  .tool {
+    padding-top: 12px;
+    border-top: 1px dashed var(--color-line);
+  }
+
+  .dot {
+    flex: none;
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: color-mix(in srgb, var(--color-ink) 15%, transparent);
+    transition:
+      background 0.5s,
+      box-shadow 0.5s,
+      transform 0.5s cubic-bezier(0.34, 1.5, 0.4, 1);
+  }
+
+  .status .dot {
+    width: 8px;
+    height: 8px;
+  }
+
+  /* Lit for every state but the two resting ones: completed, active and done alike. */
+  .step:not([data-state='upcoming']) .dot,
+  .status:not([data-state='idle']) .dot {
+    transform: scale(1.25);
+    background: var(--lit);
+    box-shadow: 0 0 12px var(--lit);
+  }
+
+  /* The one hidden state of the section, and the only one that needs a guard: a card
+     that has not been reached yet. Behind `.has-js` and `no-preference`, like every
+     other resting state of the site, so with reduced motion or without JavaScript the
+     five cards read at full opacity. */
+  @media (prefers-reduced-motion: no-preference) {
+    :global(html.has-js) .step[data-state='upcoming'] {
+      opacity: 0.22;
+      transform: translateY(10px) scale(0.97);
+    }
+  }
+
+  /* The pinning itself (`DESIGN_SPEC` §5): never under 720px, and never without the JS
+     that advances it — a 280vh track nothing walks through is just a hole in the page.
+     `.flow` is the driver's answer to the other half of the test: a block that does not
+     fit in the viewport height scrolls like any other section. */
+  @media (prefers-reduced-motion: no-preference) and (width >= 720px) {
+    :global(html.has-js) .track:not(.flow) {
+      height: 280vh;
+    }
+    :global(html.has-js) .track:not(.flow) .pin {
+      position: sticky;
+      top: 0;
+      min-height: 100vh;
+      padding-block: 32px;
+    }
+  }
+</style>
+
+<script>
+  import { methodCardState, methodLabel, methodProgress, methodStep } from '../lib/motion/math'
+  import { onScroll } from '../lib/motion/scroll'
+
+  const track = document.querySelector<HTMLElement>('[data-method-track]')
+  const inner = document.querySelector<HTMLElement>('[data-method-inner]')
+  const status = document.querySelector<HTMLElement>('[data-method-status]')
+  const label = document.querySelector<HTMLElement>('[data-method-text]')
+  const cards = [...document.querySelectorAll<HTMLElement>('[data-step]')]
+
+  if (track && inner && status && label && cards.length > 0) {
+    const verbs = (status.dataset.verbs ?? '').split('|')
+    const idle = status.dataset.idle ?? ''
+    const done = status.dataset.done ?? ''
+
+    // Measured once and re-measured only when the viewport changes size — a resize
+    // already produces a frame of the scroll engine, so the section needs no listener
+    // of its own and no layout read per frame.
+    let docTop = 0
+    let height = 0
+    let pinned = false
+    let measured = ''
+    let painted = ''
+
+    onScroll(({ scrollY, vh }) => {
+      const viewport = `${window.innerWidth}x${vh}`
+      if (viewport !== measured) {
+        measured = viewport
+        // The same test the `@media` makes, plus the half only layout can answer: 64 is
+        // the padding the block takes once it is pinned. Rotating a phone re-runs it,
+        // so the section is never stranded half-pinned.
+        pinned = window.innerWidth >= 720 && inner.offsetHeight + 64 <= vh
+        track.classList.toggle('flow', !pinned)
+        const rect = track.getBoundingClientRect()
+        docTop = rect.top + scrollY
+        height = rect.height
+      }
+
+      // The whole section is derived from the progress of this frame alone: nothing is
+      // accumulated, so scrolling back up walks the states backwards on its own.
+      const step = methodStep(methodProgress(docTop - scrollY, height, vh, pinned))
+      const key = `${step.active}${step.done ? 'd' : ''}`
+      if (key === painted) return
+      painted = key
+
+      cards.forEach((card, index) => {
+        card.dataset.state = methodCardState(index, step)
+      })
+
+      if (step.active >= 0) {
+        status.style.setProperty('--step', `var(--color-step-${step.active + 1})`)
+      }
+      status.dataset.state = step.done ? 'done' : step.active >= 0 ? 'active' : 'idle'
+      label.textContent = methodLabel(verbs, step, idle, done)
+    })
+  }
+</script>
