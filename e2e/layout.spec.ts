@@ -149,14 +149,10 @@ for (const route of ROUTES) {
   })
 
   test(`${route} does not scroll horizontally at 390 either`, async ({ page }) => {
-    // Expected to fail today, and deliberately not skipped: `Footer.astro`'s ASCIImoji
-    // stacks fifteen hidden faces in one inline-grid cell, and at 390 the widest of them
-    // overflows that box — the document measures 397 in ES and 391 in EN while every
-    // section fits. It is pre-existing, it is the last horizontal overflow on the site,
-    // and `Footer.astro` is outside the files of spec 22. `test.fail` rather than
-    // `test.fixme` so this turns red the day the footer is fixed and the marker is due
-    // for removal.
-    test.fail()
+    // 390 is where the last one hid: the footer's ASCIImoji shrank as a flex item to
+    // 84px against a widest face of 111, and the hidden faces that size the box — they
+    // are `visibility: hidden`, which still takes layout space — pushed 7px past the
+    // viewport while every section fit. `flex: none` in `Footer.astro` closed it.
     await page.setViewportSize({ width: 390, height: 950 })
     await page.goto(route)
 
