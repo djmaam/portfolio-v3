@@ -91,10 +91,17 @@ if (verbs.length !== t.steps.length) {
     padding-block: clamp(56px, 7vw, 100px);
   }
 
+  /* The only `container-page` in the site that is a flex item, and auto inline margins
+     beat `align-items: stretch`: the box shrinks to fit its content — 1124px — instead of
+     taking the 1200 every other section gets. So block layout's `width: auto` (the parent
+     minus the gutters, capped by the grid) is restated here, which is the one thing a
+     flex item cannot inherit. `.pin` pads only on the block axis, so `100%` is the full
+     width of the track. */
   .inner {
     display: flex;
     flex-direction: column;
     gap: 40px;
+    width: min(100% - 2 * var(--container-pad), var(--container-max));
   }
 
   .head {
