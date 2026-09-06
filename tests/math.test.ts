@@ -461,6 +461,15 @@ test('cloudCenter pulls the cloud a third of the way toward the console', () => 
   expect(cloudCenter(null, 1000, 800)).toEqual({ x: 640, y: 360 })
 })
 
+test('cloudCenter with a full pull lands on the console, which is where the ✳ forms', () => {
+  const rect = { left: 600, top: 100, width: 400, height: 300 }
+  // `MOTION_SPEC` §3 centers the ✳ "en la consola" — undamped, unlike the cloud. The
+  // mock does the same: its cloud uses `cx*.35` and its ✳ uses `cx`.
+  expect(cloudCenter(rect, 1000, 800, 1)).toEqual({ x: 800, y: 240 })
+  // The default is still the cloud's 35%, so no existing caller moves.
+  expect(cloudCenter(rect, 1000, 800, 0.35)).toEqual(cloudCenter(rect, 1000, 800))
+})
+
 test('cursorPull attracts toward the cursor and dies at 200px', () => {
   expect(cursorPull(0, 0)).toEqual({ x: 0, y: 0 })
   expect(cursorPull(200, 0)).toEqual({ x: 0, y: 0 })

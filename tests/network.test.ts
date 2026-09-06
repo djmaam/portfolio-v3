@@ -39,10 +39,26 @@ test('the canvas is decoration: hidden from the tree and deaf to the pointer', (
   const rule = /\.hero-net\s*\{([^}]*)\}/.exec(css)?.[1] ?? ''
   expect(rule).toMatch(/pointer-events:\s*none/)
   expect(rule).toMatch(/position:\s*absolute/)
-  expect(rule).toMatch(/inset:\s*0/)
   // Behind the hero text, above the aurora — and never a negative z-index (spec 07).
   expect(rule).toMatch(/z-index:\s*0/)
   expect(rule).toMatch(/mask-image:\s*linear-gradient\(180deg/)
+})
+
+test('the canvas is the viewport box of MOTION_SPEC §3, not the hero box', () => {
+  // "Canvas absoluto, 100vw × 100vh". Sizing it off `.hero` instead makes `ry = .48h`,
+  // the ✳ radius and the 55% mask cut all follow a section that re-flows — and `--nav-h`
+  // is what lifts it back to the top of the page, where the mock puts it.
+  const rule = /\.hero-net\s*\{([^}]*)\}/.exec(css)?.[1] ?? ''
+  expect(rule).toMatch(/height:\s*100vh/)
+  expect(rule).toMatch(/top:\s*calc\(-1 \* var\(--nav-h\)\)/)
+  expect(rule).not.toMatch(/inset:\s*0/)
+
+  // And the card is read into the canvas' own coordinates, not the section's, which is
+  // the half of the change that lives in the script.
+  expect(network).toMatch(/canvas\.offsetTop/)
+  // The canvas' size no longer moves when the hero re-flows, so the cached card would
+  // miss a font swap without this.
+  expect(network).toMatch(/fonts\?\.ready|fonts\.ready/)
 })
 
 test('the canvas paints in the theme colors, read from the tokens', () => {

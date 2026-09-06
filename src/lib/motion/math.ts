@@ -346,12 +346,16 @@ export function insideCard(x: number, y: number, rect: Rect | null, pad = 10): b
  * Where the cloud is centered: on the console, but pulled only 35% of the way there from
  * the middle of the canvas, so the ellipsoid still covers the text column. Before the
  * card has been measured it falls back to the resting position of the design.
+ *
+ * `pull` is that fraction. The ✳ formation asks for 1, because `MOTION_SPEC` §3 centers
+ * it "en la consola" — on the card itself, not on the damped center the cloud orbits.
+ * At 0.35 it forms 210px to the left of the console and lands on the H1.
  */
-export function cloudCenter(rect: Rect | null, w: number, h: number): Point {
+export function cloudCenter(rect: Rect | null, w: number, h: number, pull = 0.35): Point {
   if (!rect) return { x: w * 0.64, y: h * 0.45 }
   const cx = rect.left + rect.width / 2
   // Ten pixels above the middle of the card: the log, not the metrics, is the center.
-  return { x: w * 0.5 + (cx - w * 0.5) * 0.35, y: rect.top + rect.height / 2 - 10 }
+  return { x: w * 0.5 + (cx - w * 0.5) * pull, y: rect.top + rect.height / 2 - 10 }
 }
 
 /**
