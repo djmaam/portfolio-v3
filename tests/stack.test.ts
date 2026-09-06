@@ -1,6 +1,7 @@
 import { expect, test } from 'bun:test'
 
 import { content, LANGS, stack } from '../src/lib/content'
+import { groupRows } from '../src/lib/stack'
 
 const source = await Bun.file(new URL('../src/components/Stack.astro', import.meta.url)).text()
 const [, frontmatter = '', body = ''] = /^---([\s\S]*?)^---([\s\S]*)$/m.exec(source) ?? []
@@ -28,10 +29,21 @@ test('the highlight is derived from stack.core, with no second list in the compo
   for (const name of new Set(names)) expect(clean).not.toContain(name)
 })
 
+/**
+ * Spec 22: `content.json` still ships 17 / 17 / 18 and stays read-only, and the component
+ * regroups the same 52 names into four rows that each fit the content column. The
+ * regrouping is `groupRows`, so nothing here may re-type a technology.
+ */
+test('the component renders four rows regrouped from stack.rows, not the three of content.json', () => {
+  expect(frontmatter).toMatch(/groupRows\(stack\.rows\.flat\(\), (?:ROWS|4)\)/)
+  expect(markup).not.toMatch(/stack\.rows\.map/)
+  expect(groupRows(names, 4).flat().sort()).toEqual([...names].sort())
+})
+
 test('each row ships its items twice and only the clone is hidden from assistive tech', () => {
   // One template for both halves, so the copy the marquee loops on cannot drift from
   // the one the screen reader announces.
-  expect(markup).toMatch(/stack\.rows\.map/)
+  expect(markup).toMatch(/rows\.map/)
   expect(markup).toMatch(/\[false, true\]\.map\(\(clone\)/)
   expect(markup).toMatch(/aria-hidden=\{clone \? 'true' : undefined\}/)
   expect([...markup.matchAll(/<ul class="half"/g)]).toHaveLength(1)
@@ -50,12 +62,23 @@ test('the marquee runs only with prefers-reduced-motion: no-preference', () => {
   expect(styles.indexOf('animation')).toBeGreaterThan(guard)
 })
 
-test('the three rows carry the speeds of MOTION_SPEC §10, the middle one reversed', () => {
+test('the four rows carry speeds of the MOTION_SPEC §10 family, alternating direction', () => {
+  // §10 names three rows at 70 / 85 / 78s; spec 22 adds a fourth in the same family and
+  // records the deviation. The alternation is what §10 is really about.
   expect(styles).toMatch(/nth-child\(1\)[\s\S]*?70s/)
   expect(styles).toMatch(/nth-child\(2\)[\s\S]*?85s/)
   expect(styles).toMatch(/nth-child\(3\)[\s\S]*?78s/)
+  expect(styles).toMatch(/nth-child\(4\)[\s\S]*?8[0-5]s/)
   expect(styles).toMatch(/nth-child\(2\)[\s\S]*?animation-direction:\s*reverse/)
+  expect(styles).toMatch(/nth-child\(4\)[\s\S]*?animation-direction:\s*reverse/)
   expect(styles).toMatch(/animation-timing-function:\s*linear|linear infinite/)
+})
+
+test('the stack column may be narrower than its content, which is what clips the marquee', () => {
+  // The bug of spec 22: an `auto` grid column is sized to the max-content of its widest
+  // item, and a `max-content` marquee track is 2.8 columns wide. `overflow: hidden` on
+  // the row zeroes the automatic minimum but not that contribution, so the fix is here.
+  expect(styles).toMatch(/\.stack\s*\{[\s\S]*?grid-template-columns:\s*minmax\(0,\s*1fr\)/)
 })
 
 test('hover pauses the hovered row and only that one', () => {

@@ -127,7 +127,9 @@ or the track would be `2 × half + gap` — is why that identity holds; it still
 ## Acceptance criteria
 
 - [ ] `document.documentElement.scrollWidth === clientWidth` on `/` and `/en` at 1512,
-      1024 and 390 — in `e2e/layout.spec.ts`.
+      1024 and 390 — in `e2e/layout.spec.ts`. **Holds at 1512 and 1024; at 390 it is a
+      `test.fail` for a defect this block does not own** (see below), and no `section` or
+      `container-page` child overflows at any of the three.
 - [ ] The stack subtitle is inside the viewport, in the header's second column.
 - [ ] Every `.track` measures exactly 2× its `.half`, at every one of those widths.
 - [ ] Both edges of a row fade, and no row is wider than its container.
@@ -139,6 +141,21 @@ or the track would be `2 × half + gap` — is why that identity holds; it still
       `no-preference` block; `tests/a11y.test.ts` still finds no unguarded animation.
 - [ ] With `reduce` the rows are static, wrapped and complete from the first frame.
 - [ ] `bun test`, `bun run lint`, `bun run build` and the Playwright suite pass.
+
+## Found on the way: the footer at 390px
+
+With the stack's 3540px gone, one horizontal overflow is left on the site and it is not
+this section's. `Footer.astro` stacks the fifteen ASCIImoji faces in a single inline-grid
+cell (`.moji`, `min-width: 9ch`) to size the box to the widest face; at a 390px viewport
+that cell is squeezed to 84px while its widest hidden face still measures ~111px, and the
+faces overflow it. The document measures 397 in ES and 391 in EN — 7px and 1px — while
+every section fits inside 390.
+
+It is pre-existing, it was invisible while the stack was contributing 3404px of its own,
+and `Footer.astro` is outside this block's files. It is recorded here and left as a
+`test.fail` in `e2e/layout.spec.ts` so it is visible in every CI run and turns red — not
+silently green — the day the footer is fixed. A one-line fix belongs to whoever owns the
+footer next: the `.moji` cell needs `overflow: hidden` or the ghosts need to not exceed it.
 
 ## Out of scope
 

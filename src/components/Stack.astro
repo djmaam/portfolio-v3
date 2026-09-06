@@ -1,6 +1,7 @@
 ---
 import { content, stack } from '../lib/content'
 import type { Lang } from '../lib/content'
+import { groupRows } from '../lib/stack'
 
 interface Props {
   lang: Lang
@@ -12,6 +13,13 @@ const t = content[lang]
 // The single list: `stack.core` names what is highlighted and the chips read membership
 // from it. A second list in here would drift the day content.json changes.
 const core = new Set<string>(stack.core)
+
+// Four rows, not the three of `DESIGN_SPEC` §3.7 and `MOTION_SPEC` §10: a row of the
+// handoff's grouping is ~1.3× the content column, so most of it is off screen at any
+// moment. Regrouped here because `handoff/` is read-only — same names, no second list.
+// The deviation and its measurements are recorded in `docs/superpowers/specs/22-stack.md`.
+const ROWS = 4
+const rows = groupRows(stack.rows.flat(), ROWS)
 ---
 
 <section id="stack" class="section-y section-divider" aria-labelledby="stack-title">
@@ -26,7 +34,7 @@ const core = new Set<string>(stack.core)
 
     <div class="rows">
       {
-        stack.rows.map((row) => (
+        rows.map((row) => (
           <div class="row" data-reveal>
             <div class="track">
               {/* Two identical halves: `translateX(-50%)` only loops seamlessly if the
@@ -53,8 +61,15 @@ const core = new Set<string>(stack.core)
 </section>
 
 <style>
+  /* `minmax(0, 1fr)`, never the implicit `auto` column: `auto` is sized to the
+     max-content of its widest item, and the widest item is a `max-content` marquee track
+     2.8 columns wide. `overflow: hidden` on the row zeroes the automatic *minimum* size
+     but not that contribution, so with `auto` the track dragged the section, the page
+     container and the document to 3540px inside a 1512px viewport — the subtitle ended up
+     at x=1864 and the right-hand mask off screen with it (spec 22). */
   .stack {
     display: grid;
+    grid-template-columns: minmax(0, 1fr);
     gap: clamp(24px, 3vw, 36px);
   }
 
@@ -186,7 +201,14 @@ const core = new Set<string>(stack.core)
       --speed: 78s;
     }
 
-    /* Scoped to the row under the cursor: the other two keep running. */
+    /* The fourth row is this block's addition (spec 22); its speed stays inside the
+       70-85s family of `MOTION_SPEC` §10 and the direction keeps alternating. */
+    .row:nth-child(4) .track {
+      --speed: 82s;
+      animation-direction: reverse;
+    }
+
+    /* Scoped to the row under the cursor: the other three keep running. */
     .row:hover .track {
       animation-play-state: paused;
     }
