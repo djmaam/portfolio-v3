@@ -105,11 +105,7 @@ test('both pages render the section where their stack marker was', async () => {
     expect(page).not.toContain('section-import: stack')
     expect(page).not.toContain('section: stack')
 
-    // The other four markers belong to sections being built in parallel: leaving one
-    // out of the diff is what keeps those branches merging cleanly.
-    for (const other of ['method', 'experience', 'projects', 'contact']) {
-      expect(page).toContain(`// section-import: ${other}`)
-      expect(page).toContain(`{/* section: ${other} */}`)
-    }
+    // Only this section's own marker is asserted. Pinning the siblings' markers would
+    // encode a transient state: each disappears as that section lands.
   }
 })
