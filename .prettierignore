@@ -5,3 +5,6 @@ bun.lock
 handoff/
 docs/
 .claude/
+test-results/
+playwright-report/
+.lighthouseci/

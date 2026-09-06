@@ -4,3 +4,6 @@ dist/
 .DS_Store
 .env*
 .claude/worktrees/
+test-results/
+playwright-report/
+.lighthouseci/

@@ -10,7 +10,18 @@ export default [
   // `.claude/worktrees/*` holds throwaway agent worktrees, each with its own
   // tsconfig.json. Left visible, typescript-eslint sees several candidate roots and
   // refuses to parse anything.
-  { ignores: ['dist/', '.astro/', 'node_modules/', 'handoff/', '.claude/'] },
+  {
+    ignores: [
+      'dist/',
+      '.astro/',
+      'node_modules/',
+      'handoff/',
+      '.claude/',
+      'test-results/',
+      'playwright-report/',
+      '.lighthouseci/',
+    ],
+  },
   js.configs.recommended,
   ...ts.configs.recommended,
   ...astro.configs.recommended,

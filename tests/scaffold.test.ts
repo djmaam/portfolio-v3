@@ -9,6 +9,6 @@ test('astro.config.mjs declares static output', () => {
 })
 
 test('package.json exposes every script the workflow depends on', () => {
-  const scripts = ['dev', 'build', 'preview', 'lint', 'format', 'test']
+  const scripts = ['dev', 'build', 'preview', 'lint', 'format', 'test', 'test:e2e', 'test:lh']
   expect(Object.keys(pkg.scripts as Record<string, string>).sort()).toEqual(scripts.sort())
 })
