@@ -80,6 +80,12 @@ const year = new Date().getFullYear()
   .moji {
     display: inline-grid;
     justify-items: end;
+    /* `flex: none` because this is a flex item of `.sig`, and a shrinking one: at 390px
+       it was compressed to 84px against a widest face of 111px, and the hidden faces —
+       `visibility: hidden` still takes layout space — pushed 7px past the viewport. That
+       was the last horizontal overflow on the site. Clipping it would crop whichever face
+       is showing, so the box keeps its width and the signature line wraps instead. */
+    flex: none;
     min-width: 9ch;
     color: var(--color-ink);
   }

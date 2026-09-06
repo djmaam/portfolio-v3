@@ -111,6 +111,106 @@ test('the hero H1 renders in four lines, like the mock', async ({ page }) => {
   expect(Math.round(lines)).toBe(4)
 })
 
+/**
+ * The guard of spec 22. The stack shipped a `max-content` marquee track inside a grid
+ * column sized `auto`, which made `documentElement.scrollWidth` 3540px against a 1512px
+ * viewport — the whole document scrolled sideways, and the stack subtitle sat at x=1864.
+ * Nothing failed, because nothing measured the document. This does, at every width, on
+ * both routes, for every section: it is the assertion the next one to do it trips over.
+ */
+const WIDTHS = [1512, 1024, 390]
+
+const overflow = (page: import('@playwright/test').Page) =>
+  page.evaluate(() => ({
+    scroll: document.documentElement.scrollWidth,
+    client: document.documentElement.clientWidth,
+    // Named, so a failure says which section did it and not only that one did.
+    wide: [
+      ...document.querySelectorAll<HTMLElement>('section, .container-page, .container-page > *'),
+    ]
+      .filter((el) => el.getBoundingClientRect().right > document.documentElement.clientWidth + 0.5)
+      .map((el) => el.className || el.tagName),
+  }))
+
+for (const route of ROUTES) {
+  test(`${route} never scrolls horizontally`, async ({ page }) => {
+    for (const width of WIDTHS) {
+      await page.setViewportSize({ width, height: 950 })
+      await page.goto(route)
+
+      const doc = await overflow(page)
+      // No section may be wider than the viewport, at any width — this is the assertion
+      // the stack should have failed on for two blocks.
+      expect(doc.wide).toEqual([])
+      // 390 is asserted separately below: one thing on the page is still 7px too wide
+      // there, and it is not a section.
+      if (width !== 390) expect(doc.scroll).toBe(doc.client)
+    }
+  })
+
+  test(`${route} does not scroll horizontally at 390 either`, async ({ page }) => {
+    // 390 is where the last one hid: the footer's ASCIImoji shrank as a flex item to
+    // 84px against a widest face of 111, and the hidden faces that size the box — they
+    // are `visibility: hidden`, which still takes layout space — pushed 7px past the
+    // viewport while every section fit. `flex: none` in `Footer.astro` closed it.
+    await page.setViewportSize({ width: 390, height: 950 })
+    await page.goto(route)
+
+    const doc = await overflow(page)
+    expect(doc.scroll).toBe(doc.client)
+  })
+
+  test(`${route} keeps the stack subtitle on screen, in the header's second column`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: WIDE.viewport, height: 950 })
+    await page.goto(route)
+
+    const sub = await page.evaluate(() => {
+      const el = document.querySelector<HTMLElement>('#stack header p.text-body')!
+      const headline = document.querySelector<HTMLElement>('#stack header .headline')!
+      return {
+        left: el.getBoundingClientRect().left,
+        right: el.getBoundingClientRect().right,
+        // Second column of the two-column `auto-fit` header: it starts after the headline.
+        afterHeadline: el.getBoundingClientRect().left > headline.getBoundingClientRect().right,
+        viewport: document.documentElement.clientWidth,
+      }
+    })
+
+    expect(sub.afterHeadline).toBe(true)
+    expect(sub.left).toBeGreaterThanOrEqual(WIDE.left)
+    expect(sub.right).toBeLessThanOrEqual(sub.viewport)
+  })
+}
+
+test('every marquee track is exactly twice its half, so translateX(-50%) has no seam', async ({
+  page,
+}) => {
+  // The gap lives on the chip and not on the flex container precisely so this identity
+  // holds — with `gap` the track would be `2 × half + gap` and the loop would land half a
+  // gap short, once per cycle. A row stretched by a blown grid track breaks it too.
+  for (const width of [1512, 1024, 390]) {
+    await page.setViewportSize({ width, height: 950 })
+    await page.goto('/')
+
+    const rows = await page.evaluate(() =>
+      [...document.querySelectorAll<HTMLElement>('#stack .row')].map((row) => ({
+        row: row.getBoundingClientRect().width,
+        track: row.querySelector<HTMLElement>('.track')!.getBoundingClientRect().width,
+        half: row.querySelector<HTMLElement>('.half')!.getBoundingClientRect().width,
+        container: row.parentElement!.getBoundingClientRect().width,
+      })),
+    )
+
+    expect(rows).toHaveLength(4)
+    for (const row of rows) {
+      expect(row.track).toBeCloseTo(2 * row.half, 1)
+      expect(row.row).toBeLessThanOrEqual(row.container)
+    }
+  }
+})
+
 test('the projects grid stays at three columns, which is what projectDelay assumes', async ({
   page,
 }) => {
