@@ -7,7 +7,10 @@ import ts from 'typescript-eslint'
 // typescript-eslint and rely on `astro check` + TS strict alone.
 
 export default [
-  { ignores: ['dist/', '.astro/', 'node_modules/', 'handoff/'] },
+  // `.claude/worktrees/*` holds throwaway agent worktrees, each with its own
+  // tsconfig.json. Left visible, typescript-eslint sees several candidate roots and
+  // refuses to parse anything.
+  { ignores: ['dist/', '.astro/', 'node_modules/', 'handoff/', '.claude/'] },
   js.configs.recommended,
   ...ts.configs.recommended,
   ...astro.configs.recommended,

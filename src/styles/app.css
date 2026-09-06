@@ -143,6 +143,14 @@
     --nav-h: 64px;
   }
 
+  /* The nav is sticky, so a native fragment jump (no JS, or a middle-click) would
+     land the section underneath it. `anchors.ts` applies the same offset when it
+     handles the click; this covers the case where it does not run. */
+  :target,
+  [id] {
+    scroll-margin-top: var(--nav-h);
+  }
+
   body {
     background-color: var(--color-bg);
     color: var(--color-ink);
