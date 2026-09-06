@@ -12,6 +12,7 @@
 import { chromium } from '@playwright/test'
 
 import { content } from '../src/lib/content'
+import { projectUrl } from '../src/lib/projects'
 
 // 16:11, the aspect ratio of the card's `.preview` box. The page lays out at 1440 CSS
 // pixels — a desktop, not a squeezed phone — and is written out at two thirds of that,
@@ -34,8 +35,9 @@ for (const project of content.es.projects) {
   if (only.length > 0 && !only.includes(project.host)) continue
   if (!hosts.delete(project.host)) continue
 
-  console.log(`→ ${project.host}`)
-  await page.goto(project.url, { waitUntil: 'load', timeout: 60_000 })
+  const url = projectUrl(project.host, project.url)
+  console.log(`→ ${project.host} (${url})`)
+  await page.goto(url, { waitUntil: 'load', timeout: 60_000 })
   await page.waitForLoadState('networkidle', { timeout: 30_000 }).catch(() => {})
 
   for (const button of await page.getByRole('button').all()) {

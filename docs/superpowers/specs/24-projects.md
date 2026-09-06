@@ -28,7 +28,7 @@ Our `left: -40%` double-counts the initial offset and eats 40% off the end of th
 ### The fix
 
 - `.shimmer` moves to `left: 0`, keeps `width: 40%`, and its rest-state transform becomes
-  `translateX(-100%) skewX(-12deg)` — the same position the animation starts from, so the
+  `translateX(-120%) skewX(-12deg)` — the same position the animation starts from, so the
   band is offscreen-left whether or not the animation is running (matches today's
   behavior under `prefers-reduced-motion: reduce`, where the shimmer never animates and
   must not appear as a static bar over the preview).
@@ -39,19 +39,29 @@ Our `left: -40%` double-counts the initial offset and eats 40% off the end of th
   ```css
   @keyframes shimmer {
     from {
-      transform: translateX(-100%) skewX(-12deg);
+      transform: translateX(-120%) skewX(-12deg);
     }
     to {
-      transform: translateX(250%) skewX(-12deg);
+      transform: translateX(270%) skewX(-12deg);
     }
   }
   ```
 
-  At `from`: `left: 0` shifted by `-100%` of the band's own 40%-wide box = the band spans
-  -40% to 0% of the frame — offscreen-left, touching the boundary. At `to`: shifted by
-  `250%` of the same box = the band spans 100% to 140% of the frame — offscreen-right,
-  touching the boundary on the other side. Neither endpoint overlaps the frame's interior,
-  so the loop point is invisible by construction, not just by eye.
+  `MOTION_SPEC` §9 states `translateX(-100% → 250%)`, which is exactly right for an
+  axis-aligned box: at `left: 0`, `-100%` puts the band's right edge on the frame's left
+  edge and `250%` puts its left edge on the frame's right edge — touching the boundary,
+  not crossing it. But `skewX(-12deg)` shears the band into a parallelogram, and a
+  parallelogram's rendered bounding box is wider than its layout width by
+  `height * tan(12deg)`, split evenly across both edges. Measured against a real card
+  (`.preview` 383×263 in this build), that shear alone pushes ~28px of the sheared corner
+  back across the boundary the axis-aligned math said was clear — an e2e assertion on the
+  actual rendered bounding box caught this where the arithmetic did not. `-120%`/`270%`
+  add the ~18% of the band's own width (`(11/16) * tan(12deg) / (2 * 0.4)`, from the
+  preview's fixed 16:11 aspect ratio, the band's fixed 40% width, and the fixed 12°
+  skew — a constant ratio, so it holds at every breakpoint) needed to clear that shear,
+  with a small margin to spare. The motion `MOTION_SPEC` describes — enters from the left,
+  skewed, 40% wide, travels across, exits right — is unchanged; only the exact travel
+  distance grew enough to make the loop point invisible in practice, not just on paper.
 
 `@keyframes shimmer` lives in `src/styles/app.css`, shared with sibling agents' work —
 only that one block is touched here.

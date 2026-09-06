@@ -4,7 +4,7 @@ import { join } from 'node:path'
 
 import { content } from '../lib/content'
 import type { Lang } from '../lib/content'
-import { previewMode, projectDelay } from '../lib/projects'
+import { previewMode, projectDelay, projectUrl } from '../lib/projects'
 
 interface Props {
   lang: Lang
@@ -47,7 +47,12 @@ const projects = t.projects.map((project, index) => {
       {
         projects.map((project) => (
           <li data-reveal data-delay={project.delay}>
-            <a class="card" href={project.url} target="_blank" rel="noopener noreferrer">
+            <a
+              class="card"
+              href={projectUrl(project.host, project.url)}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
               <div class="preview">
                 {/* Decoration, not content: `alt=""` keeps it out of the accessibility
                 tree, and it is a static file, so the card costs one same-origin request
@@ -167,11 +172,14 @@ const projects = t.projects.map((project, index) => {
     pointer-events: none;
   }
 
+  /* Rest state matches the animation's `from` keyframe (`app.css`): offscreen-left,
+     whether or not the animation is running. `left: -40%` used to double-count the
+     offset and land the travelling band parked on the frame's right edge (PV3-29). */
   .shimmer {
     position: absolute;
     top: 0;
     bottom: 0;
-    left: -40%;
+    left: 0;
     width: 40%;
     pointer-events: none;
     background: linear-gradient(
@@ -180,7 +188,7 @@ const projects = t.projects.map((project, index) => {
       color-mix(in srgb, var(--color-accent) 12%, transparent),
       transparent
     );
-    transform: skewX(-12deg);
+    transform: translateX(-120%) skewX(-12deg);
   }
 
   .kind {

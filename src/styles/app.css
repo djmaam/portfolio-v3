@@ -491,8 +491,11 @@
 }
 
 @keyframes shimmer {
+  from {
+    transform: translateX(-120%) skewX(-12deg);
+  }
   to {
-    transform: translateX(250%);
+    transform: translateX(270%) skewX(-12deg);
   }
 }
 
