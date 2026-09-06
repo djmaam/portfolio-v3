@@ -5,7 +5,7 @@ import Nav from '../../components/Nav.astro'
 // section-import: method
 // section-import: experience
 // section-import: projects
-// section-import: stack
+import Stack from '../../components/Stack.astro'
 // section-import: contact
 import Base from '../../layouts/Base.astro'
 import type { Lang } from '../../lib/content'
@@ -20,6 +20,6 @@ const lang: Lang = 'en'
   {/* section: method */}
   {/* section: experience */}
   {/* section: projects */}
-  {/* section: stack */}
+  <Stack lang={lang} />
   {/* section: contact */}
 </Base>
