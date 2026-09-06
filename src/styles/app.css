@@ -189,10 +189,23 @@
    The spacing of `DESIGN_SPEC §2`, so no component repeats the magic numbers.
    The hero padding is deliberately not here: it appears exactly once. */
 
+/* `content-box` is the whole of issue 19. `DESIGN_SPEC` §2 reads
+   `max-width: 1200px; padding: 0 clamp(20px, 4vw, 48px)`, which is ambiguous, and the
+   reset's `border-box` resolves it the wrong way: the cap swallows the gutter and the
+   grid comes out 1104px. The mock's own container is `content-box` — 1200 of content
+   inside a 1296 border box — so the 1200 is the *content*, and the padding is the margin
+   the page keeps from the viewport edge. Only viewports past 1296px see any difference:
+   below the cap, `width: auto` has always made the content box the parent minus the
+   padding, whatever `box-sizing` says. */
 @utility container-page {
-  max-width: 1200px;
+  /* Named, because a flex or grid item cannot inherit block layout's `width: auto` and
+     has to restate it — see `.inner` in `Method.astro`, the one place that needs them. */
+  --container-max: 1200px;
+  --container-pad: clamp(20px, 4vw, 48px);
+  box-sizing: content-box;
+  max-width: var(--container-max);
   margin-inline: auto;
-  padding-inline: clamp(20px, 4vw, 48px);
+  padding-inline: var(--container-pad);
 }
 
 @utility section-y {
