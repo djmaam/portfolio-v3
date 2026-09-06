@@ -1,8 +1,10 @@
 import { defineConfig, devices } from '@playwright/test'
 
-// The static build, served exactly as it ships. `astro preview` defaults to this port
-// and the tests never hardcode it anywhere else.
-const PORT = 4321
+// The static build, served exactly as it ships. 4321 is `astro preview`'s own default and
+// stays the default here; `PORT` exists because several worktrees run this suite at once.
+// Without it they all share one port, and `reuseExistingServer` would quietly hand every
+// run the *first* worktree's `dist/` — a suite that passes against someone else's build.
+const PORT = Number(process.env.PORT) || 4321
 const baseURL = `http://localhost:${PORT}`
 const isCI = Boolean(process.env.CI)
 
@@ -18,7 +20,7 @@ export default defineConfig({
   // CI time for very little here (spec 17, "out of scope").
   projects: [{ name: 'chromium', use: devices['Desktop Chrome'] }],
   webServer: {
-    command: 'bun run preview',
+    command: `bun run preview --port ${PORT}`,
     url: baseURL,
     reuseExistingServer: !isCI,
     // Astro 7 daemonizes `preview` when it auto-detects a coding-agent environment, and
