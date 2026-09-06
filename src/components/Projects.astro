@@ -1,0 +1,237 @@
+---
+import { existsSync } from 'node:fs'
+import { join } from 'node:path'
+
+import { content } from '../lib/content'
+import type { Lang } from '../lib/content'
+import { previewMode, projectDelay } from '../lib/projects'
+
+interface Props {
+  lang: Lang
+}
+
+const { lang } = Astro.props
+const t = content[lang]
+
+const projects = t.projects.map((project, index) => {
+  const shot = `/previews/${project.host}.png`
+  return {
+    ...project,
+    delay: projectDelay(index),
+    iframe: previewMode(project.host) === 'iframe',
+    // Resolved at build time: the screenshots are still pending from the user, and an
+    // <img> pointing at a file that is not there renders a broken icon in every browser.
+    // Absent means no <img> at all, so the striped placeholder of the box shows through.
+    shot: existsSync(join(process.cwd(), 'public', shot)) ? shot : null,
+  }
+})
+---
+
+<section id="projects" class="section-y section-divider">
+  <div class="container-page">
+    <div class="head" data-reveal>
+      <div class="heading">
+        <p class="font-mono text-label text-dim">04 / {t.secProjects}</p>
+        <h2 class="text-h2">{t.projectsTitle}</h2>
+      </div>
+      <p class="sub text-dim">{t.projectsSub}</p>
+    </div>
+
+    <ul class="cards">
+      {
+        /* The reveal goes on the `<li>`, one level above the hover transform of the
+        card: two transforms on one element fight (`MOTION_SPEC` §5). */
+      }
+      {
+        projects.map((project) => (
+          <li data-reveal data-delay={project.delay}>
+            <a class="card" href={project.url} target="_blank" rel="noopener noreferrer">
+              <div class="preview">
+                {/* Decoration, not content: sandboxed, out of the tab order and out of
+                the accessibility tree, and never loaded before it is scrolled to. */}
+                {project.iframe && (
+                  <iframe
+                    class="frame"
+                    src={project.url}
+                    sandbox=""
+                    loading="lazy"
+                    aria-hidden="true"
+                    tabindex="-1"
+                  />
+                )}
+                {project.shot && <img class="frame" src={project.shot} alt="" loading="lazy" />}
+                <span class="shimmer" aria-hidden="true" />
+                <span class="kind font-mono text-label-sm">{project.kind}</span>
+              </div>
+
+              <div class="meta">
+                <span class="names">
+                  <span class="text-card-title">{project.name}</span>
+                  <span class="desc text-dim">{project.desc}</span>
+                </span>
+                <span class="arrow font-mono" aria-hidden="true">
+                  ↗
+                </span>
+              </div>
+            </a>
+          </li>
+        ))
+      }
+    </ul>
+  </div>
+</section>
+
+<style>
+  .head {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 24px;
+    margin-bottom: 40px;
+  }
+
+  .heading {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .sub {
+    max-width: 380px;
+    font-size: 16px;
+  }
+
+  .cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr));
+    gap: 14px;
+  }
+
+  .cards > li {
+    display: flex;
+    min-width: 0;
+  }
+
+  .card {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    border-radius: 24px;
+    overflow: hidden;
+    background: var(--color-surface);
+    border: 1px solid var(--color-line);
+    color: inherit;
+    text-decoration: none;
+    transition:
+      transform 0.25s,
+      border-color 0.25s,
+      box-shadow 0.25s;
+  }
+
+  .card:hover {
+    transform: translateY(-4px);
+    border-color: color-mix(in srgb, var(--color-accent) 45%, transparent);
+    box-shadow: 0 20px 60px var(--color-shadow-card);
+  }
+
+  .card:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+  }
+
+  /* The striped placeholder: it is the floor of every preview, so a screenshot that has
+     not arrived yet leaves the box looking deliberate instead of empty. */
+  .preview {
+    position: relative;
+    aspect-ratio: 16 / 11;
+    overflow: hidden;
+    border-bottom: 1px solid var(--color-line);
+    background: repeating-linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--color-ink) 4%, transparent) 0 6px,
+      transparent 6px 14px
+    );
+  }
+
+  /* The iframe renders at 400% and is scaled to a quarter, so the site inside lays out
+     as a desktop viewport instead of as a 300px phone. */
+  .frame {
+    position: absolute;
+    inset: 0;
+    width: 400%;
+    height: 400%;
+    border: 0;
+    transform: scale(0.25);
+    transform-origin: 0 0;
+    pointer-events: none;
+  }
+
+  /* The screenshot shares the class, and overrides the two rules that are the iframe's:
+     it is already the size of the box. */
+  img.frame {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transform: none;
+  }
+
+  .shimmer {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: -40%;
+    width: 40%;
+    pointer-events: none;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      color-mix(in srgb, var(--color-accent) 12%, transparent),
+      transparent
+    );
+    transform: skewX(-12deg);
+  }
+
+  .kind {
+    position: absolute;
+    top: 14px;
+    left: 14px;
+    padding: 5px 10px;
+    border-radius: 999px;
+    background: var(--color-glass);
+    color: var(--color-accent);
+    border: 1px solid color-mix(in srgb, var(--color-accent) 30%, transparent);
+  }
+
+  .meta {
+    display: flex;
+    flex: 1;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 14px;
+    padding: 16px 20px 18px;
+  }
+
+  .names {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 0;
+  }
+
+  .desc {
+    font-size: 14px;
+  }
+
+  .arrow {
+    flex: none;
+    font-size: 12px;
+    color: var(--color-accent);
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .shimmer {
+      animation: shimmer 2.8s ease-in-out infinite;
+    }
+  }
+</style>
