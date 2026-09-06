@@ -33,3 +33,11 @@ export const consoleChrome = {
     { key: 'shipped', label: 'SHIPPED' },
   ],
 } as const
+
+/**
+ * The companies behind the "also with" box of the experience timeline. They live in the
+ * mock (`handoff/reference/Portfolio.dc.html:697`) but never made it into
+ * `content.json`, which only carries the label. Proper nouns, identical in both
+ * languages, so they belong here next to the other chrome that is not translated copy.
+ */
+export const alsoWithCompanies = ['Creativa Media Lab', 'Kodai', 'Hashme', 'Demedis'] as const
