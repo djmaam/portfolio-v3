@@ -155,6 +155,14 @@ class NodeNetwork {
       else this.resume()
     })
 
+    // The canvas is a viewport box, so its size no longer changes when the hero re-flows
+    // and `measure`'s size guard would keep a stale card across a font swap — the one
+    // reflow that moves the console without resizing the window.
+    document.fonts?.ready.then(() => {
+      this.w = -1
+      this.measure()
+    })
+
     this.stopLog = onLogLine(() => this.command())
     window.addEventListener('pointermove', this.onPointer, { passive: true })
     this.resume()
@@ -210,6 +218,10 @@ class NodeNetwork {
       top += el.offsetTop
       el = el.offsetParent as HTMLElement | null
     }
+    // Into the canvas' own coordinates. The canvas is the viewport box, not the section
+    // box (`app.css`, `.hero-net`), so the two spaces no longer coincide.
+    left -= this.canvas.offsetLeft
+    top -= this.canvas.offsetTop
     this.card = { left, top, width: this.cardEl.offsetWidth, height: this.cardEl.offsetHeight }
     this.anchors = consoleAnchors(this.card)
   }
@@ -287,6 +299,9 @@ class NodeNetwork {
     const dx = center.x - w / 2
     const dy = center.y - h / 2
     const armRadius = asteriskRadius(w, h)
+    // The ✳ is centered on the console itself (`MOTION_SPEC` §3), not on the damped
+    // center the cloud orbits — that is 210px to its left, over the H1.
+    const formCenter = this.form > 0 ? cloudCenter(this.card, w, h, 1) : center
     this.rot += rotationStep(this.collapse)
 
     // The cursor eases toward its target, so the camera never snaps.
@@ -334,8 +349,8 @@ class NodeNetwork {
 
       if (this.form > 0) {
         const target = asteriskTarget(i, count, armRadius)
-        p.x = lerp(p.x, center.x + target.x, this.form)
-        p.y = lerp(p.y, center.y + target.y, this.form)
+        p.x = lerp(p.x, formCenter.x + target.x, this.form)
+        p.y = lerp(p.y, formCenter.y + target.y, this.form)
       }
 
       if (hasMouse) {
