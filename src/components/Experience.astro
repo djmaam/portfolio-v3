@@ -147,17 +147,31 @@ const isCurrent = (job: (typeof t.jobs)[number]) => job.glow !== 'transparent'
     border: 1px solid transparent;
     border-radius: 20px;
     transition:
-      transform 0.25s,
       border-color 0.25s,
       background 0.25s,
       box-shadow 0.25s;
   }
 
   .card:hover {
-    transform: translateY(-4px);
     background: var(--color-surface);
     border-color: color-mix(in srgb, var(--color-accent) 45%, transparent);
     box-shadow: 0 20px 60px var(--color-shadow-card);
+  }
+
+  /* The 4px lift of `DESIGN_SPEC` §4 is motion: with `reduce` the card still materializes
+     on hover, it just stays where it is. */
+  @media (prefers-reduced-motion: no-preference) {
+    .card {
+      transition:
+        transform 0.25s,
+        border-color 0.25s,
+        background 0.25s,
+        box-shadow 0.25s;
+    }
+
+    .card:hover {
+      transform: translateY(-4px);
+    }
   }
 
   .who {

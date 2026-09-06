@@ -124,15 +124,28 @@ const projects = t.projects.map((project, index) => {
     color: inherit;
     text-decoration: none;
     transition:
-      transform 0.25s,
       border-color 0.25s,
       box-shadow 0.25s;
   }
 
   .card:hover {
-    transform: translateY(-4px);
     border-color: color-mix(in srgb, var(--color-accent) 45%, transparent);
     box-shadow: 0 20px 60px var(--color-shadow-card);
+  }
+
+  /* The 4px lift of `DESIGN_SPEC` §4 is motion: with `reduce` the card still lights up
+     on hover, it just stays where it is. */
+  @media (prefers-reduced-motion: no-preference) {
+    .card {
+      transition:
+        transform 0.25s,
+        border-color 0.25s,
+        box-shadow 0.25s;
+    }
+
+    .card:hover {
+      transform: translateY(-4px);
+    }
   }
 
   /* The striped placeholder: it is the floor of every preview, so a screenshot that has

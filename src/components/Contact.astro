@@ -196,14 +196,11 @@ const socials = (['github', 'linkedin', 'telegram'] as const).map((key) => ({
     color: var(--color-contact-accent);
     border-bottom: 1px solid currentColor;
     overflow-wrap: anywhere;
-    transition:
-      color 0.25s,
-      gap 0.25s;
+    transition: color 0.25s;
   }
 
   .email:hover {
     color: var(--color-contact-ink);
-    gap: 16px;
   }
 
   .arrow {
@@ -270,6 +267,18 @@ const socials = (['github', 'linkedin', 'telegram'] as const).map((key) => ({
 
     .grid {
       animation: gridflow 6s linear infinite;
+    }
+
+    /* The gap that grows 10 → 16px on hover (`DESIGN_SPEC` §4) moves the arrow, so it
+       is motion too: with `reduce` the address still changes color, it just holds. */
+    .email {
+      transition:
+        color 0.25s,
+        gap 0.25s;
+    }
+
+    .email:hover {
+      gap: 16px;
     }
   }
 </style>

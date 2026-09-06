@@ -102,15 +102,28 @@ const words = t.aboutLead.split(' ').map((word, index) => (index === 0 ? word : 
     background: var(--color-surface);
     border: 1px solid var(--color-line);
     transition:
-      transform 0.25s,
       border-color 0.25s,
       box-shadow 0.25s;
   }
 
   .card:hover {
-    transform: translateY(-4px);
     border-color: color-mix(in srgb, var(--color-accent) 45%, transparent);
     box-shadow: 0 20px 60px var(--color-shadow-card);
+  }
+
+  /* The 4px lift of `DESIGN_SPEC` §4 is motion: with `reduce` the card still lights up
+     on hover, it just stays where it is. */
+  @media (prefers-reduced-motion: no-preference) {
+    .card {
+      transition:
+        transform 0.25s,
+        border-color 0.25s,
+        box-shadow 0.25s;
+    }
+
+    .card:hover {
+      transform: translateY(-4px);
+    }
   }
 
   /* A 10-11px mono label: weight 500 is what makes the accent legal as text here

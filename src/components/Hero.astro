@@ -144,18 +144,12 @@ const figures = [
     border-radius: 999px;
     font-size: 15px;
     font-weight: 500;
-    transition:
-      transform 0.2s,
-      border-color 0.2s;
+    transition: border-color 0.2s;
   }
 
   .primary {
     background: var(--color-ink);
     color: var(--color-bg);
-  }
-
-  .primary:hover {
-    transform: translateY(-1px);
   }
 
   .secondary {
@@ -185,6 +179,18 @@ const figures = [
   @media (prefers-reduced-motion: no-preference) {
     .cursor {
       animation: blink 1s steps(1) infinite;
+    }
+
+    /* The lift of `DESIGN_SPEC` §4 is motion like any other: with `reduce` the button
+       still takes its hover border, it just does not move. */
+    .cta {
+      transition:
+        transform 0.2s,
+        border-color 0.2s;
+    }
+
+    .primary:hover {
+      transform: translateY(-1px);
     }
   }
 </style>
