@@ -31,7 +31,9 @@ function parseColor(value: string): Rgba {
   if (text.startsWith('#')) {
     const hex = text.slice(1)
     const pairs =
-      hex.length === 3 ? [...hex].map((digit) => digit + digit) : [hex.slice(0, 2), hex.slice(2, 4), hex.slice(4, 6)]
+      hex.length === 3
+        ? [...hex].map((digit) => digit + digit)
+        : [hex.slice(0, 2), hex.slice(2, 4), hex.slice(4, 6)]
     const [r, g, b] = pairs.map((pair) => parseInt(pair, 16))
     return [r!, g!, b!, 1]
   }
@@ -200,27 +202,32 @@ const components = (
   await Array.fromAsync(new Glob('src/components/*.astro').scan({ cwd: Bun.fileURLToPath(root) }))
 ).sort()
 
-test.each(components)('%s only paints text with the accent at ≥15px or weight ≥500', async (file) => {
-  const source = await Bun.file(new URL(file, root)).text()
-  const styles = [...source.matchAll(/<style>([\s\S]*?)<\/style>/g)].map(([, body]) => body!).join('\n')
-  const parsed = rules(styles)
+test.each(components)(
+  '%s only paints text with the accent at ≥15px or weight ≥500',
+  async (file) => {
+    const source = await Bun.file(new URL(file, root)).text()
+    const styles = [...source.matchAll(/<style>([\s\S]*?)<\/style>/g)]
+      .map(([, body]) => body!)
+      .join('\n')
+    const parsed = rules(styles)
 
-  const offenders = parsed
-    .filter(({ body }) => /(^|[;{\s])color:\s*var\(--color-accent\)/.test(body))
-    .filter(({ selector, body }) => {
-      if (clearsThreshold(body)) return false
-      // The size or the weight may sit on the element's own class instead — a `:hover`
-      // that only changes the color must not also change the weight, or the text reflows.
-      const classes = ownClasses(selector)
-      return !parsed.some(
-        (rule) =>
-          rule.body !== body &&
-          classes.includes(ownClasses(rule.selector)[0] ?? '') &&
-          ownClasses(rule.selector).length === 1 &&
-          clearsThreshold(rule.body),
-      )
-    })
-    .map(({ selector }) => selector)
+    const offenders = parsed
+      .filter(({ body }) => /(^|[;{\s])color:\s*var\(--color-accent\)/.test(body))
+      .filter(({ selector, body }) => {
+        if (clearsThreshold(body)) return false
+        // The size or the weight may sit on the element's own class instead — a `:hover`
+        // that only changes the color must not also change the weight, or the text reflows.
+        const classes = ownClasses(selector)
+        return !parsed.some(
+          (rule) =>
+            rule.body !== body &&
+            classes.includes(ownClasses(rule.selector)[0] ?? '') &&
+            ownClasses(rule.selector).length === 1 &&
+            clearsThreshold(rule.body),
+        )
+      })
+      .map(({ selector }) => selector)
 
-  expect(offenders).toEqual([])
-})
+    expect(offenders).toEqual([])
+  },
+)
