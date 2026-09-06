@@ -1,0 +1,227 @@
+import { expect, test, type Page } from '@playwright/test'
+// Node ESM needs the attribute and only gives JSON modules a default export, so this
+// cannot use the named import `src/lib/content.ts` uses — Vite resolves that one.
+import content from '../handoff/content.json' with { type: 'json' }
+
+const { i18n } = content
+
+/**
+ * The end-to-end safety net (spec 17). Seven tests, deliberately: `bun test` already
+ * covers every formula, the contrast ratios and the a11y invariants without a browser,
+ * so each test here asserts something a unit test structurally cannot — the DOM plumbing
+ * running in a real event loop, with a real layout engine and a real focus order.
+ */
+
+// `bootDelay(10)` — the console, the last element of the sequence — is 2200ms, so every
+// wait on the boot timeline needs headroom over that.
+const BOOT_TIMEOUT = 6000
+
+test('the hero boots', async ({ page }) => {
+  await page.goto('/')
+
+  const boots = page.locator('[data-boot]')
+  const count = await boots.count()
+  expect(count).toBeGreaterThan(0)
+
+  // Every step of the timeline, not just the last: a driver that skipped an element
+  // would still leave the console visible.
+  for (let index = 0; index < count; index++) {
+    await expect(boots.nth(index)).toHaveCSS('opacity', '1', { timeout: BOOT_TIMEOUT })
+  }
+
+  await expect(page.locator('h1')).toBeVisible()
+  await expect(page.locator('h1')).toHaveCSS('opacity', '1')
+})
+
+test('the theme toggle round-trips', async ({ page }) => {
+  await page.goto('/')
+
+  const read = () =>
+    page.evaluate(() => ({
+      theme: document.documentElement.dataset.theme,
+      colorScheme: document.documentElement.style.colorScheme,
+    }))
+
+  const before = await read()
+  await page.locator('[data-theme-toggle]').click()
+
+  const after = await read()
+  expect(after.theme).not.toBe(before.theme)
+  // Both halves, because only `data-theme` drives the tokens and only `color-scheme`
+  // drives the form controls and the scrollbar.
+  expect(after.colorScheme).toBe(after.theme)
+
+  await page.reload()
+  expect(await read()).toEqual(after)
+})
+
+test('the language toggle navigates', async ({ page }) => {
+  await page.goto('/')
+
+  await page.locator('a[data-lang-toggle]').click()
+  await page.waitForURL(/\/en\/?$/)
+
+  await expect(page.locator('html')).toHaveAttribute('lang', 'en')
+  await expect(page.locator('h1')).toContainText(i18n.en.h1a)
+})
+
+test('a reveal fires on scroll', async ({ page }) => {
+  await page.goto('/')
+
+  // Below the fold on every viewport this suite runs at, so it is still at its resting
+  // state when the page loads and only the observer can move it.
+  const card = page.locator('#projects li[data-reveal]').first()
+  await expect(card).toHaveCSS('opacity', '0')
+
+  await card.scrollIntoViewIfNeeded()
+  await expect(card).toHaveCSS('opacity', '1')
+})
+
+test('the method sticky advances through its five steps', async ({ page }) => {
+  await page.goto('/')
+
+  const verbs = i18n.es.stepVerbs.split('|')
+
+  const track = await page.evaluate(() => {
+    const element = document.querySelector('[data-method-track]')
+    if (!element) return null
+    const rect = element.getBoundingClientRect()
+    return { top: rect.top + window.scrollY, height: rect.height, vh: window.innerHeight }
+  })
+  expect(track).not.toBeNull()
+  if (!track) return
+
+  // From a viewport before the track to a viewport past its end: whichever mode the
+  // section resolved to — pinned or in flow — the whole progress range is inside this.
+  const from = Math.max(0, track.top - track.vh)
+  const to = track.top + track.height
+  const samples: { active: number; text: string; state: string }[] = []
+
+  for (let i = 0; i <= 40; i++) {
+    await page.evaluate((y) => window.scrollTo(0, y), from + ((to - from) * i) / 40)
+    // The scroll engine is rAF-throttled, so the DOM lands a frame after the scroll.
+    await page.waitForTimeout(40)
+    samples.push(
+      await page.evaluate(() => ({
+        active: [...document.querySelectorAll<HTMLElement>('[data-step]')].findIndex(
+          (card) => card.dataset.state === 'active',
+        ),
+        text: document.querySelector('[data-method-text]')?.textContent?.trim() ?? '',
+        state: document.querySelector<HTMLElement>('[data-method-status]')?.dataset.state ?? '',
+      })),
+    )
+  }
+
+  // Every step lit, in order, and none skipped.
+  const walked = [...new Set(samples.map((s) => s.active))].filter((active) => active >= 0)
+  expect(walked).toEqual([0, 1, 2, 3, 4])
+
+  // The indicator tracks the step it claims to be on, on every single frame sampled.
+  for (const { active, text } of samples) {
+    if (active >= 0) expect(text).toBe(`${verbs[active]} · ${active + 1}/5`)
+  }
+
+  expect(samples[0].state).toBe('idle')
+  expect(samples.at(-1)?.state).toBe('done')
+  expect(samples.at(-1)?.text).toBe(i18n.es.cycleDone)
+})
+
+test.describe('with prefers-reduced-motion: reduce', () => {
+  test.use({ reducedMotion: 'reduce' })
+
+  test('no canvas is mounted and the hero reads from the first frame', async ({ page }) => {
+    await page.goto('/')
+
+    await expect(page.locator('canvas')).toHaveCount(0)
+    // No wait: with `reduce` the `opacity: 0` rule never applied, so this holds before
+    // any timer of the boot sequence could have fired.
+    await expect(page.locator('h1')).toHaveCSS('opacity', '1')
+    await expect(page.locator('h1')).toBeVisible()
+  })
+})
+
+/**
+ * The one issue 16 could not close. `app.css` draws a 2px ring at a 2px offset on
+ * `:focus-visible`, and `.row`, `.preview`, `.edge` and friends carry `overflow: hidden`
+ * — so an element sitting flush against one of them would have its ring cropped. Nothing
+ * short of a real layout engine can answer that, which is why it lives here.
+ */
+async function clippedRings(page: Page): Promise<string[]> {
+  return page.evaluate(() => {
+    const element = document.activeElement
+    if (!(element instanceof HTMLElement) || element === document.body) return []
+
+    const style = getComputedStyle(element)
+    const grow = (parseFloat(style.outlineWidth) || 0) + (parseFloat(style.outlineOffset) || 0)
+    if (grow <= 0) return []
+
+    const rect = element.getBoundingClientRect()
+    const ring = {
+      left: rect.left - grow,
+      top: rect.top - grow,
+      right: rect.right + grow,
+      bottom: rect.bottom + grow,
+    }
+
+    const name = (node: HTMLElement) =>
+      node.tagName.toLowerCase() + (node.className ? `.${String(node.className).trim()}` : '')
+    const label = `${name(element)} "${(element.textContent ?? '').trim().slice(0, 30)}"`
+
+    const found: string[] = []
+    // 0.5px of slack: subpixel layout, not a clipped ring.
+    const EPSILON = 0.5
+
+    for (let node = element.parentElement; node; node = node.parentElement) {
+      const ancestor = getComputedStyle(node)
+      const clips = (value: string) => value === 'hidden' || value === 'clip'
+      if (!clips(ancestor.overflowX) && !clips(ancestor.overflowY)) continue
+
+      // `overflow` clips at the padding box, so the borders come off the client rect.
+      const box = node.getBoundingClientRect()
+      const edges = {
+        left: box.left + (parseFloat(ancestor.borderLeftWidth) || 0),
+        top: box.top + (parseFloat(ancestor.borderTopWidth) || 0),
+        right: box.right - (parseFloat(ancestor.borderRightWidth) || 0),
+        bottom: box.bottom - (parseFloat(ancestor.borderBottomWidth) || 0),
+      }
+
+      const sides = [
+        clips(ancestor.overflowX) && ring.left < edges.left - EPSILON && 'left',
+        clips(ancestor.overflowY) && ring.top < edges.top - EPSILON && 'top',
+        clips(ancestor.overflowX) && ring.right > edges.right + EPSILON && 'right',
+        clips(ancestor.overflowY) && ring.bottom > edges.bottom + EPSILON && 'bottom',
+      ].filter((side): side is string => typeof side === 'string')
+
+      if (sides.length > 0) {
+        found.push(`${label} — ring clipped on ${sides.join(', ')} by ${name(node)}`)
+      }
+    }
+
+    return found
+  })
+}
+
+test('the focus ring is never clipped by an overflow ancestor', async ({ page }) => {
+  await page.goto('/')
+  // Tabbing while the boot sequence is still moving elements would measure a transient
+  // layout, not the one a visitor tabs through.
+  await expect(page.locator('[data-boot]').last()).toHaveCSS('opacity', '1', {
+    timeout: BOOT_TIMEOUT,
+  })
+
+  const focusable = await page.evaluate(
+    () =>
+      document.querySelectorAll(
+        'a[href], button, input, select, textarea, [tabindex]:not([tabindex="-1"])',
+      ).length,
+  )
+  expect(focusable).toBeGreaterThan(0)
+
+  const clipped: string[] = []
+  for (let i = 0; i < focusable; i++) {
+    await page.keyboard.press('Tab')
+    clipped.push(...(await clippedRings(page)))
+  }
+
+  expect(clipped).toEqual([])
+})
