@@ -106,12 +106,9 @@ test('both pages render the section at their contact marker', async () => {
     const text = await Bun.file(new URL(page, import.meta.url)).text()
     expect(text).toMatch(/import Contact from '[./]+components\/Contact\.astro'/)
     expect(text).toMatch(/<Contact lang=\{lang\} \/>/)
-    // The other four markers belong to the sections still in flight.
     expect(text).not.toContain('section-import: contact')
     expect(text).not.toContain('section: contact')
-    for (const other of ['method', 'experience', 'projects', 'stack']) {
-      expect(text).toContain(`// section-import: ${other}`)
-      expect(text).toContain(`{/* section: ${other} */}`)
-    }
+    // Only this section's own marker is asserted. Pinning the siblings' markers would
+    // encode a transient state: each disappears as that section lands.
   }
 })
