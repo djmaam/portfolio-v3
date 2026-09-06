@@ -18,7 +18,7 @@ const socials = (['github', 'linkedin', 'telegram'] as const).map((key) => ({
 }))
 ---
 
-<section id="contact" class="section-y section-divider">
+<section id="contact" class="section-y section-divider" aria-labelledby="contact-title">
   <div class="container-page">
     {
       /* The reveal goes on the outermost wrapper: the card underneath is what carries
@@ -38,7 +38,7 @@ const socials = (['github', 'linkedin', 'telegram'] as const).map((key) => ({
           <div class="cols">
             <div class="intro">
               <p class="font-mono text-label accent">06 / {t.secContact}</p>
-              <h2 class="text-h2-contact">{t.contactTitle}</h2>
+              <h2 id="contact-title" class="text-h2-contact">{t.contactTitle}</h2>
               <p class="text-body sub">{t.contactSub}</p>
             </div>
 
@@ -122,6 +122,14 @@ const socials = (['github', 'linkedin', 'telegram'] as const).map((key) => ({
     color: var(--color-contact-ink);
   }
 
+  /* The exception that proves the global rule of `app.css`: the card inverts the theme,
+     so `--color-accent` resolves against a background it was never measured on — the
+     contrast bug of issue 13. Inside the card the ring takes the inverted accent, which
+     is the token that was measured there. */
+  .card :focus-visible {
+    outline-color: var(--color-contact-accent);
+  }
+
   .grid {
     position: absolute;
     inset: 0;
@@ -188,14 +196,11 @@ const socials = (['github', 'linkedin', 'telegram'] as const).map((key) => ({
     color: var(--color-contact-accent);
     border-bottom: 1px solid currentColor;
     overflow-wrap: anywhere;
-    transition:
-      color 0.25s,
-      gap 0.25s;
+    transition: color 0.25s;
   }
 
   .email:hover {
     color: var(--color-contact-ink);
-    gap: 16px;
   }
 
   .arrow {
@@ -262,6 +267,18 @@ const socials = (['github', 'linkedin', 'telegram'] as const).map((key) => ({
 
     .grid {
       animation: gridflow 6s linear infinite;
+    }
+
+    /* The gap that grows 10 → 16px on hover (`DESIGN_SPEC` §4) moves the arrow, so it
+       is motion too: with `reduce` the address still changes color, it just holds. */
+    .email {
+      transition:
+        color 0.25s,
+        gap 0.25s;
+    }
+
+    .email:hover {
+      gap: 16px;
     }
   }
 </style>

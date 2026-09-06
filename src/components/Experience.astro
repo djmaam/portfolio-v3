@@ -18,11 +18,11 @@ const t = content[lang]
 const isCurrent = (job: (typeof t.jobs)[number]) => job.glow !== 'transparent'
 ---
 
-<section id="work" class="section-y section-divider">
+<section id="work" class="section-y section-divider" aria-labelledby="work-title">
   <div class="container-page">
     <div class="head" data-reveal>
       <p class="font-mono text-label text-dim">03 / {t.secWork}</p>
-      <h2 class="text-h2">{t.workTitle}</h2>
+      <h2 id="work-title" class="text-h2">{t.workTitle}</h2>
     </div>
 
     <ol class="timeline">
@@ -147,17 +147,31 @@ const isCurrent = (job: (typeof t.jobs)[number]) => job.glow !== 'transparent'
     border: 1px solid transparent;
     border-radius: 20px;
     transition:
-      transform 0.25s,
       border-color 0.25s,
       background 0.25s,
       box-shadow 0.25s;
   }
 
   .card:hover {
-    transform: translateY(-4px);
     background: var(--color-surface);
     border-color: color-mix(in srgb, var(--color-accent) 45%, transparent);
     box-shadow: 0 20px 60px var(--color-shadow-card);
+  }
+
+  /* The 4px lift of `DESIGN_SPEC` §4 is motion: with `reduce` the card still materializes
+     on hover, it just stays where it is. */
+  @media (prefers-reduced-motion: no-preference) {
+    .card {
+      transition:
+        transform 0.25s,
+        border-color 0.25s,
+        background 0.25s,
+        box-shadow 0.25s;
+    }
+
+    .card:hover {
+      transform: translateY(-4px);
+    }
   }
 
   .who {

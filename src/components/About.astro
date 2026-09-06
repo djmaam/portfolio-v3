@@ -18,14 +18,21 @@ const t = content[lang]
 const words = t.aboutLead.split(' ').map((word, index) => (index === 0 ? word : ` ${word}`))
 ---
 
-<section id="about" class="section-y section-divider">
+<section id="about" class="section-y section-divider" aria-labelledby="about-title">
   <div class="about container-page">
     <p class="font-mono text-label text-dim">01 / {t.secAbout}</p>
 
     <div class="content">
-      <p class="text-lead" data-lead>
+      {
+        /* The lead *is* the section heading — it is what the other sections render as an
+          `<h2 class="text-h2">`, and without it the page jumped from the `<h1>` of the
+          hero to the `<h3>` of the principle cards. Tailwind's preflight resets a
+          heading to inherit its size and weight, so `.text-lead` still owns the type and
+          nothing about the section moves. */
+      }
+      <h2 id="about-title" class="text-lead" data-lead>
         {words.map((word) => <span data-word>{word}</span>)}
-      </p>
+      </h2>
 
       {
         /* The reveal goes on a wrapper of its own, never on an element with a hover
@@ -102,19 +109,35 @@ const words = t.aboutLead.split(' ').map((word, index) => (index === 0 ? word : 
     background: var(--color-surface);
     border: 1px solid var(--color-line);
     transition:
-      transform 0.25s,
       border-color 0.25s,
       box-shadow 0.25s;
   }
 
   .card:hover {
-    transform: translateY(-4px);
     border-color: color-mix(in srgb, var(--color-accent) 45%, transparent);
     box-shadow: 0 20px 60px var(--color-shadow-card);
   }
 
+  /* The 4px lift of `DESIGN_SPEC` §4 is motion: with `reduce` the card still lights up
+     on hover, it just stays where it is. */
+  @media (prefers-reduced-motion: no-preference) {
+    .card {
+      transition:
+        transform 0.25s,
+        border-color 0.25s,
+        box-shadow 0.25s;
+    }
+
+    .card:hover {
+      transform: translateY(-4px);
+    }
+  }
+
+  /* A 10-11px mono label: weight 500 is what makes the accent legal as text here
+     (`DESIGN_SPEC` §6). */
   .accent {
     color: var(--color-accent);
+    font-weight: 500;
   }
 </style>
 

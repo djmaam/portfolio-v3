@@ -18,7 +18,7 @@ if (verbs.length !== t.steps.length) {
 }
 ---
 
-<section id="method" class="section-divider">
+<section id="method" class="section-divider" aria-labelledby="method-title">
   {
     /* The track is the scrollable height the pinned block rides on. It only becomes one
       on a wide enough viewport that also fits the block — see the `@media` below and the
@@ -30,7 +30,7 @@ if (verbs.length !== t.steps.length) {
         <header class="head">
           <div class="head-left" data-reveal>
             <p class="font-mono text-label text-dim">02 / {t.secMethod}</p>
-            <h2 class="text-h2 title">{t.methodTitle}</h2>
+            <h2 id="method-title" class="text-h2 title">{t.methodTitle}</h2>
           </div>
 
           <div class="head-right" data-reveal>
@@ -125,10 +125,14 @@ if (verbs.length !== t.steps.length) {
 
   /* ── Status indicator ─────────────────────────────────────────────────────── */
 
+  /* Weight 500 for every state, not only the accent one: the indicator must not change
+     weight mid-cycle, and at 10-11px the accent is only legal as text at 500
+     (`DESIGN_SPEC` §6). */
   .status {
     display: flex;
     align-items: center;
     gap: 10px;
+    font-weight: 500;
     color: var(--color-dim);
     transition: color 0.4s;
   }
@@ -166,15 +170,12 @@ if (verbs.length !== t.steps.length) {
     border-radius: 20px;
     background: var(--color-surface);
     transition:
-      opacity 0.6s cubic-bezier(0.2, 0.8, 0.2, 1),
-      transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1),
       border-color 0.6s,
       box-shadow 0.6s,
       background 0.6s;
   }
 
   .step[data-state='active'] {
-    transform: translateY(-6px) scale(1.03);
     border-color: var(--lit);
     box-shadow:
       0 0 0 1px var(--lit),
@@ -213,8 +214,7 @@ if (verbs.length !== t.steps.length) {
     background: color-mix(in srgb, var(--color-ink) 15%, transparent);
     transition:
       background 0.5s,
-      box-shadow 0.5s,
-      transform 0.5s cubic-bezier(0.34, 1.5, 0.4, 1);
+      box-shadow 0.5s;
   }
 
   .status .dot {
@@ -225,7 +225,6 @@ if (verbs.length !== t.steps.length) {
   /* Lit for every state but the two resting ones: completed, active and done alike. */
   .step:not([data-state='upcoming']) .dot,
   .status:not([data-state='idle']) .dot {
-    transform: scale(1.25);
     background: var(--lit);
     box-shadow: 0 0 12px var(--lit);
   }
@@ -238,6 +237,34 @@ if (verbs.length !== t.steps.length) {
     :global(html.has-js) .step[data-state='upcoming'] {
       opacity: 0.22;
       transform: translateY(10px) scale(0.97);
+    }
+
+    /* Everything the cycle moves. The driver never runs with `reduce` — `onScroll` does
+       not subscribe — so the states below are unreachable there anyway; keeping their
+       transforms out of the base rules is what makes that provable from the built CSS. */
+    .step {
+      transition:
+        opacity 0.6s cubic-bezier(0.2, 0.8, 0.2, 1),
+        transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1),
+        border-color 0.6s,
+        box-shadow 0.6s,
+        background 0.6s;
+    }
+
+    .step[data-state='active'] {
+      transform: translateY(-6px) scale(1.03);
+    }
+
+    .dot {
+      transition:
+        background 0.5s,
+        box-shadow 0.5s,
+        transform 0.5s cubic-bezier(0.34, 1.5, 0.4, 1);
+    }
+
+    .step:not([data-state='upcoming']) .dot,
+    .status:not([data-state='idle']) .dot {
+      transform: scale(1.25);
     }
   }
 

@@ -27,12 +27,12 @@ const projects = t.projects.map((project, index) => {
 })
 ---
 
-<section id="projects" class="section-y section-divider">
+<section id="projects" class="section-y section-divider" aria-labelledby="projects-title">
   <div class="container-page">
     <div class="head" data-reveal>
       <div class="heading">
         <p class="font-mono text-label text-dim">04 / {t.secProjects}</p>
-        <h2 class="text-h2">{t.projectsTitle}</h2>
+        <h2 id="projects-title" class="text-h2">{t.projectsTitle}</h2>
       </div>
       <p class="sub text-dim">{t.projectsSub}</p>
     </div>
@@ -124,20 +124,28 @@ const projects = t.projects.map((project, index) => {
     color: inherit;
     text-decoration: none;
     transition:
-      transform 0.25s,
       border-color 0.25s,
       box-shadow 0.25s;
   }
 
   .card:hover {
-    transform: translateY(-4px);
     border-color: color-mix(in srgb, var(--color-accent) 45%, transparent);
     box-shadow: 0 20px 60px var(--color-shadow-card);
   }
 
-  .card:focus-visible {
-    outline: 2px solid var(--color-accent);
-    outline-offset: 2px;
+  /* The 4px lift of `DESIGN_SPEC` §4 is motion: with `reduce` the card still lights up
+     on hover, it just stays where it is. */
+  @media (prefers-reduced-motion: no-preference) {
+    .card {
+      transition:
+        transform 0.25s,
+        border-color 0.25s,
+        box-shadow 0.25s;
+    }
+
+    .card:hover {
+      transform: translateY(-4px);
+    }
   }
 
   /* The striped placeholder: it is the floor of every preview, so a screenshot that has
@@ -200,6 +208,8 @@ const projects = t.projects.map((project, index) => {
     border-radius: 999px;
     background: var(--color-glass);
     color: var(--color-accent);
+    /* 10-11px, so the accent needs weight 500 to be legal as text (`DESIGN_SPEC` §6). */
+    font-weight: 500;
     border: 1px solid color-mix(in srgb, var(--color-accent) 30%, transparent);
   }
 
@@ -226,6 +236,7 @@ const projects = t.projects.map((project, index) => {
   .arrow {
     flex: none;
     font-size: 12px;
+    font-weight: 500;
     color: var(--color-accent);
   }
 

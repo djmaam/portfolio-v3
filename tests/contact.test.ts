@@ -48,9 +48,11 @@ test('the card paints itself with the inverted pair of tokens', () => {
   // light and in dark alike.
   expect(appCss).toMatch(/--color-contact-card:\s*light-dark\(#0b0d12,\s*#f3f5f9\)/)
   expect(appCss).toMatch(/--color-contact-ink:\s*light-dark\(#f3f5f9,\s*#0b0d12\)/)
-  // The accent inverts with the card: it is `--color-accent` with its branches swapped,
-  // which is what keeps the label, the email and the pill hover readable on the card.
-  expect(appCss).toMatch(/--color-contact-accent:\s*light-dark\(#3ee7ff,\s*#0a8faf\)/)
+  // The accent inverts with the card, which is what keeps the label, the email and the
+  // pill hover readable on it. Nearly `--color-accent` with its branches swapped: the
+  // light branch of the page accent only reaches 3.46:1 on the light card, so the branch
+  // that lands there is darker (`tests/contrast.test.ts` is what holds it to 4.5:1).
+  expect(appCss).toMatch(/--color-contact-accent:\s*light-dark\(#3ee7ff,\s*#087a95\)/)
   expect(styles).toMatch(/color:\s*var\(--color-contact-accent\)/)
   // The page's own accent stays outside the card, on the beam that turns in the border.
   expect(styles).not.toMatch(/\.card[^}]*var\(--color-accent\)/)

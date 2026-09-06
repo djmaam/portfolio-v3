@@ -58,12 +58,17 @@
   /* The contact card inverts the theme. */
   --color-contact-card: light-dark(#0b0d12, #f3f5f9);
   --color-contact-ink: light-dark(#f3f5f9, #0b0d12);
-  /* And so does the accent inside it: it is `--color-accent` with its two branches
-     swapped, because the branch that reads on the page is the one that disappears on the
-     card — #3ee7ff on the light card is 1.35:1. Not a color of its own, but a token is
-     the only way to say it: a literal may not leave this file, and a scoped override of
-     `--color-accent` would be a second declaration of a token that must have one. */
-  --color-contact-accent: light-dark(#3ee7ff, #0a8faf);
+  /* And so does the accent inside it: the branch that reads on the page is the one that
+     disappears on the card — #3ee7ff on the light card is 1.35:1. Not a color of its own,
+     but a token is the only way to say it: a literal may not leave this file, and a scoped
+     override of `--color-accent` would be a second declaration of a token that must have
+     one.
+
+     Nearly `--color-accent` with its branches swapped, but not quite: #0a8faf reaches only
+     3.46:1 on the light card, which is the large-text threshold and not the 4.5:1 this
+     token needs — the card carries the accent at 12px in the section label and in the
+     hovered pills. Darkened until it clears 4.5:1 (`tests/contrast.test.ts`). */
+  --color-contact-accent: light-dark(#3ee7ff, #087a95);
 
   /* Traffic-light colors of the "How I work" steps: same in both themes. */
   --color-step-1: #ff5c5c;
@@ -144,9 +149,24 @@
   :root {
     color-scheme: light dark;
 
-    /* Nav height. Lives on the root because two places need the same number: the sticky
-       bar itself and the anchor-scroll offset, which Nav.astro reads from here. */
+    /* Nav height. Lives on the root because three places need the same number: the sticky
+       bar itself, the anchor-scroll offset, which Nav.astro reads from here, and the
+       scroll padding below. */
     --nav-h: 64px;
+
+    /* What the browser keeps clear when it scrolls something into view on its own —
+       which is what a Tab press does. `scroll-margin-top` below answers fragment jumps;
+       this answers focus, and they are different properties. Without it the first
+       element focused below the fold lands under the sticky nav. */
+    scroll-padding-top: var(--nav-h);
+  }
+
+  /* `DESIGN_SPEC` §4 asks for a 2px accent ring with a 2px offset on everything
+     interactive and notes it is missing from the mock. One rule for the whole site.
+     `:focus-visible`, never `:focus` — a mouse click must not leave a ring behind. */
+  :focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
   }
 
   /* The nav is sticky, so a native fragment jump (no JS, or a middle-click) would
@@ -181,6 +201,34 @@
 
 @utility section-divider {
   border-top: 1px solid var(--color-line);
+}
+
+/* ── Skip link ────────────────────────────────────────────────────────────────
+   The one thing here that is not in the design (`spec 16` §4): with a sticky nav and
+   eight sections, tabbing past the nav on every page load is exactly what a skip link
+   exists for. Styled here rather than in `Base.astro`, which owns no styles of its own.
+
+   Off the top of the viewport until it takes focus, and moved with `top` rather than a
+   transform so nothing animates for a visitor who asked for no motion. */
+
+@layer components {
+  .skip-link {
+    position: fixed;
+    top: -100px;
+    left: 12px;
+    z-index: 30;
+    padding: 10px 18px;
+    border: 1px solid var(--color-accent);
+    border-radius: 999px;
+    background: var(--color-bg);
+    color: var(--color-ink);
+    font-size: 15px;
+    font-weight: 500;
+  }
+
+  .skip-link:focus-visible {
+    top: 12px;
+  }
 }
 
 /* ── Aurora ───────────────────────────────────────────────────────────────────

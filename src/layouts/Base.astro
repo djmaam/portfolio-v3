@@ -4,6 +4,7 @@ import Footer from '../components/Footer.astro'
 import { content, links, site } from '../lib/content'
 import type { Lang } from '../lib/content'
 import { siblingPath } from '../lib/i18n'
+import { ui } from '../lib/ui'
 
 interface Props {
   lang: Lang
@@ -78,6 +79,13 @@ const title = `${site.name} · ${t.eyebrow}`
     />
   </head>
   <body>
+    {
+      /* First focusable element of the page, before the aurora and before the nav: the
+        keyboard reaches the content in one Tab instead of nine. `tabindex="-1"` on the
+        target is what makes the jump actually move focus and not only the viewport. */
+    }
+    <a class="skip-link" href="#main">{ui[lang].skipToContent}</a>
+
     <div class="aurora" aria-hidden="true">
       <div></div>
       <div></div>
@@ -87,7 +95,7 @@ const title = `${site.name} · ${t.eyebrow}`
     {/* Everything readable sits above the aurora, which owns z-index 0 alone. */}
     <div class="relative z-[1]">
       <slot name="nav" />
-      <main><slot /></main>
+      <main id="main" tabindex="-1"><slot /></main>
       {
         /* Rendered here rather than passed in from the pages: Base already knows `lang`,
           which is all the footer needs, and this keeps the pages out of the diff. Nav
