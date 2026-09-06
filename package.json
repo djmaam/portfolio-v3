@@ -9,13 +9,17 @@
     "preview": "astro preview",
     "lint": "eslint . && prettier --check . && tsc --noEmit && bun scripts/check-tokens.ts",
     "format": "prettier --write .",
-    "test": "bun test"
+    "test": "bun test",
+    "test:e2e": "playwright test",
+    "test:lh": "lhci autorun"
   },
   "dependencies": {
     "astro": "^7.3.1"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
+    "@lhci/cli": "^0.15.1",
+    "@playwright/test": "^1.63.0",
     "@tailwindcss/vite": "^4.3.3",
     "@types/bun": "^1.4.1",
     "eslint": "^10.10.0",

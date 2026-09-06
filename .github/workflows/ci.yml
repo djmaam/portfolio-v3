@@ -17,3 +17,37 @@ jobs:
       - run: bun run lint
       - run: bun test
       - run: bun run build
+
+  # Runs in parallel with `check` and builds once for both browser suites: Playwright
+  # drives `astro preview` over that build, Lighthouse scores the same `dist/`.
+  browser:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.0
+      - run: bun install --frozen-lockfile
+      - run: bun run build
+
+      # The browser download is ~150MB and does not change between runs of the same
+      # Playwright version, which is what the lockfile hash stands in for.
+      - id: playwright-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('bun.lock') }}
+
+      - if: steps.playwright-cache.outputs.cache-hit != 'true'
+        run: bunx playwright install --with-deps chromium
+      # A cache hit restores the browser but not the apt libraries it links against.
+      - if: steps.playwright-cache.outputs.cache-hit == 'true'
+        run: bunx playwright install-deps chromium
+
+      - run: bun run test:e2e
+
+      # The Chromium the smoke suite just ran on, rather than whatever Chrome the runner
+      # image happens to ship: the performance score should come from a pinned engine.
+      - run: |
+          CHROME_PATH="$(bun -e 'import { chromium } from "playwright"; console.log(chromium.executablePath())')" \
+            bun run test:lh
