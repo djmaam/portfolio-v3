@@ -1,0 +1,192 @@
+---
+import { content, stack } from '../lib/content'
+import type { Lang } from '../lib/content'
+
+interface Props {
+  lang: Lang
+}
+
+const { lang } = Astro.props
+const t = content[lang]
+
+// The single list: `stack.core` names what is highlighted and the chips read membership
+// from it. A second list in here would drift the day content.json changes.
+const core = new Set<string>(stack.core)
+---
+
+<section id="stack" class="section-y section-divider">
+  <div class="container-page stack">
+    <header data-reveal>
+      <div class="headline">
+        <p class="font-mono text-label text-dim">05 / {t.secStack}</p>
+        <h2 class="text-h2-stack">{t.stackTitle}</h2>
+      </div>
+      <p class="text-body text-dim">{t.stackSub}</p>
+    </header>
+
+    <div class="rows">
+      {
+        stack.rows.map((row) => (
+          <div class="row" data-reveal>
+            <div class="track">
+              {/* Two identical halves: `translateX(-50%)` only loops seamlessly if the
+                second one repeats the first. The clone is decoration, so it is hidden
+                from assistive technology and each technology is announced once. */}
+              {[false, true].map((clone) => (
+                <ul class="half" aria-hidden={clone ? 'true' : undefined}>
+                  {row.map((name) => (
+                    <li class:list={['chip', { core: core.has(name) }]}>{name}</li>
+                  ))}
+                </ul>
+              ))}
+            </div>
+          </div>
+        ))
+      }
+    </div>
+
+    <p class="legend font-mono text-label-sm text-dim">
+      <span><span class="dot on" aria-hidden="true"></span>{t.stackCore}</span>
+      <span><span class="dot" aria-hidden="true"></span>{t.stackAlso}</span>
+    </p>
+  </div>
+</section>
+
+<style>
+  .stack {
+    display: grid;
+    gap: clamp(24px, 3vw, 36px);
+  }
+
+  /* `auto-fit` collapses the empty tracks, so the two blocks split the row in half on a
+     wide viewport and stack below ~600px, with no breakpoint of our own. */
+  header {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr));
+    gap: clamp(16px, 3vw, 32px);
+    align-items: end;
+  }
+
+  .headline {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    min-width: 0;
+  }
+
+  h2 {
+    margin: 0;
+  }
+
+  .rows {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .row {
+    overflow: hidden;
+  }
+
+  /* Resting state: the chips wrap and every one of them is readable. The marquee is what
+     turns each row into a single nowrap line, and it exists only under `no-preference` —
+     so with `reduce` the rows are static and complete from the first frame. */
+  .track {
+    display: flex;
+    flex-wrap: wrap;
+  }
+
+  .half {
+    display: flex;
+    flex-wrap: wrap;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  /* The gap lives on the chip, not on the flex container: with `gap` the track would be
+     `2 × half + gap` wide and `translateX(-50%)` would land half a gap short, which is
+     the seam you would see once per loop. */
+  .chip {
+    margin-inline-end: 8px;
+    margin-block-end: 8px;
+    padding: 7px 12px;
+    border: 1px solid var(--color-line);
+    border-radius: 8px;
+    color: var(--color-dim);
+    font-family: var(--font-mono);
+    font-size: 12px;
+    white-space: nowrap;
+  }
+
+  .chip.core {
+    border-color: color-mix(in srgb, var(--color-accent) 40%, transparent);
+    background: var(--color-accent-soft);
+    color: var(--color-accent);
+  }
+
+  .legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 18px;
+  }
+
+  .legend > span {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .dot {
+    width: 8px;
+    height: 8px;
+    border: 1px solid var(--color-dim);
+    border-radius: 50%;
+  }
+
+  .dot.on {
+    border-color: transparent;
+    background: var(--color-accent);
+    box-shadow: 0 0 8px var(--color-accent);
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    /* Only the alpha channel of a mask gradient is read, so `black` names no color of the
+       design here: it is just the opaque end of the 8% fade (`MOTION_SPEC` §10). */
+    .row {
+      mask-image: linear-gradient(90deg, transparent, black 8%, black 92%, transparent);
+    }
+
+    .track {
+      width: max-content;
+      flex-wrap: nowrap;
+      animation: marquee var(--speed) linear infinite;
+    }
+
+    .half {
+      flex-wrap: nowrap;
+    }
+
+    .chip {
+      margin-block-end: 0;
+    }
+
+    .row:nth-child(1) .track {
+      --speed: 70s;
+    }
+
+    .row:nth-child(2) .track {
+      --speed: 85s;
+      animation-direction: reverse;
+    }
+
+    .row:nth-child(3) .track {
+      --speed: 78s;
+    }
+
+    /* Scoped to the row under the cursor: the other two keep running. */
+    .row:hover .track {
+      animation-play-state: paused;
+    }
+  }
+</style>
