@@ -1,0 +1,267 @@
+---
+import { content, links } from '../lib/content'
+import type { Lang } from '../lib/content'
+
+interface Props {
+  lang: Lang
+}
+
+const { lang } = Astro.props
+const t = content[lang]
+
+// The pills are the social keys of content.json and their label is the key upper-cased:
+// a brand name is not copy, and this way it is not retyped either. Add a key to `links`
+// and the pill follows — the icon is the only thing that has to be drawn.
+const socials = (['github', 'linkedin', 'telegram'] as const).map((key) => ({
+  key,
+  href: links[key],
+}))
+---
+
+<section id="contact" class="section-y section-divider">
+  <div class="container-page">
+    {
+      /* The reveal goes on the outermost wrapper: the card underneath is what carries
+        the spin, and two transforms on one element fight (`MOTION_SPEC` §5). The
+        observer is the shared one `Base.astro` already binds over the whole page. */
+    }
+    <div class="frame" data-reveal>
+      <div class="halo" aria-hidden="true"><div class="beam"></div></div>
+
+      {/* 2px of padding is the border: the beam turns underneath, the card covers it. */}
+      <div class="edge">
+        <div class="beam" aria-hidden="true"></div>
+
+        <div class="card">
+          <div class="grid" aria-hidden="true"></div>
+
+          <div class="cols">
+            <div class="intro">
+              <p class="font-mono text-label accent">06 / {t.secContact}</p>
+              <h2 class="text-h2-contact">{t.contactTitle}</h2>
+              <p class="text-body sub">{t.contactSub}</p>
+            </div>
+
+            <div class="reach">
+              <a class="email" href={`mailto:${links.email}`}>
+                {links.email}<span class="arrow" aria-hidden="true">↗</span>
+              </a>
+
+              <div class="pills">
+                {
+                  socials.map(({ key, href }) => (
+                    <a class="pill font-mono" href={href} target="_blank" rel="noopener">
+                      <span class="icon" data-icon={key} aria-hidden="true" />
+                      <span>{key.toUpperCase()}</span>
+                    </a>
+                  ))
+                }
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .frame {
+    position: relative;
+  }
+
+  /* The same beam blurred outside the card, which is the halo of `MOTION_SPEC` §11. */
+  .halo {
+    position: absolute;
+    inset: -2px;
+    border-radius: 35px;
+    overflow: hidden;
+    filter: blur(14px);
+    opacity: 0.55;
+    pointer-events: none;
+  }
+
+  .edge {
+    position: relative;
+    padding: 2px;
+    border-radius: 34px;
+    overflow: hidden;
+    /* Its own stacking context, so the beam never rises over the page. */
+    isolation: isolate;
+  }
+
+  /* A square wider than the card, centered and spinning: the visible sliver of the cone
+     is what reads as a beam running along the border. */
+  .beam {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 220%;
+    aspect-ratio: 1;
+    margin-left: -110%;
+    margin-top: -110%;
+    pointer-events: none;
+    background: conic-gradient(
+      from 0deg,
+      color-mix(in srgb, var(--color-accent) 10%, transparent) 0 50%,
+      var(--color-accent) 76%,
+      var(--color-violet) 86%,
+      color-mix(in srgb, var(--color-accent) 10%, transparent) 100%
+    );
+  }
+
+  /* The inversion: the three `--color-contact-*` tokens are the theme's own colors
+     swapped, so the card is dark on the light page and light on the dark one, and the
+     accent it carries inverts with it. */
+  .card {
+    position: relative;
+    border-radius: 32px;
+    padding: clamp(28px, 5.5vw, 72px);
+    overflow: hidden;
+    background: var(--color-contact-card);
+    color: var(--color-contact-ink);
+  }
+
+  .grid {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background-image:
+      linear-gradient(
+        color-mix(in srgb, var(--color-contact-accent) 12%, transparent) 1px,
+        transparent 1px
+      ),
+      linear-gradient(
+        90deg,
+        color-mix(in srgb, var(--color-contact-accent) 12%, transparent) 1px,
+        transparent 1px
+      );
+    background-size: 48px 48px;
+    /* A mask reads alpha, so the opaque end only has to be opaque: `currentColor` is the
+       card's ink and saves naming a color to throw away. */
+    mask-image: radial-gradient(60% 80% at 80% 50%, currentColor, transparent);
+  }
+
+  .cols {
+    position: relative;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr));
+    gap: 32px;
+    align-items: center;
+  }
+
+  .intro {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    min-width: 0;
+  }
+
+  .accent {
+    color: var(--color-contact-accent);
+  }
+
+  .sub {
+    max-width: 440px;
+    opacity: 0.7;
+  }
+
+  .reach {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+    min-width: 0;
+  }
+
+  /* One-off size, so it stays here instead of becoming a token: the `cqw` of the mock
+     against the 1200px container is this `vw`. `anywhere` is what lets the address break
+     into two lines on a narrow screen (`DESIGN_SPEC` §5) instead of overflowing. */
+  .email {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 10px;
+    padding-bottom: 6px;
+    font-size: clamp(22px, 2.9vw, 34px);
+    font-weight: 500;
+    letter-spacing: -0.025em;
+    color: var(--color-contact-accent);
+    border-bottom: 1px solid currentColor;
+    overflow-wrap: anywhere;
+    transition:
+      color 0.25s,
+      gap 0.25s;
+  }
+
+  .email:hover {
+    color: var(--color-contact-ink);
+    gap: 16px;
+  }
+
+  .arrow {
+    font-size: 0.7em;
+  }
+
+  .pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 14px;
+  }
+
+  /* `currentColor` again: the border is the card's ink faded, so it inverts with the
+     card and needs no token of its own. */
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    padding: 10px 16px;
+    border: 1px solid color-mix(in srgb, currentColor 20%, transparent);
+    border-radius: 999px;
+    font-size: var(--text-label);
+    letter-spacing: 0.06em;
+    color: inherit;
+    transition:
+      color 0.25s,
+      border-color 0.25s;
+  }
+
+  .pill:hover {
+    color: var(--color-contact-accent);
+    border-color: var(--color-contact-accent);
+  }
+
+  /* The icons are masks, never images: the shape comes from the SVG's alpha and every
+     pixel of color from `currentColor`, so one icon follows both the theme inversion of
+     the card and the accent the pill takes on hover. A `fill` could do neither. */
+  .icon {
+    width: 15px;
+    height: 15px;
+    background: currentColor;
+    mask-position: center;
+    mask-size: contain;
+    mask-repeat: no-repeat;
+  }
+
+  .icon[data-icon='github'] {
+    mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12'/%3E%3C/svg%3E");
+  }
+
+  .icon[data-icon='linkedin'] {
+    mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2zm-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.32 1.3v-1.11h-2.79v8.37h2.79v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 0 1 1.4 1.4v4.93zM6.88 8.56a1.68 1.68 0 0 0 1.68-1.68c0-.93-.75-1.69-1.68-1.69a1.69 1.69 0 0 0-1.69 1.69c0 .93.76 1.68 1.69 1.68m1.39 9.94v-8.37H5.5v8.37z'/%3E%3C/svg%3E");
+  }
+
+  .icon[data-icon='telegram'] {
+    mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z'/%3E%3C/svg%3E");
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .beam {
+      animation: spin 7s linear infinite;
+    }
+
+    .grid {
+      animation: gridflow 6s linear infinite;
+    }
+  }
+</style>
