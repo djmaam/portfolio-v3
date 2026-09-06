@@ -1,10 +1,9 @@
+import { existsSync } from 'node:fs'
+import { join } from 'node:path'
 import { expect, test } from 'bun:test'
 
 import { content, LANGS } from '../src/lib/content'
 import { PREVIEWS, previewMode, projectDelay } from '../src/lib/projects'
-
-/** The hosts that answered a framing check on 2026-09-05 (spec 11, design doc §8). */
-const BLOCKED = ['creativamedialab.com', 'telecentro.com.ar']
 
 const hosts = LANGS.flatMap((lang) => content[lang].projects.map((project) => project.host))
 
@@ -12,18 +11,11 @@ test('every project in content.json has a declared preview mode', () => {
   for (const host of hosts) expect(PREVIEWS[host]).toBeDefined()
 })
 
-test('the two hosts that block framing are screenshots, the other four are iframes', () => {
-  const modes = [...new Set(hosts)].map((host) => [host, previewMode(host)])
-
-  expect(Object.fromEntries(modes)).toEqual({
-    'nera-agro.com': 'iframe',
-    'agropro.ag': 'iframe',
-    'kodaiverse.com': 'iframe',
-    'masushuaia.com': 'iframe',
-    'creativamedialab.com': 'screenshot',
-    'telecentro.com.ar': 'screenshot',
-  })
-  for (const host of BLOCKED) expect(previewMode(host)).toBe('screenshot')
+test('every project is a screenshot, and its image exists', () => {
+  for (const project of content.es.projects) {
+    expect(previewMode(project.host)).toBe('screenshot')
+    expect(existsSync(join(process.cwd(), 'public', 'previews', `${project.host}.jpg`))).toBe(true)
+  }
 })
 
 test('the mode is keyed by host, so reordering content.json cannot swap it', () => {
@@ -36,7 +28,7 @@ test('the mode is keyed by host, so reordering content.json cannot swap it', () 
   expect(Object.keys(PREVIEWS).every((key) => Number.isNaN(Number(key)))).toBe(true)
 })
 
-test('a host nobody declared falls back to a screenshot, never to an iframe', () => {
+test('a host nobody declared still falls back to a screenshot', () => {
   expect(previewMode('example.com')).toBe('screenshot')
 })
 
@@ -53,26 +45,33 @@ const source = await Bun.file(new URL('../src/components/Projects.astro', import
 const [, frontmatter = '', body = ''] = /^---([\s\S]*?)^---([\s\S]*)$/m.exec(source) ?? []
 const [, styles = ''] = /<style>([\s\S]*?)<\/style>/.exec(body) ?? []
 const markup = body.replace(/<style>[\s\S]*?<\/style>/g, '')
-const [, iframe = ''] = /<iframe([\s\S]*?)\/>/.exec(markup) ?? []
 
-test('exactly one iframe is written, and only projects in iframe mode render it', () => {
-  expect(markup.match(/<iframe/g)).toHaveLength(1)
-  // The screenshot projects mount no iframe at all: the tag sits behind the mode.
-  expect(markup).toMatch(/project\.iframe &&[\s\S]*?<iframe/)
+test('exactly one image is written, behind the resolved screenshot', () => {
+  expect(markup.match(/<img/g)).toHaveLength(1)
+  // A project whose file is missing renders no <img> at all, so the striped placeholder
+  // of the box shows through instead of a broken-image icon.
+  expect(markup).toMatch(/project\.shot &&[\s\S]*?<img/)
 })
 
-test('the iframe is lazy, sandboxed and out of the accessibility tree', () => {
-  expect(iframe).toMatch(/loading="lazy"/)
-  expect(iframe).toMatch(/sandbox/)
-  expect(iframe).toMatch(/aria-hidden="true"/)
-  expect(iframe).toMatch(/tabindex="-1"/)
-  // A tab stop over a decorative preview is the a11y bug this pair guards.
+test('the preview image is lazy, decorative and deaf to the pointer', () => {
+  const [, img = ''] = /<img([\s\S]*?)\/>/.exec(markup) ?? []
+  expect(img).toMatch(/loading="lazy"/)
+  expect(img).toMatch(/alt=""/)
+  // A tab stop or an accessible name over a decorative preview is the a11y bug this
+  // guards; `alt=""` keeps it out of the tree and the frame ignores the pointer.
   expect(styles).toMatch(/\.frame \{[^}]*pointer-events: none/)
+})
+
+test('no iframe survives: the previews are static files, not live embeds', () => {
+  // Four live cross-origin embeds pulled 40-50 third-party requests into the page and
+  // cost the budget of spec 17. Nothing should quietly bring them back.
+  expect(markup).not.toMatch(/<iframe/)
+  expect(body).not.toMatch(/IntersectionObserver/)
 })
 
 test('the screenshot falls back to the striped placeholder while the files are missing', () => {
   expect(frontmatter).toMatch(/existsSync/)
-  expect(frontmatter).toMatch(/previews\/\$\{project\.host\}\.png/)
+  expect(frontmatter).toMatch(/previews\/\$\{project\.host\}\.jpg/)
   expect(markup).toMatch(/project\.shot &&/)
   expect(styles).toMatch(/repeating-linear-gradient/)
 })

@@ -179,8 +179,9 @@ test.each(Object.keys(pages))('%s names every section that carries an id', (rout
 })
 
 test.each(Object.keys(pages))('%s keeps every preview iframe out of the tab order', (route) => {
+  // The previews are static images since spec 17, so today this finds none. The guard
+  // stays: an iframe added later must not become a tab stop.
   const frames = tags(pages[route as keyof typeof pages], 'iframe')
-  expect(frames.length).toBeGreaterThan(0)
   for (const { attributes } of frames) {
     expect(attributes).toMatch(/aria-hidden="true"/)
     expect(attributes).toMatch(/tabindex="-1"/)
