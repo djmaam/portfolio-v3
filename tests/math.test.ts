@@ -23,6 +23,10 @@ import {
   lerp,
   logWindow,
   median,
+  methodCardState,
+  methodLabel,
+  methodProgress,
+  methodStep,
   metricsAt,
   nearestPoint,
   nodeAlpha,
@@ -586,4 +590,121 @@ test('revealDelay staggers 110ms per index', () => {
   expect(revealDelay(0)).toBe(0)
   expect(revealDelay(1)).toBe(110)
   expect(revealDelay(2)).toBe(220)
+})
+
+// ── How I work (`MOTION_SPEC` §7) ────────────────────────────────────────────
+
+test('methodStep holds at -1 until the track has run 6% of its length', () => {
+  expect(methodStep(0).active).toBe(-1)
+  expect(methodStep(0.059).active).toBe(-1)
+  expect(methodStep(0.06).active).toBe(0)
+})
+
+test('methodStep walks 0 → 4 across the five bands of the spec', () => {
+  const band = 0.84 / 5
+  for (let i = 0; i < 5; i++) {
+    // Both ends of the band, kept off the boundary so the floor cannot straddle it.
+    expect(methodStep(0.06 + i * band + 0.001).active).toBe(i)
+    expect(methodStep(0.06 + (i + 1) * band - 0.001).active).toBe(i)
+  }
+})
+
+test('methodStep never reports a sixth step, however far the track runs', () => {
+  expect(methodStep(0.9).active).toBe(4)
+  expect(methodStep(1).active).toBe(4)
+  expect(methodStep(4).active).toBe(4)
+})
+
+test('methodStep is done from .93 on', () => {
+  expect(methodStep(0.929).done).toBe(false)
+  expect(methodStep(0.93).done).toBe(true)
+  expect(methodStep(1).done).toBe(true)
+})
+
+test('methodStep is a pure function of p, which is what makes it reversible', () => {
+  const samples = Array.from({ length: 101 }, (_, i) => i / 100)
+  const down = [...samples].reverse()
+  const key = (p: number) => JSON.stringify(methodStep(p))
+
+  // Walking the track up and then back down yields the same state at the same p: the
+  // animation reverses exactly, because no frame carries anything over to the next.
+  const forward = samples.map(key)
+  const backward = down.map(key).reverse()
+  expect(backward).toEqual(forward)
+
+  // And out of order, twice, for good measure.
+  for (const p of [0.5, 0.1, 0.94, 0.1, 0.5]) expect(key(p)).toBe(key(p))
+})
+
+test('methodProgress pinned is how far the track has scrolled past the viewport', () => {
+  // A 280vh track in a 1000px viewport travels 1800px while it is pinned.
+  expect(methodProgress(0, 2800, 1000, true)).toBe(0)
+  expect(methodProgress(-900, 2800, 1000, true)).toBeCloseTo(0.5, 10)
+  expect(methodProgress(-1800, 2800, 1000, true)).toBe(1)
+})
+
+test('methodProgress in flow starts .85 viewports down and runs over .9 of the block', () => {
+  expect(methodProgress(850, 1000, 1000, false)).toBe(0)
+  expect(methodProgress(850 - 450, 1000, 1000, false)).toBeCloseTo(0.5, 10)
+  expect(methodProgress(850 - 900, 1000, 1000, false)).toBe(1)
+})
+
+test('methodProgress clamps at both ends and never divides by zero', () => {
+  expect(methodProgress(500, 2800, 1000, true)).toBe(0)
+  expect(methodProgress(-9000, 2800, 1000, true)).toBe(1)
+  expect(methodProgress(9000, 1000, 1000, false)).toBe(0)
+  expect(methodProgress(-9000, 1000, 1000, false)).toBe(1)
+
+  // A track shorter than the viewport cannot be pinned, and a block of no height has
+  // no progress: both report 0 instead of Infinity or NaN.
+  expect(methodProgress(0, 800, 1000, true)).toBe(0)
+  expect(methodProgress(-100, 1000, 1000, true)).toBe(0)
+  expect(methodProgress(0, 0, 1000, false)).toBe(0)
+})
+
+test('methodLabel reads the verb of the active step and counts from one', () => {
+  const verbs = ['ONE', 'TWO', 'THREE', 'FOUR', 'FIVE']
+  expect(methodLabel(verbs, { active: 0, done: false }, 'IDLE', 'DONE')).toBe('ONE · 1/5')
+  expect(methodLabel(verbs, { active: 4, done: false }, 'IDLE', 'DONE')).toBe('FIVE · 5/5')
+})
+
+test('methodLabel falls back to idle before the first step and to done at the end', () => {
+  const verbs = ['ONE', 'TWO', 'THREE', 'FOUR', 'FIVE']
+  expect(methodLabel(verbs, { active: -1, done: false }, 'IDLE', 'DONE')).toBe('IDLE')
+  expect(methodLabel(verbs, { active: 4, done: true }, 'IDLE', 'DONE')).toBe('DONE')
+  expect(methodLabel(verbs, { active: -1, done: true }, 'IDLE', 'DONE')).toBe('DONE')
+  // A verb list that lost a pipe must not silently print `undefined · 5/4`.
+  expect(methodLabel(['ONE'], { active: 3, done: false }, 'IDLE', 'DONE')).toBe('IDLE')
+})
+
+test('methodCardState lights the active card, keeps the walked ones and dims the rest', () => {
+  const step = { active: 2, done: false }
+  const grid = Array.from({ length: 5 }, (_, i) => methodCardState(i, step))
+  expect(grid).toEqual(['completed', 'completed', 'active', 'upcoming', 'upcoming'])
+
+  // Before the first step nothing is lit at all.
+  const idle = Array.from({ length: 5 }, (_, i) => methodCardState(i, methodStep(0)))
+  expect(idle).toEqual(Array.from({ length: 5 }, () => 'upcoming'))
+})
+
+test('methodCardState turns the whole grid at once once the cycle is done', () => {
+  const step = methodStep(0.95)
+  const grid = Array.from({ length: 5 }, (_, i) => methodCardState(i, step))
+  expect(grid).toEqual(Array.from({ length: 5 }, () => 'done'))
+})
+
+test('the whole grid is a pure function of p, so it reverses with the scroll', () => {
+  const grid = (p: number) =>
+    Array.from({ length: 5 }, (_, i) => methodCardState(i, methodStep(p))).join(' ')
+  const samples = Array.from({ length: 101 }, (_, i) => i / 100)
+
+  // Down the page and back up: the same p paints the same five cards, which is the
+  // whole of the "reversible" requirement.
+  const down = samples.map(grid)
+  expect([...samples].reverse().map(grid).reverse()).toEqual(down)
+
+  // And the grid only ever moves forward as p grows: one card lights at a time, in
+  // order, and none of them goes back to `upcoming` on the way down.
+  const lit = down.map((row) => row.split(' ').filter((state) => state !== 'upcoming').length)
+  for (let i = 1; i < lit.length; i++) expect(lit[i]!).toBeGreaterThanOrEqual(lit[i - 1]!)
 })

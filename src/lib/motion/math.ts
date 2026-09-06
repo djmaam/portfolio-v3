@@ -450,3 +450,66 @@ export function wordOpacity(index: number, total: number, p: number): number {
 export function revealDelay(index: number): number {
   return 110 * index
 }
+
+// ── How I work (`MOTION_SPEC` §7) ────────────────────────────────────────────
+
+/**
+ * Which of the five steps is lit at track progress `p`, and whether the cycle has
+ * finished (`MOTION_SPEC` §7): nothing is lit over the first 6% of the track, the five
+ * steps share the next 84%, and the last 7% is the finished state.
+ *
+ * A pure function of `p` on purpose. The driver derives the whole section from the
+ * progress of the current frame and never accumulates anything across frames, which is
+ * what makes scrolling back up walk the states backwards for free.
+ */
+export function methodStep(p: number): { active: number; done: boolean } {
+  return {
+    active: p < 0.06 ? -1 : Math.min(4, Math.floor(((p - 0.06) / 0.84) * 5)),
+    done: p >= 0.93,
+  }
+}
+
+/**
+ * The visual state of card `index` (`MOTION_SPEC` §7): every card turns at once when the
+ * cycle is done; before that, the one that is lit, the ones already walked, and the ones
+ * still ahead. Derived from `step` alone, like everything else in this section, so the
+ * whole grid walks backwards when the page does.
+ */
+export function methodCardState(
+  index: number,
+  step: { active: number; done: boolean },
+): 'upcoming' | 'active' | 'completed' | 'done' {
+  if (step.done) return 'done'
+  if (index === step.active) return 'active'
+  return index < step.active ? 'completed' : 'upcoming'
+}
+
+/**
+ * Progress of that track, clamped to [0, 1] (`MOTION_SPEC` §7). Pinned, it advances over
+ * everything the track can scroll while its sticky block stays stuck. In flow — narrow
+ * viewport, or a block that does not fit in one — it starts when the top of the section
+ * is .85 viewports down and runs over .9 of its height. A track that cannot move reports
+ * 0 instead of dividing by zero.
+ */
+export function methodProgress(top: number, height: number, vh: number, pinned: boolean): number {
+  const travel = pinned ? height - vh : height * 0.9
+  if (travel <= 0) return 0
+  return clamp01((pinned ? -top : 0.85 * vh - top) / travel)
+}
+
+/**
+ * The status line of the header (`MOTION_SPEC` §7): `VERB · n/5` while a step is lit,
+ * `idle` before the first one, `finished` once the cycle is done. A `verbs` list too
+ * short for the active step falls back to `idle`, so a `stepVerbs` that lost a pipe
+ * reads as nothing rather than as the wrong verb.
+ */
+export function methodLabel(
+  verbs: readonly string[],
+  step: { active: number; done: boolean },
+  idle: string,
+  finished: string,
+): string {
+  if (step.done) return finished
+  const verb = verbs[step.active]
+  return verb === undefined ? idle : `${verb} · ${step.active + 1}/${verbs.length}`
+}
