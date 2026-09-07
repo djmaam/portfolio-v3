@@ -1,0 +1,1274 @@
+<title>Cubo Arrieta</title>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link
+  href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+  rel="stylesheet"
+/>
+<style>
+  /* Light palette on bare :root, dark redefined twice (media + [data-theme]) */
+  :root {
+    --page-bg: #f4f5f7;
+    --page-ink: #0b0d12;
+    --page-dim: #5e6675;
+    --page-line: rgba(0, 0, 0, 0.1);
+    --page-card: #ffffff;
+    --page-accent: #0a8faf;
+    --page-violet: rgb(120, 90, 255);
+    --stage-bg: #08090c;
+    --stage-ink: #f3f5f9;
+    --stage-dim: #8b94a7;
+    --stage-line: rgba(255, 255, 255, 0.08);
+    --stage-accent: #3ee7ff;
+    --stage-violet: #aa78ff;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme='light']) {
+      --page-bg: #08090c;
+      --page-ink: #f3f5f9;
+      --page-dim: #8b94a7;
+      --page-line: rgba(255, 255, 255, 0.1);
+      --page-card: #0f1116;
+      --page-accent: #3ee7ff;
+      --page-violet: rgb(170, 120, 255);
+    }
+  }
+
+  :root[data-theme='dark'] {
+    --page-bg: #08090c;
+    --page-ink: #f3f5f9;
+    --page-dim: #8b94a7;
+    --page-line: rgba(255, 255, 255, 0.1);
+    --page-card: #0f1116;
+    --page-accent: #3ee7ff;
+    --page-violet: rgb(170, 120, 255);
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  body {
+    margin: 0;
+    background: var(--page-bg);
+    color: var(--page-ink);
+    font-family: Manrope, -apple-system, 'Helvetica Neue', system-ui, sans-serif;
+    font-size: 15px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap {
+    max-width: 1180px;
+    margin-inline: auto;
+    padding: 40px 24px 100px;
+  }
+
+  h1 {
+    font-size: clamp(28px, 4vw, 40px);
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    margin: 0 0 8px;
+  }
+
+  h2 {
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--page-dim);
+    margin: 56px 0 16px;
+    font-family: 'IBM Plex Mono', ui-monospace, monospace;
+  }
+
+  .lede {
+    color: var(--page-dim);
+    max-width: 62ch;
+    margin: 0 0 32px;
+  }
+
+  code,
+  .mono {
+    font-family: 'IBM Plex Mono', ui-monospace, monospace;
+    font-size: 0.88em;
+  }
+
+  code {
+    background: color-mix(in srgb, var(--page-accent) 12%, transparent);
+    padding: 1px 5px;
+    border-radius: 4px;
+  }
+
+  /* ---------- Stage: a miniature of the real site ---------- */
+  .stage {
+    position: relative;
+    aspect-ratio: 16 / 9;
+    min-height: 340px;
+    border: 1px solid var(--page-line);
+    border-radius: 14px;
+    overflow: hidden;
+    background: var(--stage-bg);
+    color: var(--stage-ink);
+    isolation: isolate;
+  }
+
+  .stage canvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+  }
+
+  /* The network sits under the content, like today's hero canvas. */
+  #cv {
+    z-index: 1;
+  }
+
+  /* The logo overlay owns the screen until it docks. In the real site this canvas is
+     removed on landing and the nav keeps a static SVG. */
+  #cvLogo {
+    z-index: 5;
+  }
+
+  .aurora {
+    position: absolute;
+    inset: -10%;
+    background:
+      radial-gradient(38% 42% at 22% 28%, rgba(62, 231, 255, 0.16), transparent 70%),
+      radial-gradient(34% 38% at 78% 62%, rgba(170, 120, 255, 0.14), transparent 70%);
+    filter: blur(50px);
+    z-index: 0;
+  }
+
+  .stage-nav {
+    position: absolute;
+    inset: 0 0 auto;
+    height: 11%;
+    min-height: 40px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding-inline: 4.5%;
+    border-bottom: 1px solid var(--stage-line);
+    background: rgba(8, 9, 12, 0.55);
+    backdrop-filter: blur(14px);
+    z-index: 3;
+    font-size: clamp(9px, 1.05vw, 13px);
+  }
+
+  /* The docked logo is drawn on the canvas; this only reserves its box so the
+     flight has a real target to measure, exactly like a FLIP transition. */
+  .nav-slot {
+    width: 2.2em;
+    height: 1.5em;
+    flex: none;
+  }
+
+  .nav-name {
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    white-space: nowrap;
+  }
+
+  .nav-links {
+    margin-left: auto;
+    display: flex;
+    gap: 1.8em;
+    color: var(--stage-dim);
+  }
+
+  .stage-hero {
+    position: absolute;
+    inset: 11% 0 0;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4%;
+    align-items: center;
+    padding: 0 4.5%;
+    z-index: 2;
+    pointer-events: none;
+  }
+
+  .hero-col > * {
+    margin: 0 0 0.7em;
+  }
+
+  .eyebrow {
+    display: flex;
+    align-items: center;
+    gap: 0.7em;
+    font-family: 'IBM Plex Mono', ui-monospace, monospace;
+    font-size: clamp(7px, 0.82vw, 10px);
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--stage-dim);
+  }
+
+  .eyebrow i {
+    display: block;
+    width: 2em;
+    height: 1px;
+    background: var(--stage-accent);
+    flex: none;
+  }
+
+  .h1 {
+    font-size: clamp(15px, 2.5vw, 32px);
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    line-height: 1.12;
+  }
+
+  .h1 b {
+    color: var(--stage-accent);
+    font-weight: 600;
+  }
+
+  .sub {
+    font-size: clamp(8px, 1vw, 13px);
+    color: var(--stage-dim);
+    max-width: 30ch;
+  }
+
+  .ctas {
+    display: flex;
+    gap: 0.6em;
+    font-size: clamp(7px, 0.85vw, 11px);
+  }
+
+  .ctas span {
+    padding: 0.55em 1.3em;
+    border-radius: 999px;
+    background: var(--stage-ink);
+    color: var(--stage-bg);
+    font-weight: 500;
+  }
+
+  .ctas span + span {
+    background: transparent;
+    color: var(--stage-ink);
+    border: 1px solid var(--stage-line);
+  }
+
+  .console {
+    position: relative;
+    border: 1px solid var(--stage-line);
+    border-radius: 10px;
+    background: rgba(15, 17, 22, 0.82);
+    padding: 5%;
+    font-family: 'IBM Plex Mono', ui-monospace, monospace;
+    font-size: clamp(6px, 0.78vw, 10px);
+    color: var(--stage-dim);
+    overflow: hidden;
+    line-height: 1.85;
+  }
+
+  .console b {
+    color: var(--stage-accent);
+    font-weight: 400;
+  }
+
+  /* The 2px scan line of MOTION_SPEC 2, driven from JS so the scrubber owns it. */
+  .console::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 2px;
+    top: var(--sweep, -2px);
+    background: linear-gradient(90deg, transparent, var(--stage-accent), transparent);
+    box-shadow: 0 0 12px var(--stage-accent);
+    opacity: var(--sweep-a, 0);
+  }
+
+  .phase-tag {
+    position: absolute;
+    left: 14px;
+    bottom: 12px;
+    z-index: 4;
+    font-family: 'IBM Plex Mono', ui-monospace, monospace;
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--stage-accent);
+    background: rgba(8, 9, 12, 0.7);
+    border: 1px solid var(--stage-line);
+    border-radius: 999px;
+    padding: 4px 12px;
+  }
+
+  /* ---------- Transport ---------- */
+  .transport {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-top: 14px;
+    flex-wrap: wrap;
+  }
+
+  button {
+    font: inherit;
+    font-size: 13px;
+    font-weight: 500;
+    padding: 8px 18px;
+    border-radius: 999px;
+    border: 1px solid var(--page-line);
+    background: var(--page-card);
+    color: var(--page-ink);
+    cursor: pointer;
+  }
+
+  button:hover {
+    border-color: var(--page-accent);
+  }
+
+  button[data-on='true'] {
+    border-color: var(--page-accent);
+    color: var(--page-accent);
+  }
+
+  input[type='range'] {
+    accent-color: var(--page-accent);
+    width: 100%;
+  }
+
+  .scrub {
+    flex: 1 1 260px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .t {
+    font-family: 'IBM Plex Mono', ui-monospace, monospace;
+    font-size: 12px;
+    color: var(--page-dim);
+    min-width: 5.5ch;
+    text-align: right;
+  }
+
+  /* ---------- Panels ---------- */
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
+    gap: 14px;
+  }
+
+  .card {
+    border: 1px solid var(--page-line);
+    border-radius: 12px;
+    background: var(--page-card);
+    padding: 16px 18px;
+  }
+
+  .card h3 {
+    margin: 0 0 6px;
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+  .card p {
+    margin: 0;
+    font-size: 13px;
+    color: var(--page-dim);
+  }
+
+  .knobs {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
+    gap: 14px 26px;
+  }
+
+  .knob label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    font-family: 'IBM Plex Mono', ui-monospace, monospace;
+    color: var(--page-dim);
+    margin-bottom: 2px;
+  }
+
+  .knob label b {
+    color: var(--page-ink);
+    font-weight: 500;
+  }
+
+  .toggles {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 18px;
+  }
+
+  /* ---------- Phase table ---------- */
+  .scroller {
+    overflow-x: auto;
+    border: 1px solid var(--page-line);
+    border-radius: 12px;
+  }
+
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    min-width: 620px;
+    font-size: 13px;
+  }
+
+  th,
+  td {
+    text-align: left;
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--page-line);
+    vertical-align: top;
+  }
+
+  th {
+    font-family: 'IBM Plex Mono', ui-monospace, monospace;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--page-dim);
+    font-weight: 500;
+  }
+
+  tr:last-child td {
+    border-bottom: 0;
+  }
+
+  tbody tr {
+    cursor: pointer;
+  }
+
+  tbody tr:hover td {
+    background: color-mix(in srgb, var(--page-accent) 7%, transparent);
+  }
+
+  tbody tr[data-active='true'] td {
+    background: color-mix(in srgb, var(--page-accent) 12%, transparent);
+  }
+
+  td.ms {
+    font-family: 'IBM Plex Mono', ui-monospace, monospace;
+    color: var(--page-dim);
+    white-space: nowrap;
+  }
+
+  /* ---------- Size test ---------- */
+  .sizes {
+    display: flex;
+    align-items: flex-end;
+    gap: 30px;
+    flex-wrap: wrap;
+    background: var(--stage-bg);
+    border: 1px solid var(--page-line);
+    border-radius: 12px;
+    padding: 22px 26px;
+  }
+
+  .size {
+    text-align: center;
+    color: var(--stage-dim);
+    font-family: 'IBM Plex Mono', ui-monospace, monospace;
+    font-size: 10px;
+  }
+
+  .size canvas {
+    display: block;
+    margin: 0 auto 8px;
+  }
+
+  .size-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--stage-ink);
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    font-family: Manrope, sans-serif;
+    font-size: 16px;
+  }
+
+  ul {
+    padding-left: 1.1em;
+    color: var(--page-dim);
+  }
+
+  li {
+    margin-bottom: 6px;
+  }
+
+  li b {
+    color: var(--page-ink);
+  }
+
+  .note {
+    border-left: 2px solid var(--page-accent);
+    padding: 2px 0 2px 14px;
+    color: var(--page-dim);
+    margin: 18px 0;
+  }
+</style>
+
+<div class="wrap">
+  <h1>Cubo Arrieta</h1>
+  <p class="lede">
+    Prototipo vivo del logo y de la coreografía de entrada. El cubo se dibuja con el mismo
+    motor de proyección que ya usa <code>src/lib/motion/network.ts</code>: cada pieza tiene
+    su propia rotación en X/Y/Z y el conjunto entero gira aparte. Las fases se
+    solapan a propósito: la energía sale mientras el cubo todavía vuela. Mové el scrubber
+    para recorrer la secuencia, o tocá los knobs para afinar la geometría.
+  </p>
+
+  <div class="stage" id="stage">
+    <div class="aurora"></div>
+    <canvas id="cv"></canvas>
+    <canvas id="cvLogo"></canvas>
+
+    <div class="stage-nav">
+      <div class="nav-slot" id="navSlot"></div>
+      <div class="nav-name" id="navName">MARCOS ARRIETA</div>
+      <div class="nav-links"><span>Sobre mí</span><span>Trabajo</span><span>Contacto</span></div>
+    </div>
+
+    <div class="stage-hero">
+      <div class="hero-col">
+        <p class="eyebrow" data-boot="0"><i></i><span id="typed">DISEÑO Y CONSTRUYO PRODUCTO</span></p>
+        <p class="h1" data-boot="1">Ingeniero de producto<br /><b>que envía a producción</b></p>
+        <p class="sub" data-boot="2">
+          Diez años construyendo plataformas que aguantan usuarios de verdad.
+        </p>
+        <div class="ctas" data-boot="3"><span>Ver trabajo</span><span>Contacto</span></div>
+      </div>
+
+      <div class="console" id="console">
+        <div><b>&gt;</b> spec 26-aurora.md — ok</div>
+        <div><b>&gt;</b> agents: 4 · specs: 12</div>
+        <div><b>&gt;</b> build: dist/ 41 kB</div>
+        <div><b>&gt;</b> deploy: live</div>
+      </div>
+    </div>
+
+    <div class="phase-tag" id="phaseTag">SEED</div>
+  </div>
+
+  <div class="transport">
+    <button id="play">Reproducir</button>
+    <div class="scrub">
+      <input type="range" id="scrub" min="0" max="1000" value="0" />
+      <span class="t" id="tLabel">0 ms</span>
+    </div>
+    <button id="loop" data-on="true">Loop</button>
+  </div>
+
+  <h2>Fases</h2>
+  <p class="lede">
+    Cada fila es un tramo. Hacé clic para saltar. Los tramos se pisan entre sí — por eso
+    entran seis fases en 4.2s — y el knob <b>duración</b> reescala todo junto.
+  </p>
+  <div class="scroller">
+    <table>
+      <thead>
+        <tr>
+          <th>ms</th>
+          <th>Fase</th>
+          <th>Qué pasa</th>
+          <th>Dónde vive</th>
+        </tr>
+      </thead>
+      <tbody id="phaseRows"></tbody>
+    </table>
+  </div>
+
+  <h2>Geometría</h2>
+  <div class="knobs" id="knobs"></div>
+  <div class="toggles">
+    <button data-toggle="files" data-on="true">Paneles-archivo</button>
+    <button data-toggle="ticks" data-on="true">Marcas de acento</button>
+    <button data-toggle="glow" data-on="true">Glow</button>
+    <button data-toggle="wire" data-on="true">Cubos wireframe</button>
+    <button data-toggle="light">Fondo claro</button>
+  </div>
+
+  <h2>Prueba de tamaño</h2>
+  <p class="lede">
+    La prueba que decide si el logo sirve: a 14px, dentro del nav, tiene que leerse como una
+    forma, no como ruido. Si a 14px no se distingue, hay que bajar el número de piezas.
+  </p>
+  <div class="sizes">
+    <div class="size"><canvas data-size="14"></canvas>14px · nav</div>
+    <div class="size"><canvas data-size="20"></canvas>20px</div>
+    <div class="size"><canvas data-size="32"></canvas>32px</div>
+    <div class="size"><canvas data-size="64"></canvas>64px</div>
+    <div class="size">
+      <div class="size-row"><canvas data-size="16"></canvas>MARCOS ARRIETA</div>
+      en contexto
+    </div>
+  </div>
+
+  <h2>Cómo se parte el trabajo</h2>
+  <div class="grid">
+    <div class="card">
+      <h3>PV3-A · Logo cubo</h3>
+      <p>
+        Geometría de las piezas, render del cubo, reemplazo del ✳ en <code>Nav.astro</code> y
+        <code>Footer.astro</code>, idle lento. Mergeable solo: el sitio queda con logo nuevo
+        aunque la coreografía no exista todavía.
+      </p>
+    </div>
+    <div class="card">
+      <h3>PV3-B · Coreografía</h3>
+      <p>
+        Overlay de entrada, vuelo al nav, energía → red de nodos → consola → contenido.
+        Reescribe el timing de <code>boot.ts</code> y el arranque de <code>network.ts</code>.
+        Usa el logo que ya dejó PV3-A.
+      </p>
+    </div>
+  </div>
+
+  <h2>Decisiones abiertas</h2>
+  <ul>
+    <li>
+      <b>Duración total.</b> 4.2s con las fases solapadas. Movete el knob: por debajo de
+      3.2s el EXPAND deja de leerse, por encima de 5s se siente que el sitio te hace esperar.
+    </li>
+    <li>
+      <b>Revisitas.</b> La secuencia corre una vez por sesión
+      (<code>sessionStorage</code>), no en cada navegación entre ES y EN. Un clic o un
+      scroll durante la animación salta al final.
+    </li>
+    <li>
+      <b>El nombre.</b> Ya no se forma con partículas: aparece en el nav con el
+      <code>scramble</code> que el sitio ya tiene (<code>MOTION_SPEC</code> §1, resuelve de
+      izquierda a derecha con easing cuadrático). Cero código nuevo y cero riesgo de que
+      el nav salte de ancho.
+    </li>
+    <li>
+      <b><code>prefers-reduced-motion: reduce</code>.</b> El cubo se dibuja quieto, ya
+      expandido y ya en el nav, y el contenido está desde el primer frame. Sin overlay,
+      sin vuelo.
+    </li>
+    <li>
+      <b>Sin JS.</b> El nav necesita un fallback estático. Un SVG inline del cubo en reposo
+      cubre eso y además sirve de favicon y de imagen OG.
+    </li>
+    <li>
+      <b>Fondo claro.</b> Probá el toggle: el cian sobre <code>#f4f5f7</code> pierde
+      cuerpo. Probablemente necesite su propia alpha, como terminó pasando con la aurora.
+    </li>
+  </ul>
+</div>
+
+<script>
+  // ---------- math ----------
+  const clamp = (v, a = 0, b = 1) => Math.min(b, Math.max(a, v))
+  const lerp = (a, b, t) => a + (b - a) * t
+  const norm = (t, a, b) => clamp((t - a) / (b - a))
+  const inOut = (t) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2)
+  const outCubic = (t) => 1 - Math.pow(1 - t, 3)
+  const outBack = (t) => 1 + 2.70158 * Math.pow(t - 1, 3) + 1.70158 * Math.pow(t - 1, 2)
+
+  function seeded(n) {
+    let s = n >>> 0 || 1
+    return () => ((s = (s * 1103515245 + 12345) & 0x7fffffff), s / 0x7fffffff)
+  }
+
+  function rot3(p, rx, ry, rz) {
+    let { x, y, z } = p
+    let c = Math.cos(rz)
+    let s = Math.sin(rz)
+    ;[x, y] = [x * c - y * s, x * s + y * c]
+    c = Math.cos(ry)
+    s = Math.sin(ry)
+    ;[x, z] = [x * c + z * s, -x * s + z * c]
+    c = Math.cos(rx)
+    s = Math.sin(rx)
+    ;[y, z] = [y * c - z * s, y * s + z * c]
+    return { x, y, z }
+  }
+
+  // ---------- geometry ----------
+  // A 3x3x3 lattice read isometrically: six solid cubes on the face axes, wireframe
+  // cubes on the corners, flat "file" panels floating one step further out, and short
+  // accent ticks past those. That is the silhouette of the reference image.
+  const CUBE_FACES = [
+    [0, 1, 2, 3],
+    [4, 5, 6, 7],
+    [0, 1, 5, 4],
+    [2, 3, 7, 6],
+    [1, 2, 6, 5],
+    [0, 3, 7, 4],
+  ]
+  const CUBE_NORMALS = [
+    [0, 0, -1],
+    [0, 0, 1],
+    [0, -1, 0],
+    [0, 1, 0],
+    [1, 0, 0],
+    [-1, 0, 0],
+  ]
+  const CUBE_VERTS = [
+    [-1, -1, -1],
+    [1, -1, -1],
+    [1, 1, -1],
+    [-1, 1, -1],
+    [-1, -1, 1],
+    [1, -1, 1],
+    [1, 1, 1],
+    [-1, 1, 1],
+  ]
+
+  function buildPieces() {
+    const rnd = seeded(7)
+    const pieces = []
+    const push = (pos, kind, size, extra = {}) =>
+      pieces.push({
+        pos: { x: pos[0], y: pos[1], z: pos[2] },
+        kind,
+        size,
+        // How far this piece tumbles on its own axes before settling flush with the
+        // lattice. Whole turns, so the resting pose is always axis-aligned.
+        turns: { x: Math.round(rnd() * 2 - 1), y: Math.round(rnd() * 3 - 1), z: Math.round(rnd() * 2 - 1) },
+        phase: rnd() * Math.PI * 2,
+        orient: { x: 0, y: 0, z: 0 },
+        lines: Array.from({ length: 6 }, (_, i) => ({
+          y: 0.16 + i * 0.135,
+          x: 0.12 + rnd() * 0.1,
+          w: 0.22 + rnd() * 0.5,
+        })),
+        ...extra,
+      })
+
+    // Core, then the six face axes as the bright solids.
+    push([0, 0, 0], 'core', 0.46)
+    const axes = [
+      [1, 0, 0],
+      [-1, 0, 0],
+      [0, 1, 0],
+      [0, -1, 0],
+      [0, 0, 1],
+      [0, 0, -1],
+    ]
+    axes.forEach((a, i) => push(a, i % 2 ? 'wire' : 'solid', 0.3))
+
+    // Edge midpoints fill the hexagonal silhouette; corners cap it.
+    for (const [a, b] of [
+      [0, 1],
+      [1, 2],
+      [0, 2],
+    ])
+      for (const sa of [-1, 1])
+        for (const sb of [-1, 1]) {
+          const v = [0, 0, 0]
+          v[a] = sa
+          v[b] = sb
+          if (rnd() > 0.34) push(v, rnd() > 0.72 ? 'solid' : 'wire', 0.24)
+        }
+    for (const sx of [-1, 1])
+      for (const sy of [-1, 1])
+        for (const sz of [-1, 1]) if (rnd() > 0.62) push([sx, sy, sz], 'wire', 0.2)
+
+    // One screen per face axis, facing outward along it.
+    axes.forEach((a, i) =>
+      push(
+        a.map((v) => v * 1.8),
+        'file',
+        0.36,
+        { orient: [{ x: 0, y: Math.PI / 2, z: 0 }, { x: Math.PI / 2, y: 0, z: 0 }, { x: 0, y: 0, z: 0 }][i >> 1] },
+      ),
+    )
+
+    for (let i = 0; i < 9; i++) {
+      const t = (i / 9) * Math.PI * 2
+      push([Math.cos(t) * 2.4, Math.sin(t * 1.7) * 2.0, Math.sin(t) * 2.4], 'tick', 0.45)
+    }
+    return pieces
+  }
+
+  const PIECES = buildPieces()
+
+  // ---------- knobs ----------
+  const K = {
+    duration: { v: 4200, min: 2500, max: 12000, step: 100, label: 'duración total (ms)' },
+    spread: { v: 1, min: 0.6, max: 1.8, step: 0.01, label: 'separación de piezas' },
+    globalSpin: { v: 0.5, min: 0, max: 4, step: 0.05, label: 'giro del conjunto' },
+    pieceSpin: { v: 1, min: 0, max: 4, step: 0.05, label: 'giro de cada pieza' },
+    tilt: { v: 0.62, min: 0, max: 1.2, step: 0.01, label: 'inclinación isométrica' },
+    scale: { v: 0.85, min: 0.5, max: 1.8, step: 0.01, label: 'tamaño en el hero' },
+    nodes: { v: 64, min: 0, max: 120, step: 1, label: 'nodos de la red' },
+  }
+  const ON = { files: true, ticks: true, glow: true, wire: true, light: false }
+
+  const knobs = document.getElementById('knobs')
+  for (const [key, k] of Object.entries(K)) {
+    const el = document.createElement('div')
+    el.className = 'knob'
+    el.innerHTML = `<label><span>${k.label}</span><b data-v="${key}">${k.v}</b></label>
+      <input type="range" min="${k.min}" max="${k.max}" step="${k.step}" value="${k.v}">`
+    const out = el.querySelector('b')
+    el.querySelector('input').addEventListener('input', (e) => {
+      k.v = +e.target.value
+      out.textContent = k.v
+      drawSizes()
+    })
+    knobs.appendChild(el)
+  }
+
+  document.querySelectorAll('[data-toggle]').forEach((b) => {
+    b.addEventListener('click', () => {
+      const key = b.dataset.toggle
+      ON[key] = !ON[key]
+      b.dataset.on = String(ON[key])
+      if (key === 'light') document.getElementById('stage').style.setProperty('--stage-bg', ON.light ? '#f4f5f7' : '#08090c')
+      drawSizes()
+    })
+  })
+
+  // ---------- phases ----------
+  // Fractions of the total duration, so the duration knob rescales everything at once.
+  const PHASES = [
+    [0, 0.095, 'SEED', 'Un punto de luz. El core respira, colapsado en el centro.', 'overlay nuevo'],
+    [0.09, 0.38, 'EXPAND', 'Las piezas salen a su sitio girando cada una en su eje, y se alinean.', 'logo/cube.ts'],
+    [0.355, 0.57, 'DOCK', 'El conjunto encoge y vuela al nav. Al aterrizar, el nombre hace scramble.', 'FLIP + scramble.ts'],
+    [0.52, 0.76, 'ENERGY', 'Del logo salen partículas al hero y se vuelven los 84 nodos.', 'network.ts'],
+    [0.69, 0.88, 'CONSOLE', 'Los nodos se anclan a la consola. Entra con el barrido.', 'network.ts + Console'],
+    [0.78, 1, 'CONTENT', 'Eyebrow, H1, sub, CTAs y stats en cascada.', 'boot.ts'],
+  ]
+
+  const rows = document.getElementById('phaseRows')
+  PHASES.forEach(([a, b, name, what, where], i) => {
+    const tr = document.createElement('tr')
+    tr.innerHTML = `<td class="ms" data-ms="${i}"></td><td><b>${name}</b></td><td>${what}</td><td class="mono">${where}</td>`
+    tr.addEventListener('click', () => {
+      playing = false
+      play.textContent = 'Reproducir'
+      setT(a * K.duration.v + 1)
+    })
+    rows.appendChild(tr)
+  })
+
+  function refreshMs() {
+    PHASES.forEach(([a, b], i) => {
+      rows.querySelector(`[data-ms="${i}"]`).textContent =
+        `${Math.round(a * K.duration.v)}–${Math.round(b * K.duration.v)}`
+    })
+  }
+
+  // ---------- network nodes ----------
+  const NODES = (() => {
+    const rnd = seeded(31)
+    return Array.from({ length: 120 }, () => {
+      const th = rnd() * Math.PI * 2
+      const ph = Math.acos(2 * rnd() - 1)
+      return { th, ph, r: 0.75 + rnd() * 0.25, d: rnd(), spd: 0.0004 + rnd() * 0.0008 }
+    })
+  })()
+
+  // ---------- renderer ----------
+  const cv = document.getElementById('cv')
+  const cvLogo = document.getElementById('cvLogo')
+  const logoCtx = cvLogo.getContext('2d')
+  let ctx = cv.getContext('2d')
+  const sceneCtx = ctx
+  const stage = document.getElementById('stage')
+  const navSlot = document.getElementById('navSlot')
+  const consoleEl = document.getElementById('console')
+  const navName = document.getElementById('navName')
+  const typed = document.getElementById('typed')
+  const phaseTag = document.getElementById('phaseTag')
+  const TYPED_TEXT = typed.textContent
+
+  let W = 0
+  let H = 0
+  function resize() {
+    const r = stage.getBoundingClientRect()
+    const dpr = Math.min(2, devicePixelRatio || 1)
+    W = r.width
+    H = r.height
+    for (const [c, x] of [
+      [cv, sceneCtx],
+      [cvLogo, logoCtx],
+    ]) {
+      c.width = W * dpr
+      c.height = H * dpr
+      x.setTransform(dpr, 0, 0, dpr, 0, 0)
+    }
+  }
+  new ResizeObserver(resize).observe(stage)
+  resize()
+
+  const AC = () => (ON.light ? '10, 143, 175' : '62, 231, 255')
+  const VI = () => (ON.light ? '120, 90, 255' : '170, 120, 255')
+
+  function project(p, cx, cy, s, f) {
+    const sc = f / (f + p.z)
+    return { x: cx + p.x * sc * s, y: cy + p.y * sc * s, z: p.z, sc }
+  }
+
+  // One cube, rotated on its own axes then carried by the world rotation.
+  function drawPiece(piece, o) {
+    const { cx, cy, s, f, wrx, wry, expand, t, alpha, settle } = o
+    // Unwinds from `turns` whole rotations to a slow idle wobble: the piece spins on
+    // its own axes while it flies out, then locks flush with the lattice.
+    const spin = (1 - settle) * Math.PI * 2 * K.pieceSpin.v
+    const wob = Math.sin(t * 0.0006 + piece.phase) * 0.1 * settle * K.pieceSpin.v
+    const local = {
+      x: piece.orient.x + piece.turns.x * spin + wob,
+      y: piece.orient.y + piece.turns.y * spin + wob * 1.4,
+      z: piece.orient.z + piece.turns.z * spin,
+    }
+
+    const base = {
+      x: piece.pos.x * expand * K.spread.v,
+      y: piece.pos.y * expand * K.spread.v,
+      z: piece.pos.z * expand * K.spread.v,
+    }
+
+    const toWorld = (v) => {
+      const r = rot3({ x: v[0] * piece.size, y: v[1] * piece.size, z: v[2] * piece.size }, local.x, local.y, local.z)
+      return rot3({ x: r.x + base.x, y: r.y + base.y, z: r.z + base.z }, wrx, wry, 0)
+    }
+
+    const toNormal = (v) =>
+      rot3(rot3({ x: v[0], y: v[1], z: v[2] }, local.x, local.y, local.z), wrx, wry, 0)
+
+    if (piece.kind === 'tick') {
+      if (!ON.ticks) return null
+      const a = project(toWorld([-0.6, 0, 0]), cx, cy, s, f)
+      const b = project(toWorld([0.6, 0, 0]), cx, cy, s, f)
+      return {
+        z: (a.z + b.z) / 2,
+        draw: () => {
+          ctx.strokeStyle = `rgba(${AC()},${0.5 * alpha})`
+          ctx.lineWidth = Math.max(0.6, s * 0.004)
+          ctx.beginPath()
+          ctx.moveTo(a.x, a.y)
+          ctx.lineTo(b.x, b.y)
+          ctx.stroke()
+        },
+      }
+    }
+
+    if (piece.kind === 'file') {
+      if (!ON.files) return null
+      const q = [
+        [-1, -1, 0],
+        [1, -1, 0],
+        [1, 1, 0],
+        [-1, 1, 0],
+      ].map((v) => project(toWorld(v), cx, cy, s, f))
+      const bil = (u, vv) => ({
+        x: lerp(lerp(q[0].x, q[1].x, u), lerp(q[3].x, q[2].x, u), vv),
+        y: lerp(lerp(q[0].y, q[1].y, u), lerp(q[3].y, q[2].y, u), vv),
+      })
+      return {
+        z: q.reduce((a, p) => a + p.z, 0) / 4,
+        draw: () => {
+          ctx.beginPath()
+          q.forEach((p, i) => (i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y)))
+          ctx.closePath()
+          ctx.fillStyle = `rgba(${AC()},${0.05 * alpha})`
+          ctx.fill()
+          ctx.strokeStyle = `rgba(${AC()},${0.55 * alpha})`
+          ctx.lineWidth = Math.max(0.5, s * 0.0035)
+          ctx.stroke()
+          ctx.lineWidth = Math.max(0.5, s * 0.005)
+          ctx.strokeStyle = `rgba(${AC()},${0.45 * alpha})`
+          for (const ln of piece.lines) {
+            const a = bil(ln.x, ln.y)
+            const b = bil(Math.min(0.94, ln.x + ln.w), ln.y)
+            ctx.beginPath()
+            ctx.moveTo(a.x, a.y)
+            ctx.lineTo(b.x, b.y)
+            ctx.stroke()
+          }
+        },
+      }
+    }
+
+    if (piece.kind === 'wire' && !ON.wire) return null
+
+    const world = CUBE_VERTS.map((v) => toWorld(v))
+    const pv = world.map((w) => project(w, cx, cy, s, f))
+    const solid = piece.kind === 'solid'
+    const core = piece.kind === 'core'
+    const L = { x: -0.32, y: -0.86, z: 0.4 }
+
+    return {
+      z: pv.reduce((a, p) => a + p.z, 0) / 8,
+      draw: () => {
+        ctx.lineWidth = Math.max(0.6, s * (core ? 0.006 : 0.0042))
+        CUBE_FACES.forEach((idx, fi) => {
+          const c = { x: 0, y: 0, z: 0 }
+          for (const i of idx) {
+            c.x += world[i].x / 4
+            c.y += world[i].y / 4
+            c.z += world[i].z / 4
+          }
+          const n = toNormal(CUBE_NORMALS[fi])
+          // Camera sits at -f on z: a face is visible when its normal turns toward it.
+          if (n.x * c.x + n.y * c.y + n.z * (c.z + f) >= 0) return
+
+          const lit = clamp(-(n.x * L.x + n.y * L.y + n.z * L.z), 0, 1)
+          ctx.beginPath()
+          idx.forEach((i, k) => (k ? ctx.lineTo(pv[i].x, pv[i].y) : ctx.moveTo(pv[i].x, pv[i].y)))
+          ctx.closePath()
+          ctx.fillStyle = solid
+            ? `rgba(${AC()},${(0.42 + 0.5 * lit) * alpha})`
+            : `rgba(${AC()},${(0.02 + 0.06 * lit) * alpha})`
+          ctx.fill()
+          ctx.strokeStyle = `rgba(${AC()},${(solid ? 0.95 : core ? 0.62 : 0.42) * alpha})`
+          ctx.stroke()
+        })
+      },
+    }
+  }
+
+  function drawLogo(o) {
+    if (ON.glow) {
+      ctx.save()
+      ctx.shadowBlur = o.s * 0.09
+      ctx.shadowColor = `rgba(${AC()},0.55)`
+    }
+    const drawables = []
+    for (const p of PIECES) {
+      const d = drawPiece(p, o)
+      if (d) drawables.push(d)
+    }
+    drawables.sort((a, b) => b.z - a.z)
+    for (const d of drawables) d.draw()
+    if (ON.glow) ctx.restore()
+  }
+
+  // ---------- the choreography ----------
+  const D = () => K.duration.v
+  const at = (i) => PHASES[i][0] * D()
+  const to = (i) => PHASES[i][1] * D()
+
+  function setBoot(el, on, dy = 14) {
+    el.style.opacity = on
+    el.style.transform = `translateY(${(1 - on) * dy}px)`
+    el.style.filter = `blur(${(1 - on) * 8}px)`
+  }
+
+  const GLYPHS = '<>/_-=+*#%&{}[]|\\01'
+  function scrambled(text, p) {
+    const n = Math.floor(p * p * text.length)
+    let out = ''
+    for (let i = 0; i < text.length; i++) {
+      if (text[i] === ' ') out += ' '
+      else out += i < n ? text[i] : GLYPHS[(i * 7 + Math.floor(p * 40)) % GLYPHS.length]
+    }
+    return out
+  }
+
+  function frame(t) {
+    sceneCtx.clearRect(0, 0, W, H)
+    logoCtx.clearRect(0, 0, W, H)
+
+    const navBox = navSlot.getBoundingClientRect()
+    const stageBox = stage.getBoundingClientRect()
+    const navX = navBox.left - stageBox.left + navBox.width / 2
+    const navY = navBox.top - stageBox.top + navBox.height / 2
+
+    const heroX = W * 0.5
+    const heroY = H * 0.43
+
+    // --- logo transform across the timeline ---
+    const pSeed = norm(t, at(0), to(0))
+    const pExp = norm(t, at(1), to(1))
+    const pDock = norm(t, at(2), to(2))
+
+    const expand = lerp(0.08, 1, outBack(clamp(pExp)))
+    const dock = inOut(pDock)
+    const cx = lerp(heroX, navX, dock)
+    const cy = lerp(heroY, navY, dock)
+    const big = Math.min(W, H) * 0.19 * K.scale.v
+    const small = navBox.width * 0.3
+    const s = lerp(big * lerp(0.25, 1, outCubic(clamp(pExp))), small, dock)
+
+    const wry = t * 0.00028 * K.globalSpin.v + (1 - clamp(pExp)) * 2.4
+    const wrx = K.tilt.v + Math.sin(t * 0.0004) * 0.05
+
+    const settle = outCubic(clamp((pExp - 0.25) / 0.75))
+    ctx = logoCtx
+    drawLogo({ cx, cy, s, f: 900, wrx, wry, expand, t, settle, alpha: lerp(0.35, 1, clamp(pSeed * 2)) })
+
+    ctx = sceneCtx
+
+    // --- energy -> node network ---
+    const pEnergy = norm(t, at(3), to(3))
+    const pCon = norm(t, at(4), to(4))
+    if (pEnergy > 0) {
+      const n = Math.round(K.nodes.v)
+      const rx = W * 0.26
+      const ry = H * 0.3
+      const rz = Math.min(W, H) * 0.3
+      const ncx = W * 0.72
+      const ncy = H * 0.55
+      const pts = []
+      for (let i = 0; i < n; i++) {
+        const nd = NODES[i]
+        const th = nd.th + t * nd.spd
+        const p3 = rot3(
+          {
+            x: Math.sin(nd.ph) * Math.cos(th) * rx * nd.r,
+            y: Math.cos(nd.ph) * ry * nd.r,
+            z: Math.sin(nd.ph) * Math.sin(th) * rz * nd.r,
+          },
+          0.1,
+          0,
+          0,
+        )
+        const f = 0.9 * Math.max(W, H)
+        const sc = f / (f + p3.z)
+        const tx = ncx + p3.x * sc
+        const ty = ncy + p3.y * sc
+        const e = outCubic(clamp((pEnergy - nd.d * 0.5) * 2))
+        // A slight arc so the particles fall out of the logo instead of sliding.
+        const mx = lerp(cx, tx, e)
+        const my = lerp(cy, ty, e) - Math.sin(e * Math.PI) * H * 0.12
+        pts.push({ x: mx, y: my, sc, a: e * lerp(1, 0.75, pCon) })
+      }
+      ctx.lineWidth = 1
+      for (let i = 0; i < pts.length; i++) {
+        for (let j = i + 1; j < pts.length; j++) {
+          const dx = pts[i].x - pts[j].x
+          const dy = pts[i].y - pts[j].y
+          const d = Math.hypot(dx, dy)
+          if (d < 110) {
+            ctx.strokeStyle = `rgba(${AC()},${(1 - d / 110) * 0.2 * Math.min(pts[i].a, pts[j].a)})`
+            ctx.beginPath()
+            ctx.moveTo(pts[i].x, pts[i].y)
+            ctx.lineTo(pts[j].x, pts[j].y)
+            ctx.stroke()
+          }
+        }
+      }
+      for (const p of pts) {
+        ctx.fillStyle = `rgba(${AC()},${0.75 * p.a})`
+        ctx.beginPath()
+        ctx.arc(p.x, p.y, 1.5 * p.sc, 0, 7)
+        ctx.fill()
+      }
+    }
+
+    // --- DOM: nav name, console, boot cascade ---
+    // MOTION_SPEC 1: the brand resolves left to right with quadratic easing. Same
+    // function the nav already runs on load, only its trigger moves here.
+    const pName = norm(t, at(2) + (to(2) - at(2)) * 0.62, to(2) + D() * 0.16)
+    navName.style.opacity = pName > 0 ? 1 : 0
+    navName.textContent = scrambled('MARCOS ARRIETA', pName)
+
+    const conP = outCubic(norm(t, at(4), to(4)))
+    consoleEl.style.opacity = conP
+    consoleEl.style.transform = `translateY(${(1 - conP) * 24}px) scale(${lerp(0.96, 1, conP)})`
+    consoleEl.style.filter = `blur(${(1 - conP) * 10}px)`
+    const sweep = norm(t, at(4) + (to(4) - at(4)) * 0.35, to(4) + D() * 0.04)
+    consoleEl.style.setProperty('--sweep', `${sweep * 100}%`)
+    consoleEl.style.setProperty('--sweep-a', sweep > 0 && sweep < 1 ? 1 : 0)
+
+    const c0 = at(5)
+    const stepMs = D() * 0.038
+    document.querySelectorAll('[data-boot]').forEach((el) => {
+      const n = +el.dataset.boot
+      setBoot(el, outCubic(norm(t, c0 + n * stepMs, c0 + n * stepMs + D() * 0.09)))
+    })
+    const typedN = Math.floor(norm(t, c0, c0 + D() * 0.11) * TYPED_TEXT.length)
+    typed.textContent = TYPED_TEXT.slice(0, typedN)
+
+    // Phases overlap, so the label is the last one to have started, not the only match.
+    const ph = [...PHASES].reverse().find(([a]) => t >= a * D()) || PHASES[0]
+    phaseTag.textContent = ph[2]
+    ;[...rows.children].forEach((tr, i) => (tr.dataset.active = String(PHASES[i] === ph)))
+  }
+
+  // ---------- transport ----------
+  const scrub = document.getElementById('scrub')
+  const tLabel = document.getElementById('tLabel')
+  const play = document.getElementById('play')
+  const loopBtn = document.getElementById('loop')
+  let T = 0
+  let playing = false
+  let looping = true
+  let last = 0
+
+  function setT(ms) {
+    T = clamp(ms, 0, D())
+    scrub.value = String((T / D()) * 1000)
+    tLabel.textContent = `${Math.round(T)} ms`
+    refreshMs()
+    frame(T)
+  }
+
+  scrub.addEventListener('input', () => {
+    playing = false
+    play.textContent = 'Reproducir'
+    setT((+scrub.value / 1000) * D())
+  })
+  play.addEventListener('click', () => {
+    playing = !playing
+    if (playing && T >= D() - 1) T = 0
+    play.textContent = playing ? 'Pausa' : 'Reproducir'
+    last = 0
+  })
+  loopBtn.addEventListener('click', () => {
+    looping = !looping
+    loopBtn.dataset.on = String(looping)
+  })
+
+  function tick(now) {
+    if (playing) {
+      if (last) T += now - last
+      last = now
+      if (T >= D()) {
+        if (looping) T = 0
+        else {
+          T = D()
+          playing = false
+          play.textContent = 'Reproducir'
+        }
+      }
+      setT(T)
+    } else {
+      frame(T)
+    }
+    requestAnimationFrame(tick)
+  }
+  requestAnimationFrame(tick)
+  setT(0)
+
+  // ---------- static size test ----------
+  const sizeCanvases = [...document.querySelectorAll('[data-size]')]
+  const stageCtx = ctx
+  function drawSizes() {
+    const dpr = Math.min(2, devicePixelRatio || 1)
+    for (const c of sizeCanvases) {
+      const px = +c.dataset.size
+      const box = px * 3
+      c.style.width = box + 'px'
+      c.style.height = box + 'px'
+      c.width = box * dpr
+      c.height = box * dpr
+      const x = c.getContext('2d')
+      x.setTransform(dpr, 0, 0, dpr, 0, 0)
+      x.clearRect(0, 0, box, box)
+      ctx = x // drawLogo paints through the module-level `ctx`
+      drawLogo({
+        cx: box / 2,
+        cy: box / 2,
+        s: box * 0.2,
+        f: 900,
+        wrx: K.tilt.v,
+        wry: 0.6,
+        expand: 1,
+        t: 0,
+        settle: 1,
+        alpha: 1,
+      })
+      ctx = stageCtx
+    }
+  }
+  drawSizes()
+  addEventListener('resize', drawSizes)
+</script>
