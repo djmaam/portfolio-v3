@@ -1,0 +1,63 @@
+<task-notification>
+<task-id>a9c389823a35e5312</task-id>
+<tool-use-id>toolu_01FfuYxtH57oZNMFJVFfAcPS</tool-use-id>
+<output-file>/private/tmp/claude-501/-Users-djmaam-Projects-Marcos-portfolio-v3/33786be7-d54c-4daa-a55d-df6498965cc0/tasks/a9c389823a35e5312.output</output-file>
+<status>completed</status>
+<summary>Agent "Implement Method sticky section" finished</summary>
+<note>A task-notification fires each time this agent stops with no live background children of its own. The user can send it another message and resume it, so the same task-id may notify more than once.</note>
+<result>Done. Branch `feat/09-method` pushed with four atomic commits; no PR, no merge.
+
+## The three commands (full output)
+
+```
+$ bun run lint
+$ eslint . &amp;&amp; prettier --check . &amp;&amp; tsc --noEmit &amp;&amp; bun scripts/check-tokens.ts
+Checking formatting...
+All matched files use Prettier code style!
+EXIT=0
+
+$ bun test
+bun test v1.4.0 (34cbb9a40)
+ 261 pass
+ 0 fail
+ 8029 expect() calls
+Ran 261 tests across 21 files. [123.00ms]
+EXIT=0
+
+$ bun run build          (after rm -rf dist)
+astro build → output "static", 2 page(s) built in 202ms, Complete!
+EXIT=0
+```
+Suite went 177 → 261 passing (+84: 13 new math tests, 11 new section tests, plus per-language loops).
+
+## Commits
+`8e65e10` test(method) · `724934c` feat(motion): math · `67c437b` feat(method): the section · `3c1cb63` feat(pages): both markers replaced.
+
+## Files
+- `/Users/djmaam/Projects/Marcos/portfolio-v3/src/lib/motion/math.ts` — `methodStep`, `methodCardState`, `methodProgress`, `methodLabel`
+- `/Users/djmaam/Projects/Marcos/portfolio-v3/src/components/Method.astro`
+- `/Users/djmaam/Projects/Marcos/portfolio-v3/tests/method.test.ts`, `/Users/djmaam/Projects/Marcos/portfolio-v3/tests/math.test.ts`
+- `/Users/djmaam/Projects/Marcos/portfolio-v3/src/pages/index.astro`, `/Users/djmaam/Projects/Marcos/portfolio-v3/src/pages/en/index.astro`
+
+## Verification against the real build
+
+**Reversibility.** Everything is derived from `p` in the current frame; the driver keeps only cached measurements and a paint key (memoization on the exact state, not accumulation). Three tests sample p over 0…1 in 101 steps, map the sequence, then map the reversed sequence and re-reverse it, asserting equality — for `methodStep`, for the indicator label (which also asserts the label set is exactly idle → 5 verbs in order → done), and for the whole five-card grid via `methodCardState`. A fourth asserts the grid only ever moves forward as p grows.
+
+**Reduce / no JS.** From `dist/_astro/Base.*.css`: the only rule that lowers a card's opacity is `@media (prefers-reduced-motion:no-preference){html.has-js .step[…][data-state=upcoming]{opacity:.22;…}}`. The only `280vh` and the section's only `position:sticky` are both inside `@media (prefers-reduced-motion:no-preference) and (width&gt;=720px)` and both behind `html.has-js`. `has-js` is added by the inline head script, so with JS off or `reduce` on there is no track, no pinning and no dimming — five cards at full opacity in a normal-flow section, indicator showing `cycleIdle` (server-rendered).
+
+**Colors.** Zero step hexes in `dist/index.html` and `dist/en/index.html`. The five hexes appear exactly once each in the built CSS, only as the `--color-step-N:` declarations from `app.css` (issue 01). The HTML carries `style="--step: var(--color-step-N)"` on each card; the script writes the same token reference for the indicator.
+
+**Listeners.** `grep` over `src/` finds `addEventListener('scroll'|'resize'` only in `lib/motion/scroll.ts`; the existing `scroll.test.ts`/`network.test.ts` guards still pass.
+
+Caveat: no browser or headless runner is available here (and I added no dependency), so pinning was verified from the built CSS/HTML and the unit tests, not visually.
+
+## Decisions the spec did not cover
+- **Two extra pure functions.** `methodLabel` (the acceptance criterion "indicator text matches the verb at that index" needs something testable) and `methodCardState` (removes a triple-nested ternary from the driver and makes the grid's reversibility directly assertable). The driver now holds no logic beyond measurement.
+- **State as `data-state` attributes, painted by CSS** — instead of the mock's inline style writes. Keeps colors and the 600ms curve in CSS.
+- **Two-variable indirection for the step color.** The card carries inline `--step: var(--color-step-N)`; CSS defines `--lit: var(--step)` and `[data-state='done']` overrides `--lit` with the accent. Needed because a stylesheet cannot override an inline custom property.
+- **The `.22` and the pinning live in the component's scoped `&lt;style&gt;`** behind `:global(html.has-js)`, not in `app.css` — `app.css` holds the *shared* resting states; the requirement was the `.has-js` guard, which is met and asserted.
+- **Fit test:** `window.innerWidth &gt;= 720 &amp;&amp; inner.offsetHeight + 64 &lt;= vh`, on a padding-free `.inner` (the 32px padding sits on `.pin`), replacing the mock's `+64 +40` child-sum with a flex gap. `innerWidth` rather than the mock's element width, so JS and the `@media` agree on the same 720px.
+- **Markup:** `&lt;ol&gt;` for the steps, `aria-hidden` dots, and `data-reveal` only on the two header columns — a reveal on the cards would fight the scroll-driven opacity.
+- No dependencies added.</result>
+<usage><subagent_tokens>147945</subagent_tokens><tool_uses>59</tool_uses><duration_ms>682992</duration_ms></usage>
+</task-notification>
