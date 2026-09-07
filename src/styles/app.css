@@ -469,21 +469,6 @@
   }
 }
 
-@keyframes think {
-  0% {
-    transform: rotate(0) scale(1);
-  }
-  30% {
-    transform: rotate(90deg) scale(0.72);
-  }
-  60% {
-    transform: rotate(200deg) scale(1.12);
-  }
-  100% {
-    transform: rotate(360deg) scale(1);
-  }
-}
-
 @keyframes sweep {
   from {
     top: -8%;

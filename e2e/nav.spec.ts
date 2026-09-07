@@ -115,3 +115,42 @@ test('the sticky nav never covers what the keyboard just focused', async ({ page
   const navHeight = await page.locator('.nav').evaluate((el) => el.getBoundingClientRect().height)
   expect(navHeight).toBe(64)
 })
+
+test('the mark is in the markup, before any script runs', async ({ browser }) => {
+  const context = await browser.newContext({ javaScriptEnabled: false })
+  const page = await context.newPage()
+  await page.goto('/')
+  await expect(page.locator('[data-mark] svg')).toHaveCount(2)
+  await expect(page.locator('[data-mark] canvas')).toHaveCount(0)
+  await context.close()
+})
+
+test('the canvas takes over and the mark turns', async ({ page }) => {
+  await page.goto('/')
+  const canvas = page.locator('.nav [data-mark] canvas')
+  await expect(canvas).toBeVisible()
+  await expect(page.locator('.nav [data-mark] svg')).toHaveCount(0)
+
+  const frame = () =>
+    page.locator('.nav [data-mark] canvas').evaluate((el) => {
+      const source = el as HTMLCanvasElement
+      const copy = document.createElement('canvas')
+      copy.width = source.width
+      copy.height = source.height
+      copy.getContext('2d')!.drawImage(source, 0, 0)
+      return copy.toDataURL()
+    })
+
+  const before = await frame()
+  await page.waitForTimeout(1200)
+  expect(await frame()).not.toBe(before)
+})
+
+test('with reduced motion the mark stays the static SVG', async ({ browser }) => {
+  const context = await browser.newContext({ reducedMotion: 'reduce' })
+  const page = await context.newPage()
+  await page.goto('/')
+  await expect(page.locator('.nav [data-mark] svg')).toHaveCount(1)
+  await expect(page.locator('.nav [data-mark] canvas')).toHaveCount(0)
+  await context.close()
+})

@@ -48,7 +48,7 @@ test('the canvas is the viewport box of MOTION_SPEC §3, not the hero box', asyn
   // the hero instead makes `ry = .48h`, the ✳ radius and the 55% mask cut all follow a
   // section that re-flows — the drift this assertion exists to stop.
   const box = await page.evaluate(() => {
-    const rect = document.querySelector('canvas')!.getBoundingClientRect()
+    const rect = document.querySelector('canvas.hero-net')!.getBoundingClientRect()
     return { top: rect.top, left: rect.left, width: rect.width, height: rect.height }
   })
 
@@ -72,7 +72,7 @@ test('the console the cloud is centered on is the console the page renders', asy
   // ever disagree the cloud silently drifts off the console — which is exactly what an
   // offset canvas would cause. Two independent measurement paths, compared.
   const card = await page.evaluate(() => {
-    const canvas = document.querySelector<HTMLCanvasElement>('canvas')!
+    const canvas = document.querySelector<HTMLCanvasElement>('canvas.hero-net')!
     const cardEl = document.querySelector<HTMLElement>('[data-console]')!
     const section = document.querySelector<HTMLElement>('.hero')!
 
@@ -116,7 +116,7 @@ test('the mask is applied: the cloud fades out below 55% of the canvas', async (
   const set = (property: string, value: string) =>
     page.evaluate(
       ([key, val]) => {
-        document.querySelector<HTMLElement>('canvas')!.style.setProperty(key, val)
+        document.querySelector<HTMLElement>('canvas.hero-net')!.style.setProperty(key, val)
       },
       [property, value],
     )
@@ -144,7 +144,7 @@ test('the ✳ forms on the console and clears the H1, like the mock', async ({ p
   // the tightest horizontal spread is the ✳ at full `form`, whenever the load happened to
   // let it land. `MOTION_SPEC` §3 holds it from 1200 to 1900ms.
   const star = await page.evaluate(async () => {
-    const canvas = document.querySelector<HTMLCanvasElement>('canvas')!
+    const canvas = document.querySelector<HTMLCanvasElement>('canvas.hero-net')!
     const ctx = canvas.getContext('2d')!
     const dpr = canvas.width / canvas.getBoundingClientRect().width
     let best: { spread: number; centerX: number; left: number } | null = null

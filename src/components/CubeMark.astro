@@ -1,0 +1,75 @@
+---
+import { polyAlpha, restingPolygons, strokeWidth } from '../lib/motion/mark'
+
+interface Props {
+  size: number
+}
+
+const { size } = Astro.props
+
+// Projected once, here, at rest and unwobbled. `restingPolygons` is the exact frame the
+// canvas takes over from, which is why there is no jump when it mounts: same module, same
+// numbers.
+const polys = restingPolygons(size)
+const points = (poly: (typeof polys)[number]) =>
+  poly.points.map((p) => `${p.x.toFixed(2)},${p.y.toFixed(2)}`).join(' ')
+---
+
+<span class="mark" style={`--mark-size:${size}px`} data-mark={size} aria-hidden="true">
+  <svg
+    width={size}
+    height={size}
+    viewBox={`0 0 ${size} ${size}`}
+    fill="none"
+    stroke="currentColor"
+    data-mark-svg
+  >
+    {
+      polys.map((poly) => {
+        const alpha = polyAlpha(poly, false)
+        return poly.points.length === 2 ? (
+          <polyline
+            points={points(poly)}
+            stroke-opacity={alpha.stroke}
+            stroke-width={strokeWidth(poly.kind, size)}
+          />
+        ) : (
+          <polygon
+            points={points(poly)}
+            fill="currentColor"
+            fill-opacity={alpha.fill}
+            stroke-opacity={alpha.stroke}
+            stroke-width={strokeWidth(poly.kind, size)}
+          />
+        )
+      })
+    }
+  </svg>
+</span>
+
+<style>
+  /* The only color the mark ever names, and it names a token. Both the SVG's
+     `currentColor` and the canvas' `getComputedStyle(...).color` read it from here. */
+  .mark {
+    display: inline-flex;
+    flex: none;
+    color: var(--color-accent);
+  }
+
+  .mark :global(svg),
+  .mark :global(canvas) {
+    display: block;
+    width: var(--mark-size);
+    height: var(--mark-size);
+  }
+</style>
+
+<script>
+  import { mountMark } from '../lib/motion/markDraw'
+
+  for (const host of document.querySelectorAll<HTMLElement>('[data-mark]')) {
+    const box = Number(host.dataset.mark)
+    // The brand anchor is what already fires the name scramble; the mark loosens with it.
+    mountMark(host, box, host.closest('[data-brand]'))
+  }
+</script>
