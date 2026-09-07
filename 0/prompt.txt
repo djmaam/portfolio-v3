@@ -1,0 +1,7 @@
+<task-notification>
+<task-id>b914t3jdm</task-id>
+<tool-use-id>toolu_01WnXSEJNdQgdfLLrwQBZLQ5</tool-use-id>
+<output-file>/private/tmp/claude-501/-Users-djmaam-Projects-Marcos-portfolio-v3/33786be7-d54c-4daa-a55d-df6498965cc0/tasks/b914t3jdm.output</output-file>
+<status>completed</status>
+<summary>Background command "Wait for CI on the resolved contact merge" completed (exit code 0)</summary>
+</task-notification>
