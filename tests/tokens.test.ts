@@ -171,7 +171,6 @@ const KEYFRAMES = [
   'aur1',
   'aur2',
   'rise',
-  'sweep',
   'spin',
   'gridflow',
   'shimmer',

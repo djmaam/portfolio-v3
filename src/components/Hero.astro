@@ -197,16 +197,22 @@ const figures = [
 
 <script>
   import { boot } from '../lib/motion/boot'
+  import { ENTRY_MS, entryDelay } from '../lib/motion/entry'
+  import { mountEntry } from '../lib/motion/entryDriver'
   import { typedLength } from '../lib/motion/math'
   import { mountNetwork } from '../lib/motion/network'
   import { prefersReducedMotion } from '../lib/motion/reduced'
 
+  const hero = document.querySelector<HTMLElement>('.hero')
+  const card = document.querySelector<HTMLElement>('[data-console]')
+
+  // Before `boot()`: the driver writes the `data-entry` flag the cascade reads to decide
+  // whether it is timing an entry or catching up with one that already ran this session.
+  if (card) mountEntry(card)
   boot()
 
   // The canvas is a direct child of the full-bleed shell and is measured against the
   // console card. `mountNetwork` creates nothing with `prefers-reduced-motion: reduce`.
-  const hero = document.querySelector<HTMLElement>('.hero')
-  const card = document.querySelector<HTMLElement>('[data-console]')
   if (hero && card) mountNetwork(hero, card)
 
   const eyebrow = document.querySelector<HTMLElement>('[data-typed]')
@@ -214,12 +220,14 @@ const figures = [
     const text = eyebrow.textContent ?? ''
     eyebrow.textContent = ''
 
-    // rAF, not an interval: the 700ms wait is an offset on the elapsed time, so the
-    // typing stays in step with the boot transitions instead of drifting past them.
+    // rAF, not an interval: the wait is an offset on the elapsed time, so the typing stays
+    // in step with the cascade instead of drifting past it. The eyebrow is `data-boot="0"`,
+    // so it types as it is revealed — and immediately when the entry is not running.
+    const wait = document.documentElement.dataset.entry === 'run' ? entryDelay(0, ENTRY_MS) : 0
     let start: number | undefined
     const step = (now: number) => {
       start ??= now
-      const n = typedLength(now - start - 700, 28, text.length)
+      const n = typedLength(now - start - wait, 28, text.length)
       eyebrow.textContent = text.slice(0, n)
       if (n < text.length) requestAnimationFrame(step)
     }

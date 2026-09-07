@@ -183,7 +183,13 @@ const sections = [
   const brand = document.querySelector<HTMLElement>('[data-brand]')
   const brandText = document.querySelector<HTMLElement>('[data-brand-text]')
   if (brand && brandText) {
-    setTimeout(() => scramble(brandText, 1100), 300)
+    // Not while the entry owns the brand: `entryDriver.ts` resolves the name as the mark
+    // lands on the nav, and a second run would scramble it under the overlay. The flag is
+    // read inside the timer, not around it: this script runs before the hero's, so at this
+    // point the driver has not written it yet.
+    setTimeout(() => {
+      if (document.documentElement.dataset.entry !== 'run') scramble(brandText, 1100)
+    }, 300)
     setInterval(() => scramble(brandText, 900), 9000)
     brand.addEventListener('mouseenter', () => scramble(brandText, 700))
   }
