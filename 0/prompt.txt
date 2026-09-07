@@ -1,0 +1,86 @@
+Review this change for security vulnerabilities.
+
+Changed files (you may Read these and any other file in the repo):
+  - src/lib/motion/anchors.ts
+  - tests/anchors.test.ts
+
+Unified diff (only + lines are new):
+
+=== DIFF: src/lib/motion/anchors.ts ===
+@@ -0,0 +1,32 @@
++import { anchorOffset } from './math'
++import { prefersReducedMotion } from './reduced'
++
++/**
++ * The site's only anchor click handler, delegated on `document`: every `[data-nav-link]`
++ * — the nav links and the hero CTAs — scrolls through here, so the nav offset, the `#top`
++ * case and the reduced-motion fallback exist exactly once. Called once from `Base.astro`.
++ */
++export function bindAnchors(): void {
++  // One number for the sticky height and the scroll offset: app.css owns it.
++  const navH = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--nav-h'))
++
++  document.addEventListener('click', (event) => {
++    const source = event.target
++    const link =
++      source instanceof Element ? source.closest<HTMLAnchorElement>('a[data-nav-link]') : null
++    if (!link) return
++
++    const hash = link.getAttribute('href') ?? ''
++    const target = hash === '#top' ? null : document.getElementById(hash.slice(1))
++    // The sections land in issues 06-13. Until then the link falls back to the browser,
++    // which does nothing with a fragment it cannot resolve.
++    if (hash !== '#top' && !target) return
++
++    event.preventDefault()
++    const top = target ? target.getBoundingClientRect().top + window.scrollY : 0
++    window.scrollTo({
++      top: anchorOffset(top, navH),
++      behavior: prefersReducedMotion() ? 'auto' : 'smooth',
++    })
++  })
++}
+
+
+=== DIFF: tests/anchors.test.ts ===
+@@ -0,0 +1,37 @@
++import { Glob } from 'bun'
++import { expect, test } from 'bun:test'
++
++/**
++ * Anchor scrolling is DOM plumbing, so what the unit tests can guard is the invariant
++ * that keeps it honest: exactly one delegated click handler in the whole source, and
++ * exactly one place that binds it. Nav and the hero CTAs only carry `data-nav-link`.
++ */
++const src = new URL('../src/', import.meta.url)
++
++const files = await Array.fromAsync(
++  (async function* () {
++    for await (const name of new Glob('**/*.{astro,ts}').scan(src.pathname)) {
++      yield { name, text: await Bun.file(new URL(name, src)).text() }
++    }
++  })(),
++)
++
++/** Only the `<script>` bodies of an .astro file run: its markup carries the attribute. */
++const code = ({ name, text }: { name: string; text: string }) =>
++  name.endsWith('.astro')
++    ? [...text.matchAll(/<script[^>]*>([\s\S]*?)<\/script>/g)].map((match) => match[1]).join('\n')
++    : text
++
++test('exactly one module registers the delegated anchor click handler', () => {
++  const handlers = files.filter(
++    (file) => /data-nav-link/.test(code(file)) && /addEventListener\(\s*'click'/.test(code(file)),
++  )
++  expect(handlers.map((file) => file.name)).toEqual(['lib/motion/anchors.ts'])
++})
++
++test('the handler is bound from exactly one place', () => {
++  const callers = files.filter(
++    (file) => file.name !== 'lib/motion/anchors.ts' && /bindAnchors\(\)/.test(code(file)),
++  )
++  expect(callers.map((file) => file.name)).toEqual(['layouts/Base.astro'])
++})
+
+
+Investigate per the method in your instructions, then return the findings list.
