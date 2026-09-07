@@ -1,0 +1,465 @@
+Review this change for security vulnerabilities.
+
+Changed files (you may Read these and any other file in the repo):
+  - tests/scroll.test.ts
+  - astro.config.mjs
+  - src/lib/content.ts
+  - src/lib/ui.ts
+  - tests/console.test.ts
+  - src/lib/motion/consoleLog.ts
+  - tests/consoleLog.test.ts
+  - src/lib/motion/math.ts
+  - tests/math.test.ts
+
+Unified diff (only + lines are new):
+
+=== DIFF: tests/scroll.test.ts ===
+@@ -1,9 +1,26 @@
++import { Glob } from 'bun'
+ import { afterEach, expect, test } from 'bun:test'
+ 
+ import { onScroll } from '../src/lib/motion/scroll'
+ 
+ type Listener = () => void
+ 
++const src = new URL('../src/', import.meta.url)
++const sources = await Array.fromAsync(
++  (async function* () {
++    for await (const name of new Glob('**/*.{astro,ts}').scan(src.pathname)) {
++      yield { name, text: await Bun.file(new URL(name, src)).text() }
++    }
++  })(),
++)
++
++test('exactly one module attaches a scroll listener', () => {
++  // Every new block subscribes through `onScroll`; a second listener anywhere is the
++  // regression this guards (`MOTION_SPEC` §13).
++  const attachers = sources.filter((file) => /addEventListener\(\s*'scroll'/.test(file.text))
++  expect(attachers.map((file) => file.name)).toEqual(['lib/motion/scroll.ts'])
++})
++
+ /**
+  * The site's scroll engine is pure DOM plumbing, so the test stubs the three globals it
+  * touches: `window` (listeners + rAF + metrics), `document` (scrollHeight) and
+
+
+=== DIFF: astro.config.mjs ===
+@@ -6,5 +6,9 @@ import tailwindcss from '@tailwindcss/vite'
+ export default defineConfig({
+   output: 'static',
+   site: 'https://marcosarrieta.dev',
+-  vite: { plugins: [tailwindcss()] },
++  // `json.stringify: false` keeps content.json tree-shakeable: stringified, it compiles
++  // to one `JSON.parse` of the whole file, so a client script that imports a single key
++  // — the console log — ships every string of both languages with it (5.9kB gz instead
++  // of 0.8kB). As an object literal, Rollup drops what nobody imports.
++  vite: { plugins: [tailwindcss()], json: { stringify: false } },
+ })
+
+
+=== DIFF: src/lib/content.ts ===
+@@ -1,12 +1,15 @@
+ // Single source of content: `handoff/content.json` is read-only and must not be
+ // duplicated, so the import deliberately crosses out of `src/`. Astro inlines it at
+ // build time, so `dist/` ships no JSON of its own.
+-import raw from '../../handoff/content.json'
++//
++// Named imports, not a default one: they are what lets Rollup drop the keys a client
++// script does not use (see `json.stringify` in astro.config.mjs).
++import { consoleLog, i18n, links, stack } from '../../handoff/content.json'
+ 
+ export type Lang = 'es' | 'en'
+ 
+ /** Derived from the JSON on purpose: a new key in content.json needs no type edit. */
+-export type Content = (typeof raw)['i18n']['es']
++export type Content = (typeof i18n)['es']
+ 
+ export const LANGS = ['es', 'en'] as const satisfies readonly Lang[]
+ 
+@@ -17,5 +20,5 @@ export const LANGS = ['es', 'en'] as const satisfies readonly Lang[]
+  */
+ export const site = { name: 'Marcos Arrieta', handle: '@djmaam' } as const
+ 
+-export const content: Record<Lang, Content> = raw.i18n
+-export const { links, stack, consoleLog } = raw
++export const content: Record<Lang, Content> = i18n
++export { consoleLog, links, stack }
+
+
+=== DIFF: src/lib/ui.ts ===
+@@ -17,3 +17,19 @@ export const ui: Record<Lang, { themeToggle: string }> = {
+  * derivable source.
+  */
+ export const stats = { years: '8+', companies: '5', platforms: '6' } as const
++
++/**
++ * The console's chrome (`DESIGN_SPEC` §3.2). Not page copy and not translated: a session
++ * label, a status word and three metric names that read the same in both languages —
++ * only the log lines themselves are content, and those live in `content.json`. The keys
++ * match the fields of `metricsAt`, which is what the footer renders.
++ */
++export const consoleChrome = {
++  session: 'orchestrator — session 0x4D41',
++  live: 'LIVE',
++  metrics: [
++    { key: 'agents', label: 'AGENTS' },
++    { key: 'specs', label: 'SPECS' },
++    { key: 'shipped', label: 'SHIPPED' },
++  ],
++} as const
+
+
+=== DIFF: tests/console.test.ts ===
+@@ -0,0 +1,46 @@
++import { expect, test } from 'bun:test'
++
++import { consoleChrome } from '../src/lib/ui'
++
++/**
++ * The console is DOM plumbing, so what the unit tests guard is the shape of its markup:
++ * the three things that are silently wrong if they regress — a server-rendered clock, an
++ * `aria-live` that would announce a line every 1.4s forever, and copy typed by hand.
++ */
++const source = await Bun.file(new URL('../src/components/Console.astro', import.meta.url)).text()
++const [, frontmatter = '', body = ''] = /^---([\s\S]*?)^---([\s\S]*)$/m.exec(source) ?? []
++/** What the server actually renders: the body without the client-side `<script>`. */
++const markup = body.replace(/<script[\s\S]*?<\/script>/g, '')
++
++test('the log is a log that announces nothing', () => {
++  // `aria-live="polite"` is right for the interactive console of v1.1; here the log
++  // cycles forever with no user input, so it must stay silent (spec 06 §7).
++  expect(markup).toMatch(/role="log"/)
++  expect(markup).toMatch(/aria-live="off"/)
++  expect(markup).not.toMatch(/aria-live="polite"/)
++})
++
++test('no timestamp is ever server-rendered', () => {
++  // A static build would freeze one clock into the HTML forever: the time cells ship
++  // empty and JavaScript fills them.
++  expect(markup).not.toMatch(/\d\d:\d\d:\d\d/)
++  expect(`${frontmatter}\n${markup}`).not.toMatch(/Date|toTimeString|toLocaleTimeString/)
++})
++
++test('the chrome copy comes from ui.ts and the log from content.json', () => {
++  expect(markup).toContain('consoleChrome.session')
++  expect(markup).not.toContain('orchestrator')
++  expect(markup).not.toMatch(/>\s*LIVE\s*</)
++  expect(markup).not.toMatch(/AGENTS|SPECS|SHIPPED/)
++  expect(frontmatter).toMatch(/consoleLog\D+from '\.\.\/lib\/content'/)
++})
++
++test('the console chrome names the session and the three metrics of the design', () => {
++  expect(consoleChrome.session).toBe('orchestrator — session 0x4D41')
++  expect(consoleChrome.live).toBe('LIVE')
++  expect(consoleChrome.metrics.map((metric) => metric.label)).toEqual([
++    'AGENTS',
++    'SPECS',
++    'SHIPPED',
++  ])
++})
+
+
+=== DIFF: src/lib/motion/consoleLog.ts ===
+@@ -0,0 +1,52 @@
++import { consoleLog } from '../content'
++import { prefersReducedMotion } from './reduced'
++
++export type LogLine = { key: string; value: string }
++
++type Subscriber = (line: LogLine) => void
++
++/**
++ * Lines the console shows at once, and therefore the number the server renders: the
++ * cycle picks up right after them (`MOTION_SPEC` §2).
++ */
++export const MAX_LINES = 6
++
++/** One new line every 1400ms (`MOTION_SPEC` §2). */
++export const INTERVAL_MS = 1400
++
++const subscribers = new Set<Subscriber>()
++let cursor = MAX_LINES
++let timer: ReturnType<typeof setInterval> | undefined
++
++function tick() {
++  const [key, value] = consoleLog[cursor % consoleLog.length] as [string, string]
++  cursor++
++  for (const fn of subscribers) fn({ key, value })
++}
++
++/**
++ * Registers a subscriber for each new log line and returns its unsubscribe — the same
++ * shape as `onScroll`, and the hook issue 07 uses to pulse the node network. The timer
++ * starts with the first subscription and stops with the last one, so a console that
++ * nobody watches costs nothing.
++ *
++ * The cursor resets on every fresh start, since the six lines already in the markup are
++ * what the cycle continues from. With `prefers-reduced-motion: reduce` nothing is
++ * scheduled and the subscriber never runs: the six static lines are the whole console.
++ */
++export function onLogLine(fn: Subscriber): () => void {
++  if (prefersReducedMotion()) return () => {}
++
++  if (subscribers.size === 0) {
++    cursor = MAX_LINES
++    timer = setInterval(tick, INTERVAL_MS)
++  }
++  subscribers.add(fn)
++
++  return () => {
++    subscribers.delete(fn)
++    if (subscribers.size > 0) return
++    clearInterval(timer)
++    timer = undefined
++  }
++}
+
+
+=== DIFF: tests/consoleLog.test.ts ===
+@@ -0,0 +1,150 @@
++import { afterEach, expect, test } from 'bun:test'
++
++import { consoleLog } from '../src/lib/content'
++import { MAX_LINES, onLogLine } from '../src/lib/motion/consoleLog'
++
++type Tick = () => void
++
++/**
++ * The cycle is a timer plus a subscriber set, so the test owns the clock: `setInterval`
++ * is stubbed and frames are drained by hand, which is what lets it assert both the order
++ * of the messages and that the timer really stops with the last subscriber.
++ */
++const timers = { setInterval: globalThis.setInterval, clearInterval: globalThis.clearInterval }
++
++const stub = (reduceMotion = false) => {
++  const intervals = new Map<number, Tick>()
++  let id = 0
++
++  Object.assign(globalThis, {
++    matchMedia: (query: string) => ({ matches: reduceMotion && query.includes('reduce') }),
++    setInterval: (fn: Tick) => {
++      intervals.set(++id, fn)
++      return id
++    },
++    clearInterval: (handle: number) => intervals.delete(handle),
++  })
++
++  return {
++    count: () => intervals.size,
++    advance: (ticks = 1) => {
++      for (let i = 0; i < ticks; i++) for (const fn of [...intervals.values()]) fn()
++    },
++  }
++}
++
++afterEach(() => {
++  Object.assign(globalThis, timers)
++  delete (globalThis as Record<string, unknown>).matchMedia
++})
++
++/** The message the cycle emits for the nth line, counting the six already rendered. */
++const message = (n: number) => {
++  const [key, value] = consoleLog[(MAX_LINES + n) % consoleLog.length] as [string, string]
++  return { key, value }
++}
++
++test('the cycle continues right after the six lines the markup already carries', () => {
++  const dom = stub()
++  const seen: unknown[] = []
++  const stop = onLogLine((line) => seen.push(line))
++
++  dom.advance(3)
++  expect(seen).toEqual([message(0), message(1), message(2)])
++  stop()
++})
++
++test('the cycle walks the eleven messages in order and wraps forever', () => {
++  const dom = stub()
++  const seen: unknown[] = []
++  const stop = onLogLine((line) => seen.push(line))
++
++  dom.advance(25)
++  expect(seen).toEqual(Array.from({ length: 25 }, (_, n) => message(n)))
++  // 25 lines over 11 messages: the source has looped past its end more than once.
++  expect(seen).toHaveLength(25)
++  expect(consoleLog).toHaveLength(11)
++  stop()
++})
++
++test('every subscriber gets each line exactly once', () => {
++  const dom = stub()
++  const a: unknown[] = []
++  const b: unknown[] = []
++  const stopA = onLogLine((line) => a.push(line))
++  const stopB = onLogLine((line) => b.push(line))
++
++  dom.advance(4)
++  expect(a).toHaveLength(4)
++  expect(b).toEqual(a)
++  expect(dom.count()).toBe(1)
++
++  stopA()
++  stopB()
++})
++
++test('the timer starts with the first subscriber and stops with the last one', () => {
++  const dom = stub()
++  expect(dom.count()).toBe(0)
++
++  const stopA = onLogLine(() => {})
++  const stopB = onLogLine(() => {})
++  expect(dom.count()).toBe(1)
++
++  stopA()
++  expect(dom.count()).toBe(1)
++  stopB()
++  expect(dom.count()).toBe(0)
++})
++
++test('unsubscribing stops delivery to that subscriber alone', () => {
++  const dom = stub()
++  const a: unknown[] = []
++  const b: unknown[] = []
++  const stopA = onLogLine((line) => a.push(line))
++  const stopB = onLogLine((line) => b.push(line))
++
++  dom.advance(2)
++  stopA()
++  dom.advance(2)
++
++  expect(a).toHaveLength(2)
++  expect(b).toHaveLength(4)
++  stopB()
++})
++
++test('the cycle runs fine with zero subscribers', () => {
++  const dom = stub()
++  const stop = onLogLine(() => {})
++  stop()
++
++  expect(dom.count()).toBe(0)
++  expect(() => dom.advance(5)).not.toThrow()
++  // A second unsubscribe is a no-op, the way `onScroll` behaves.
++  expect(() => stop()).not.toThrow()
++})
++
++test('a new subscription restarts the cycle at the seventh message', () => {
++  const dom = stub()
++  const first: unknown[] = []
++  const stopA = onLogLine((line) => first.push(line))
++  dom.advance(3)
++  stopA()
++
++  const second: unknown[] = []
++  const stopB = onLogLine((line) => second.push(line))
++  dom.advance(3)
++  expect(second).toEqual(first)
++  stopB()
++})
++
++test('with prefers-reduced-motion: reduce no interval is ever started', () => {
++  const dom = stub(true)
++  const seen: unknown[] = []
++  const stop = onLogLine((line) => seen.push(line))
++
++  expect(dom.count()).toBe(0)
++  dom.advance(5)
++  expect(seen).toHaveLength(0)
++  expect(() => stop()).not.toThrow()
++})
+
+
+=== DIFF: src/lib/motion/math.ts ===
+@@ -79,3 +79,28 @@ export function bootDelay(n: number): number {
+ export function typedLength(elapsed: number, perChar: number, total: number): number {
+   return Math.min(total, Math.max(0, Math.floor(elapsed / perChar)))
+ }
++
++/**
++ * The console metrics at a given tick, exactly as the mock computes them
++ * (`Portfolio.dc.html:696`): `agents` flips between 3 and 4, `specs` gains one per full
++ * pass of the 11-message log, and `shipped` one per six lines. Only ever counts up.
++ */
++export function metricsAt(tick: number): { agents: number; specs: number; shipped: number } {
++  return {
++    agents: 3 + (tick % 2),
++    specs: 12 + Math.floor(tick / 11),
++    shipped: 41 + Math.floor(tick / 6),
++  }
++}
++
++/**
++ * Indices into the console log of the at most `max` lines still visible after `tick` of
++ * them have been emitted, over a source of `length` messages that cycles forever
++ * (`MOTION_SPEC` §2). The oldest line drops as the newest enters, so the window never
++ * grows past `max`. `Console.astro` renders `logWindow(max, …)` — the first six of the
++ * cycle — so the markup and the first client frame agree.
++ */
++export function logWindow(tick: number, length: number, max: number): number[] {
++  const from = Math.max(0, tick - max)
++  return Array.from({ length: tick - from }, (_, i) => (from + i) % length)
++}
+
+
+=== DIFF: tests/math.test.ts ===
+@@ -5,6 +5,8 @@ import {
+   auroraStyle,
+   bootDelay,
+   docProgress,
++  logWindow,
++  metricsAt,
+   scrambleFrame,
+   typedLength,
+ } from '../src/lib/motion/math'
+@@ -130,3 +132,48 @@ test('typedLength advances exactly one character per perChar ms', () => {
+     expect(typedLength(n * 28 + 27, 28, 46)).toBe(n)
+   }
+ })
++
++test('metricsAt is exactly the three formulas of the mock', () => {
++  for (const tick of [0, 1, 6, 11, 12, 66]) {
++    expect(metricsAt(tick)).toEqual({
++      agents: 3 + (tick % 2),
++      specs: 12 + Math.floor(tick / 11),
++      shipped: 41 + Math.floor(tick / 6),
++    })
++  }
++  expect(metricsAt(0)).toEqual({ agents: 3, specs: 12, shipped: 41 })
++  expect(metricsAt(66)).toEqual({ agents: 3, specs: 18, shipped: 52 })
++})
++
++test('the console metrics only ever count up, and agents stays in 3-4', () => {
++  let previous = metricsAt(0)
++  for (let tick = 0; tick <= 500; tick++) {
++    const metrics = metricsAt(tick)
++    expect([3, 4]).toContain(metrics.agents)
++    expect(metrics.specs).toBeGreaterThanOrEqual(previous.specs)
++    expect(metrics.shipped).toBeGreaterThanOrEqual(previous.shipped)
++    previous = metrics
++  }
++})
++
++test('logWindow ships the first six of the cycle as the initial six lines', () => {
++  expect(logWindow(6, 11, 6)).toEqual([0, 1, 2, 3, 4, 5])
++})
++
++test('logWindow keeps the six most recent lines and wraps the source forever', () => {
++  expect(logWindow(7, 11, 6)).toEqual([1, 2, 3, 4, 5, 6])
++  expect(logWindow(11, 11, 6)).toEqual([5, 6, 7, 8, 9, 10])
++  expect(logWindow(12, 11, 6)).toEqual([6, 7, 8, 9, 10, 0])
++  expect(logWindow(17, 11, 6)).toEqual([0, 1, 2, 3, 4, 5])
++})
++
++test('logWindow never shows more than six lines, and fills up before it drops any', () => {
++  expect(logWindow(0, 11, 6)).toEqual([])
++  expect(logWindow(3, 11, 6)).toEqual([0, 1, 2])
++  for (let tick = 0; tick <= 200; tick++) {
++    const window = logWindow(tick, 11, 6)
++    expect(window.length).toBe(Math.min(tick, 6))
++    for (const index of window) expect(index).toBeGreaterThanOrEqual(0)
++    for (const index of window) expect(index).toBeLessThan(11)
++  }
++})
+
+
+Investigate per the method in your instructions, then return the findings list.
