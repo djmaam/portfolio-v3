@@ -1,0 +1,208 @@
+Review this change for security vulnerabilities.
+
+Changed files (you may Read these and any other file in the repo):
+  - tests/a11y.test.ts
+  - tests/contrast.test.ts
+
+Unified diff (only + lines are new):
+
+=== DIFF: tests/a11y.test.ts ===
+@@ -76,7 +76,8 @@ test('every animation in the built CSS sits inside a no-preference block', () =>
+ })
+ 
+ /** The properties whose transition actually moves something on screen. */
+-const MOVING = /\b(all|transform|translate|rotate|scale|gap|row-gap|column-gap|top|right|bottom|left|inset|width|height|margin|padding)\b/
++const MOVING =
++  /\b(all|transform|translate|rotate|scale|gap|row-gap|column-gap|top|right|bottom|left|inset|width|height|margin|padding)\b/
+ 
+ test('every transition of a moving property sits inside a no-preference block', () => {
+   const unguarded = built
+@@ -90,7 +91,9 @@ test('every transition of a moving property sits inside a no-preference block',
+ test('no hover state moves an element outside a no-preference block', () => {
+   const unguarded = built
+     .filter(({ selector }) => selector.includes(':hover'))
+-    .filter(({ declaration }) => /^(transform|translate|rotate|scale|gap|row-gap|column-gap)\s*:/.test(declaration))
++    .filter(({ declaration }) =>
++      /^(transform|translate|rotate|scale|gap|row-gap|column-gap)\s*:/.test(declaration),
++    )
+     .filter(({ enclosing }) => !guarded(enclosing))
+     .map(({ selector, declaration }) => `${selector} { ${declaration} }`)
+ 
+@@ -101,7 +104,10 @@ test('every hidden resting state is behind .has-js, so the page reads without Ja
+   const hidden = built
+     .filter(({ declaration }) => /^opacity\s*:\s*0(\.\d+)?$/.test(declaration))
+     .filter(({ selector }) => /\[data-(reveal|boot|word)\]/.test(selector))
+-    .filter(({ selector, enclosing }) => ![selector, ...enclosing].some((part) => part.includes('has-js')))
++    .filter(
++      ({ selector, enclosing }) =>
++        ![selector, ...enclosing].some((part) => part.includes('has-js')),
++    )
+     .map(({ selector }) => selector)
+ 
+   expect(hidden).toEqual([])
+@@ -111,7 +117,8 @@ test('every hidden resting state is behind .has-js, so the page reads without Ja
+ 
+ test('the global focus ring is :focus-visible, never :focus', () => {
+   const ring = built.filter(
+-    ({ selector, declaration }) => selector.includes(':focus-visible') && /^outline\s*:/.test(declaration),
++    ({ selector, declaration }) =>
++      selector.includes(':focus-visible') && /^outline\s*:/.test(declaration),
+   )
+   expect(ring.length).toBeGreaterThan(0)
+   expect(ring.some(({ declaration }) => declaration.includes('var(--color-accent)'))).toBe(true)
+@@ -125,8 +132,17 @@ test('the global focus ring is :focus-visible, never :focus', () => {
+ })
+ 
+ test('inside the contact card the ring uses the inverted accent', async () => {
+-  const source = await Bun.file(`${root}src/components/Contact.astro`).text()
+-  expect(source).toMatch(/:focus-visible\s*{[^}]*--color-contact-accent/)
++  // The card inverts the theme, so `--color-accent` resolves against a background it was
++  // never measured on — the contrast bug of issue 13, in the one place the global rule
++  // cannot be right. Asserted on the built CSS, because Astro's scoping is what decides
++  // whether the override actually reaches the email and the pills.
++  const override = built.find(
++    ({ selector, declaration }) =>
++      selector.includes('.card') &&
++      selector.includes(':focus-visible') &&
++      declaration.includes('--color-contact-accent'),
++  )
++  expect(override?.declaration).toMatch(/^outline-color:/)
+ 
+   // The duplicate that would drift: the global rule covers the project cards now.
+   const projects = await Bun.file(`${root}src/components/Projects.astro`).text()
+@@ -147,7 +163,9 @@ test.each(Object.keys(pages))('%s has exactly one <h1>', (route) => {
+ })
+ 
+ test.each(Object.keys(pages))('%s never skips a heading level', (route) => {
+-  const levels = tags(pages[route as keyof typeof pages], 'h[1-6]').map(({ name }) => Number(name[1]))
++  const levels = tags(pages[route as keyof typeof pages], 'h[1-6]').map(({ name }) =>
++    Number(name[1]),
++  )
+   expect(levels[0]).toBe(1)
+   const skips = levels.filter((level, index) => index > 0 && level > levels[index - 1]! + 1)
+   expect(skips).toEqual([])
+@@ -169,9 +187,10 @@ test.each(Object.keys(pages))('%s keeps every preview iframe out of the tab orde
+   }
+ })
+ 
+-test.each(Object.keys(pages))('%s hides the canvas and the decorative glyphs', (route) => {
++test.each(Object.keys(pages))('%s keeps the decorative glyphs out of the tree', (route) => {
+   const html = pages[route as keyof typeof pages]
+-  // The ✳, the ASCIImoji, the console dots and the step dots never reach the reader.
++  // The canvas and the marquee clones are covered by `network.test.ts` and
++  // `stack.test.ts`; these are the glyphs, which are spread over four components.
+   for (const glyph of ['✳', '↗']) {
+     for (const match of html.matchAll(new RegExp(`<[^>]*>[^<]*${glyph}`, 'g'))) {
+       expect(match[0]).toContain('aria-hidden')
+@@ -181,19 +200,24 @@ test.each(Object.keys(pages))('%s hides the canvas and the decorative glyphs', (
+   expect(html).toContain('aria-live="off"')
+ })
+ 
+-test.each(Object.entries(pages))('%s makes the skip link the first focusable element', (route, html) => {
+-  const focusable = tags(html, 'a|button|input|select|textarea|iframe').filter(
+-    ({ attributes }) => !/tabindex="-1"/.test(attributes),
+-  )
+-  const first = focusable[0]
+-  expect(first?.name).toBe('a')
+-  expect(first?.attributes).toContain('href="#main"')
+-
+-  const lang = route === '/en' ? 'en' : 'es'
+-  expect(html).toContain(ui[lang].skipToContent)
+-  // And the target has to be able to take the focus the link sends it.
+-  expect(html).toMatch(/<main[^>]*id="main"[^>]*tabindex="-1"|<main[^>]*tabindex="-1"[^>]*id="main"/)
+-})
++test.each(Object.entries(pages))(
++  '%s makes the skip link the first focusable element',
++  (route, html) => {
++    const focusable = tags(html, 'a|button|input|select|textarea|iframe').filter(
++      ({ attributes }) => !/tabindex="-1"/.test(attributes),
++    )
++    const first = focusable[0]
++    expect(first?.name).toBe('a')
++    expect(first?.attributes).toContain('href="#main"')
++
++    const lang = route === '/en' ? 'en' : 'es'
++    expect(html).toContain(ui[lang].skipToContent)
++    // And the target has to be able to take the focus the link sends it.
++    expect(html).toMatch(
++      /<main[^>]*id="main"[^>]*tabindex="-1"|<main[^>]*tabindex="-1"[^>]*id="main"/,
++    )
++  },
++)
+ 
+ test('the sticky nav never covers what the keyboard just focused', async () => {
+   const app = await Bun.file(`${root}src/styles/app.css`).text()
+
+
+=== DIFF: tests/contrast.test.ts ===
+@@ -31,7 +31,9 @@ function parseColor(value: string): Rgba {
+   if (text.startsWith('#')) {
+     const hex = text.slice(1)
+     const pairs =
+-      hex.length === 3 ? [...hex].map((digit) => digit + digit) : [hex.slice(0, 2), hex.slice(2, 4), hex.slice(4, 6)]
++      hex.length === 3
++        ? [...hex].map((digit) => digit + digit)
++        : [hex.slice(0, 2), hex.slice(2, 4), hex.slice(4, 6)]
+     const [r, g, b] = pairs.map((pair) => parseInt(pair, 16))
+     return [r!, g!, b!, 1]
+   }
+@@ -200,27 +202,32 @@ const components = (
+   await Array.fromAsync(new Glob('src/components/*.astro').scan({ cwd: Bun.fileURLToPath(root) }))
+ ).sort()
+ 
+-test.each(components)('%s only paints text with the accent at ≥15px or weight ≥500', async (file) => {
+-  const source = await Bun.file(new URL(file, root)).text()
+-  const styles = [...source.matchAll(/<style>([\s\S]*?)<\/style>/g)].map(([, body]) => body!).join('\n')
+-  const parsed = rules(styles)
+-
+-  const offenders = parsed
+-    .filter(({ body }) => /(^|[;{\s])color:\s*var\(--color-accent\)/.test(body))
+-    .filter(({ selector, body }) => {
+-      if (clearsThreshold(body)) return false
+-      // The size or the weight may sit on the element's own class instead — a `:hover`
+-      // that only changes the color must not also change the weight, or the text reflows.
+-      const classes = ownClasses(selector)
+-      return !parsed.some(
+-        (rule) =>
+-          rule.body !== body &&
+-          classes.includes(ownClasses(rule.selector)[0] ?? '') &&
+-          ownClasses(rule.selector).length === 1 &&
+-          clearsThreshold(rule.body),
+-      )
+-    })
+-    .map(({ selector }) => selector)
+-
+-  expect(offenders).toEqual([])
+-})
++test.each(components)(
++  '%s only paints text with the accent at ≥15px or weight ≥500',
++  async (file) => {
++    const source = await Bun.file(new URL(file, root)).text()
++    const styles = [...source.matchAll(/<style>([\s\S]*?)<\/style>/g)]
++      .map(([, body]) => body!)
++      .join('\n')
++    const parsed = rules(styles)
++
++    const offenders = parsed
++      .filter(({ body }) => /(^|[;{\s])color:\s*var\(--color-accent\)/.test(body))
++      .filter(({ selector, body }) => {
++        if (clearsThreshold(body)) return false
++        // The size or the weight may sit on the element's own class instead — a `:hover`
++        // that only changes the color must not also change the weight, or the text reflows.
++        const classes = ownClasses(selector)
++        return !parsed.some(
++          (rule) =>
++            rule.body !== body &&
++            classes.includes(ownClasses(rule.selector)[0] ?? '') &&
++            ownClasses(rule.selector).length === 1 &&
++            clearsThreshold(rule.body),
++        )
++      })
++      .map(({ selector }) => selector)
++
++    expect(offenders).toEqual([])
++  },
++)
+
+
+Investigate per the method in your instructions, then return the findings list.
