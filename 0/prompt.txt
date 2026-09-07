@@ -1,0 +1,31 @@
+<task-notification>
+<task-id>aee0ce31d86df1e6d</task-id>
+<tool-use-id>toolu_01KpC4NneKHoemraDtx5w7tF</tool-use-id>
+<output-file>/private/tmp/claude-501/-Users-djmaam-Projects-Marcos-portfolio-v3/33786be7-d54c-4daa-a55d-df6498965cc0/tasks/aee0ce31d86df1e6d.output</output-file>
+<status>completed</status>
+<summary>Agent "Translate specs and README" finished</summary>
+<note>A task-notification fires each time this agent stops with no live background children of its own. The user can send it another message and resume it, so the same task-id may notify more than once.</note>
+<result>Done. Commit `ff07201` on `feat/01-tokens-tema`, nothing pushed.
+
+## Files translated
+
+| File | Lines changed (`+`/`-`) |
+|---|---|
+| `/Users/djmaam/Projects/Marcos/portfolio-v3/docs/superpowers/specs/2026-09-05-portfolio-v3-design.md` | 286 (145+/141-) |
+| `/Users/djmaam/Projects/Marcos/portfolio-v3/docs/superpowers/specs/01-tokens-tema.md` | 132 (67+/65-) |
+| `/Users/djmaam/Projects/Marcos/portfolio-v3/docs/superpowers/specs/00-scaffold.md` | 84 (42+/42-) |
+| `/Users/djmaam/Projects/Marcos/portfolio-v3/README.md` | 14 (7+/7-) |
+| `/Users/djmaam/Projects/Marcos/portfolio-v3/CLAUDE.md` | 9 (6+/3-) |
+
+`handoff/`, `src/`, `scripts/`, `tests/` and configs untouched (`git status` showed only these 5 files). `bun run lint` passes (eslint + prettier + check-tokens, exit 0). Note `docs/` is in `.prettierignore`, so Prettier only actually checked `README.md` and `CLAUDE.md`; I kept the specs at the same ~85-col wrap as the originals anyway.
+
+## Translation decisions worth flagging
+
+- **Kept in Spanish** (design content, per your rule): `"Sobre mí"`, `"Cómo trabajo"`, `"también con"` — verified they are literal section/box names in `handoff/DESIGN_SPEC.md`, `MOTION_SPEC.md` and `content.json`. This includes backlog rows 08 and 09, whose block names *are* those section names, so the backlog table reads e.g. `| 08 | Sobre mí: lead with words that light up, … |`. If you'd rather have those two rows fully English, it's a two-line change. Also kept: `"abr. 2023 — hoy"` in §12, which quotes the mock's copy.
+- **"método" → "method"** everywhere it's the internal block/module name (`scroll.ts` comment, backlog, motion sticky), since it maps to `Method.astro` — but the *section* name stayed `"Cómo trabajo"` where the doc was quoting the design.
+- **Spelling**: used British `colour`/`maths`/`parallelised` to match the existing English in `CLAUDE.md` (which already writes "colours"). Say the word if you want US spelling instead.
+- **"Corrección al handoff" → "Correction to the handoff"** — kept as a repeated literal marker, since it's used three times as a label.
+- **CLAUDE.md "Language" section**: rewrote the exception clause to say all docs are English and the only exception is `handoff/`, which is read-only and stays Spanish on purpose, with `content.json` called out as bilingual product copy.
+- **Preserved an existing inconsistency**: `01-tokens-tema.md` §4 says "The 12 from the mock" but lists 11 keyframe names, and the acceptance criterion says 11. That mismatch is in the original; I translated it as-is rather than fixing it. Worth a separate one-line fix if you want.</result>
+<usage><subagent_tokens>70908</subagent_tokens><tool_uses>16</tool_uses><duration_ms>187431</duration_ms></usage>
+</task-notification>
