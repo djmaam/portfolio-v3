@@ -1,0 +1,9 @@
+<task-notification>
+<task-id>a89071211a72218a7</task-id>
+<tool-use-id>toolu_014oL464y1JAP87WCBA2Y8cW</tool-use-id>
+<output-file>/private/tmp/claude-501/-Users-djmaam-Projects-Marcos-portfolio-v3/ff79cbca-912c-4905-8a2c-c8e457538a3d/tasks/a89071211a72218a7.output</output-file>
+<status>failed</status>
+<summary>Agent "Generate previews and pass budget" failed: Agent terminated early due to an API error: API Error: Your computer went to sleep mid-response. The response above may be incomplete.</summary>
+<note>A task-notification fires each time this agent stops with no live background children of its own. The user can send it another message and resume it, so the same task-id may notify more than once.</note>
+<result>Now remove the dead IntersectionObserver script.</result>
+</task-notification>
