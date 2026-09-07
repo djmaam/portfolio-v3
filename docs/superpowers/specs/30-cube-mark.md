@@ -37,7 +37,7 @@ The cluster is a 3×3×3 lattice read isometrically. Positions are lattice coord
 | panel   | face axes × 1.8, normal along its axis | 0.36 | 6     | flat quad + six short code rules |
 | tick    | radius ≈ 2.4, off-lattice             | 0.45 | 9     | single stroked segment          |
 
-Thirty-five pieces: six filled cubes, fourteen wireframe, one core, six panels, nine
+Thirty-five pieces: six filled cubes, thirteen wireframe, one core, six panels, nine
 ticks. Which of the twelve edge slots and eight corner slots are occupied comes from a seeded
 LCG (`seed = 7`) evaluated once at module load, not from `Math.random`: the arrangement
 has to be byte-identical between the build-time SVG and the runtime canvas, or the mark
@@ -48,10 +48,16 @@ at 14px they collapse into noise. The prototype's size test is the evidence. The
 renders at 20px and the footer at 16px, so both draw the reduced set of seventeen; only
 the entry overlay of [31](./31-entry-choreography.md) ever draws all thirty-five.
 
+At full detail the ticks reach 4.7 lattice units and set the frame, so the cubes occupy
+about 62% of the box. That only ever applies to the full-screen entry overlay; the nav and
+the footer draw the reduced set, which fills 95%.
+
 ## Rendering
 
-The projection is the one `network.ts` already uses, from `math.ts`:
-`focalLength(w, h) = 0.9 · max(w, h)`, `sc = f / (f + z)`. Nothing new is invented.
+The projection is the formula `network.ts` already uses — `sc = f / (f + z)` — but `f` is
+`MARK_FOCAL = 900` in lattice units, not `focalLength(w, h)` in pixels. At |z| ≤ 3.2 the
+scale then varies by under 0.4%, so the mark reads as the orthographic isometric drawing
+the reference is. Nothing new is invented.
 
 - **World orientation.** `rx = 0.6155` (`atan(1/√2)`, true isometric), `ry` drifting.
 - **Per-piece rotation.** Each piece carries whole turns on each axis and a `settle`
@@ -79,6 +85,15 @@ composed `rgba()` string.
 solid faces fill opaque. That is a starting value, confirmed against the built page in the
 acceptance screenshot, not a measured one: the mark is `aria-hidden` decoration and has no
 WCAG floor to clear, so the bar is "reads as a cube", not a ratio.
+
+The build-time SVG bakes the **dark** opacities, because `polyAlpha(poly, false)` runs once
+at build and an SVG's `fill-opacity` cannot react to a theme switch. Only the fallback path
+is affected — JavaScript disabled, or `prefers-reduced-motion: reduce` — where a light-theme
+visitor sees the mark slightly thinner than intended. The canvas, which is what almost every
+visitor gets, re-reads the token on every theme change. Accepted rather than fixed: the mark
+is `aria-hidden` decoration, and the alternatives are emitting both variants into the markup
+or splitting the opacities into per-kind custom properties, neither of which is worth the
+weight for a fallback.
 
 ## Motion
 
