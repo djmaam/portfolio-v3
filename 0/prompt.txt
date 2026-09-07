@@ -1,0 +1,52 @@
+<task-notification>
+<task-id>af12bd08ad037aac5</task-id>
+<tool-use-id>REDACTED</tool-use-id>
+<output-file>/private/tmp/claude-501/-Users-djmaam-Projects-Marcos-portfolio-v3/ff79cbca-912c-4905-8a2c-c8e457538a3d/tasks/af12bd08ad037aac5.output</output-file>
+<status>completed</status>
+<summary>Agent "Review Task 5 (spec + quality)" finished</summary>
+<note>A task-notification fires each time this agent stops with no live background children of its own. The user can send it another message and resume it, so the same task-id may notify more than once.</note>
+<result>Now I have everything needed to write the report.
+
+### Spec Compliance
+
+✅ Spec compliant, with one plan-mandated Important finding below.
+
+Verified against the brief and the stated global constraints:
+
+- **Single `&lt;script&gt;` in `CubeMark.astro`**: confirmed. The placeholder `// Task 5 fills this in.` was replaced in place, not appended to — `src/components/CubeMark.astro:66-74` contains exactly one `&lt;script&gt;` block.
+- **`mountMark` no-ops under reduced motion before creating anything**: confirmed. `prefersReducedMotion()` is checked at `src/lib/motion/markDraw.ts:97`, before the `canvas` element or any DOM mutation exists.
+- **Teardown undoes setup**: confirmed for the `mouseenter` listener, `MutationObserver`, `IntersectionObserver` registration, canvas element, and the `mounted` set entry (`src/lib/motion/markDraw.ts:138-144`). One loose end noted below (Minor) — the `host._mark` expando is never cleared.
+- **Shared rAF loop stops/restarts correctly**: confirmed by trace. `loop()` (`markDraw.ts:74-86`) sets `running = false` and stops re-scheduling only when `mounted.size === 0`; `mountMark` only schedules a new rAF when `!running` (`markDraw.ts:133-136`). Walked the interleavings (unmount-then-remount before vs. after the pending frame fires) — no double loop, no stuck-stopped loop.
+- **No `resize` listener anywhere in the diff**: confirmed, `grep` for `resize` in the diff returns nothing; `scroll.ts` remains the sole owner of both `scroll` and `resize`.
+- **Hover dip via `host.closest('[data-brand]')`, footer degrades cleanly**: confirmed. `src/components/Nav.astro:30` puts `data-brand` on the anchor wrapping the nav's `CubeMark`; `Footer.astro:28`'s `CubeMark` has no such ancestor, and `hoverTarget?.addEventListener(...)` (`markDraw.ts:131`) / `?.removeEventListener(...)` (`markDraw.ts:139`) degrade to no-ops there.
+- **`buildMark` vs. `markPieces` memoization distinction**: verified in `src/lib/motion/mark.ts:140-153` — `buildMark()` is unmodified and uncached; only `markPieces()` gained two module-level caches (`cached`, `cachedReduced`), keyed on the `box &gt;= DETAIL_MIN` branch, not on `box`. Confirmed `tests/mark.test.ts:29-31` (`expect(buildMark()).toEqual(buildMark())`) calls `buildMark()` directly, not `markPieces()`, so the determinism test still exercises the real generator — the distinction genuinely holds, not vacuous.
+- **`e2e/hero.spec.ts` selector qualification**: correct and complete. `network.ts:134` sets `this.canvas.className = 'hero-net'`, so `canvas.hero-net` is a real, matching selector. All four bare `document.querySelector('canvas')` occurrences in the file were qualified (`e2e/hero.spec.ts:51,75,119,147`); the fifth `canvas` reference at line 195 is `document.createElement('canvas')` for an offscreen pixel-diff buffer, unrelated to DOM lookup and correctly left alone.
+
+⚠️ Cannot verify from diff alone: whether the hover-loosen behavior visually works as intended (Step 7's manual "look at it" check) — no automated test in this diff exercises it at all (see Important finding below).
+
+### Strengths
+
+- DPR handling is correct and idiomatic: `canvas.width/height` set in device pixels, `ctx.setTransform(dpr,0,0,dpr,0,0)` applied once at mount, all paint math stays in CSS-pixel space (`markDraw.ts:100-105`).
+- Hot path is clean: `paint()` reads `mark.accent`/`mark.light` from cached state, never `getComputedStyle`/`getBoundingClientRect` per frame; theme is only re-read on a `MutationObserver` firing (`markDraw.ts:31-37`), matching the "cheap per frame" requirement.
+- `markPieces` memoization is exactly the right shape: two buckets matching the only two possible outputs of the original unmemoized function (the box value itself was never part of `buildMark`'s output), so it's a pure perf win with provably identical behavior — confirmed by tracing that `markScale`/`markPolygons` do the actual box-dependent scaling downstream, not `markPieces`.
+- Opacity discipline is intact: every value goes through `ctx.globalAlpha`, reset to `1` at the end of `paint()` (`markDraw.ts:69`), no literal colors anywhere in the diff.
+- `FRAME_MS = 24` matches `network.ts`'s own throttle constant — genuinely "throttled like the node cloud," not just a claim in a comment.
+- rAF start/stop/restart logic is correct under all interleavings I traced, including the race where a mark remounts while the previous stop-check frame is still in flight.
+
+### Issues
+
+#### Critical (Must Fix)
+None.
+
+#### Important (Should Fix)
+1. **Hover-settle formula is new motion math embedded in the DOM-plumbing file, plan-mandated but untested** — `src/lib/motion/markDraw.ts:24-25,55-56`. `HOVER_MS`, `HOVER_SETTLE`, and the `settle` interpolation (`1 - (1 - HOVER_SETTLE) * Math.max(0, 1 - (t - mark.hoverAt) / HOVER_MS)`) is genuine numeric logic — a branch, a clamp, a linear decay — computed in `markDraw.ts` and fed straight into `markPolygons(box, settle, t, ...)`. This directly conflicts with the task's own stated constraint, "Every number `markDraw.ts` paints comes from `mark.ts`," and with the project-wide convention in `CLAUDE.md` ("Motion math lives in pure functions... so `bun test` covers it without a DOM"). Practically, it means this formula has **zero test coverage**: it's not unit-testable (it lives in the DOM file), and no e2e test in this diff exercises hover at all (the three tests added to `e2e/nav.spec.ts` cover markup-before-script, canvas-turns, and reduced-motion — none hover the brand). The natural fix is a pure function beside `pieceRotation`/`idleWobble` in `mark.ts` (e.g., `hoverSettle(hoverAt: number, t: number): number`), called from `markDraw.ts`. This is plan-mandated: the code is copied verbatim from the brief's Step 3, so the defect originates in the brief, not the implementation — flagging per the calibration instructions.
+
+#### Minor (Nice to Have)
+1. **`host._mark` expando is never cleared in teardown** — `markDraw.ts:120` sets it, teardown (`markDraw.ts:138-144`) never unsets it. Harmless in the current app because nothing in the codebase actually invokes the returned teardown at a call site (`CubeMark.astro:72` and, precedent-wise, `Hero.astro:210`'s `mountNetwork` both discard the return value), so this is dead code in production, but it's a latent leak if teardown is ever wired up (e.g., future view-transitions support) — the `Mounted` object, including its `ctx`/canvas reference, stays reachable through the host as long as the host element exists.
+2. **Global `IntersectionObserver` starts observing every mark's `visible` state as `true` from construction** (`markDraw.ts:114`, before the observer has reported anything) — matches the equivalent pattern in `network.ts`, not a bug, just worth knowing the footer mark paints for one IO round-trip before the browser confirms it's off-screen (or on first load, before any scroll).
+
+### Assessment
+**Task quality:** Needs fixes
+**Reasoning:** The DOM plumbing, rAF lifecycle, DPR handling, and test-selector fix are all correct and well-traced; the sole Important finding is real but narrow and plan-mandated — a small, well-scoped math extraction (`hoverSettle` into `mark.ts`) closes the test-coverage gap without touching anything else in this diff.</result>
+<usage><subagent_tokens>82198</subagent_tokens><tool_uses>16</tool_uses><duration_ms>196282</duration_ms></usage>
+</task-notification>
