@@ -92,7 +92,10 @@ export function markTransform(
 
   // The pieces overshoot slightly and settle; the cluster's growth is a plain outCubic.
   const expand = pExpand >= 1 ? 1 : lerp(0.08, 1, outBack(pExpand))
-  const big = Math.min(view.w, view.h) * 0.19 * 0.85
+  // 19% of the shorter side, which on a portrait phone is the width — and 19% of 390px
+  // reads as a speck rather than as the mark. Below the site's own 720 breakpoint
+  // (`nodeCountFor`, the aurora's third blob) the expansion is sized off the width.
+  const big = (view.w < 720 ? view.w * 0.34 : Math.min(view.w, view.h) * 0.19) * 0.85
   const grown = big * lerp(0.25, 1, outCubic(pExpand))
 
   return {

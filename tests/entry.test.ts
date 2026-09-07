@@ -89,6 +89,24 @@ test('markTransform starts collapsed at the center of the viewport', () => {
   expect(frame.alpha).toBeCloseTo(0.35, 12)
 })
 
+test('the expansion is sized off the width on a phone', () => {
+  // On a 390×844 viewport the shorter side is the width, and 19% of it is a speck. Below
+  // the site's 720 breakpoint the mark is a third of the width instead, so it still reads.
+  const phone = { w: 390, h: 844 }
+  // Just before DOCK opens, so the flight toward the nav's fixed 20px box is not yet
+  // pulling either of them and the two are the same easing at the same instant.
+  const grown = entrySpan('DOCK', D).from - 1
+  const wide = markTransform(grown, D, VIEW, NAV).scale
+  const narrow = markTransform(grown, D, phone, NAV).scale
+
+  // Both are the same easing at the same instant, so their ratio is the ratio of the two
+  // knobs — 34% of a phone's width against 19% of the desktop's shorter side.
+  expect(narrow / wide).toBeCloseTo((phone.w * 0.34) / (Math.min(VIEW.w, VIEW.h) * 0.19), 10)
+  expect(narrow / phone.w).toBeGreaterThan(0.25)
+  // Nothing moves on the wide viewport, which is where the knob was set: 19% of 900.
+  expect(wide).toBeGreaterThan(Math.min(VIEW.w, VIEW.h) * 0.19 * 0.85 * 0.99)
+})
+
 test('markTransform lands on the nav slot', () => {
   const frame = markTransform(D, D, VIEW, NAV)
 
