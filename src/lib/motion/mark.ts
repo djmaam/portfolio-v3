@@ -1,3 +1,4 @@
+import { lerp } from './math'
 import type { Point, Point3 } from './math'
 
 // ── The mark (spec 30) ───────────────────────────────────────────────────────
@@ -271,7 +272,6 @@ const PANEL_QUAD: readonly Point3[] = [
 
 const add = (a: Point3, b: Point3): Point3 => ({ x: a.x + b.x, y: a.y + b.y, z: a.z + b.z })
 const scale3 = (p: Point3, k: number): Point3 => ({ x: p.x * k, y: p.y * k, z: p.z * k })
-const lerp = (a: number, b: number, t: number) => a + (b - a) * t
 
 /**
  * Pixels per lattice unit. The extent is the Euclidean norm, not the largest component:
