@@ -1,0 +1,7 @@
+<task-notification>
+<task-id>bjg8029dq</task-id>
+<tool-use-id>toolu_01No9cDRs2SeaAGyvSWMyRu8</tool-use-id>
+<output-file>/private/tmp/claude-501/-Users-djmaam-Projects-Marcos-portfolio-v3/33786be7-d54c-4daa-a55d-df6498965cc0/tasks/bjg8029dq.output</output-file>
+<status>completed</status>
+<summary>Background command "Wait for CI on PR 7" completed (exit code 0)</summary>
+</task-notification>
