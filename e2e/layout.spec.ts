@@ -227,3 +227,30 @@ test('the projects grid stays at three columns, which is what projectDelay assum
 
   expect(columns).toBe(3)
 })
+
+test('the aurora still covers the viewport once the scroll has drifted it up', async ({ page }) => {
+  await page.goto('/')
+
+  // `MOTION_SPEC` §4 drifts the layer up by `12vh · p`, and `overflow: hidden` means the
+  // clip box travels with it: at `inset: 0` the bottom 12vh·p of the viewport falls
+  // outside the box and reads as a hard-edged band that grows with the scroll (spec 26).
+  // Measured, not reasoned about — the stylesheet looks correct either way.
+  await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight))
+  await page.waitForTimeout(300)
+
+  const { top, bottom, height, transform } = await page.evaluate(() => {
+    const aurora = document.querySelector<HTMLElement>('.aurora')!
+    const rect = aurora.getBoundingClientRect()
+    return {
+      top: rect.top,
+      bottom: rect.bottom,
+      height: window.innerHeight,
+      transform: aurora.style.transform,
+    }
+  })
+
+  // The drift has to have happened, or the assertion below would pass on a still layer.
+  expect(transform).toBe('translateY(-12vh)')
+  expect(top).toBeLessThanOrEqual(0)
+  expect(bottom).toBeGreaterThanOrEqual(height)
+})

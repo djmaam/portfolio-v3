@@ -247,12 +247,23 @@
 /* ── Aurora ───────────────────────────────────────────────────────────────────
    The site's background layer (`MOTION_SPEC §4`): three blurred blobs, fixed, the
    only thing painted at z-index 0. Decoration — `aria-hidden` in the markup, no
-   pointer events, and readable without JS since it needs none to show. */
+   pointer events, and readable without JS since it needs none to show.
+
+   The light theme runs the blobs at roughly 40% of §4's alphas (spec 26): over a
+   near-white `--color-bg` the specified 22%/14%/12% cost the footer's `--color-dim`
+   and `--color-accent` their WCAG ratios, and `tests/contrast.test.ts` composites the
+   worst overlap to keep it that way. The dark theme keeps §4's values, which clear it. */
 
 @layer components {
   .aurora {
     position: fixed;
-    inset: 0;
+    /* The layer hangs 13vh below the viewport. `translateY(-12vh · p)` of §4 moves the
+       element *and its `overflow` clip box* up, so with `inset: 0` the bottom 12vh·p of
+       the viewport ends up outside the box: an untinted strip with a hard edge that
+       grows as you scroll and vanishes back at the top (spec 26). 13 rather than the
+       12vh of the travel because the two `vh` round independently, and at 12 the box
+       lands a hundredth of a pixel short of the viewport. */
+    inset: 0 0 -13vh 0;
     z-index: 0;
     overflow: hidden;
     pointer-events: none;
@@ -274,7 +285,7 @@
     height: 56vw;
     filter: blur(90px);
     background: light-dark(
-      color-mix(in srgb, var(--color-accent) 22%, transparent),
+      color-mix(in srgb, var(--color-accent) 8%, transparent),
       color-mix(in srgb, var(--color-accent) 16%, transparent)
     );
   }
@@ -285,7 +296,10 @@
     width: 44vw;
     height: 44vw;
     filter: blur(100px);
-    background: color-mix(in srgb, var(--color-violet) 14%, transparent);
+    background: light-dark(
+      color-mix(in srgb, var(--color-violet) 5%, transparent),
+      color-mix(in srgb, var(--color-violet) 14%, transparent)
+    );
   }
 
   .aurora > :nth-child(3) {
@@ -295,7 +309,7 @@
     height: 36vw;
     filter: blur(90px);
     background: light-dark(
-      color-mix(in srgb, var(--color-accent) 12%, transparent),
+      color-mix(in srgb, var(--color-accent) 4%, transparent),
       color-mix(in srgb, var(--color-accent) 8%, transparent)
     );
   }

@@ -69,23 +69,40 @@ test('auroraStyle at p=0 is the resting state of MOTION_SPEC §4', () => {
 
 test('auroraStyle at p=.2 is halfway up the opacity ramp', () => {
   const s = auroraStyle(0.2)
-  expect(s.filter).toBe('hue-rotate(52deg) saturate(1.08)')
-  expect(s.opacity).toBeCloseTo(0.725, 10)
+  expect(s.filter).toBe('hue-rotate(10deg) saturate(1.08)')
+  expect(s.opacity).toBeCloseTo(0.625, 10)
   expect(s.translateY).toBe('-2.4vh')
 })
 
-test('auroraStyle reaches opacity 1 at p=.4 and stays there', () => {
-  expect(auroraStyle(0.4).opacity).toBeCloseTo(1, 10)
-  expect(auroraStyle(0.4).filter).toBe('hue-rotate(104deg) saturate(1.16)')
-  expect(auroraStyle(0.4).translateY).toBe('-4.8vh')
-  for (const p of [0.5, 0.75, 1]) expect(auroraStyle(p).opacity).toBeCloseTo(1, 10)
+test('auroraStyle peaks at .8 at p=.4 and holds it to the calm point', () => {
+  const s = auroraStyle(0.4)
+  expect(s.filter).toBe('hue-rotate(20deg) saturate(1.16)')
+  expect(s.opacity).toBeCloseTo(0.8, 10)
+  expect(s.translateY).toBe('-4.8vh')
+  // Flat between the two ramps: the second one only starts at p = .7 (spec 26).
+  for (const p of [0.5, 0.6, 0.7]) expect(auroraStyle(p).opacity).toBeCloseTo(0.8, 10)
 })
 
-test('auroraStyle at p=1 is the full hue rotation of MOTION_SPEC §4', () => {
+test('auroraStyle at p=.7 is the last frame before the layer calms down', () => {
+  const s = auroraStyle(0.7)
+  expect(s.filter).toBe('hue-rotate(35deg) saturate(1.28)')
+  expect(s.opacity).toBeCloseTo(0.8, 10)
+  expect(s.translateY).toBe('-8.4vh')
+})
+
+test('auroraStyle at p=1 caps the hue sweep and eases back down (spec 26)', () => {
   const s = auroraStyle(1)
-  expect(s.filter).toBe('hue-rotate(260deg) saturate(1.4)')
-  expect(s.opacity).toBeCloseTo(1, 10)
+  expect(s.filter).toBe('hue-rotate(50deg) saturate(1.4)')
+  expect(s.opacity).toBeCloseTo(0.55, 10)
   expect(s.translateY).toBe('-12vh')
+})
+
+test('auroraStyle never exceeds its peak, and the footer is calmer than the middle', () => {
+  for (let p = 0; p <= 1.0001; p += 0.01) {
+    expect(auroraStyle(p).opacity).toBeLessThanOrEqual(0.8)
+  }
+  // The whole point of the retune: the bottom of the page is quieter than mid-document.
+  expect(auroraStyle(1).opacity).toBeLessThan(auroraStyle(0.5).opacity)
 })
 
 const GLYPHS = '<>/_-=+*#%&{}[]|\\01'
