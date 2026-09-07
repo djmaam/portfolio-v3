@@ -93,7 +93,7 @@ These specs addressed pixel-perfect visual alignment, container overflow bugs, a
 | Spec | Title | Linear Issue | Target Area | Description |
 | :--- | :--- | :--- | :--- | :--- |
 | [`30-cube-mark.md`](./superpowers/specs/30-cube-mark.md) | Cube Mark | PV3-35 | `Nav.astro`, `Footer.astro` | Isometric cube cluster replaces the ✳ glyph. Build-time SVG upgraded to a canvas with per-piece rotation. Documented deviation from `MOTION_SPEC` §1. |
-| _(pending)_ | Entry Choreography | PV3-36 | `boot.ts`, `network.ts` | Six overlapping phases in 4.2s: the mark expands, docks in the nav, and seeds the node network. Skippable by click or scroll. Depends on [`30-cube-mark.md`](./superpowers/specs/30-cube-mark.md). |
+| [`31-entry-choreography.md`](./superpowers/specs/31-entry-choreography.md) | Entry Choreography | PV3-36 | `entry.ts`, `boot.ts`, `network.ts` | Six overlapping phases in 4.2s: the mark expands, docks in the nav, and seeds the node network. Skippable by click or scroll, once per session. Replaces the ✳ formation of `MOTION_SPEC` §3. Depends on [`30-cube-mark.md`](./superpowers/specs/30-cube-mark.md). |
 
 ---
 
