@@ -1,0 +1,54 @@
+<task-notification>
+<task-id>af2e2f3f6f9a8ea43</task-id>
+<tool-use-id>toolu_01FZd2ko8o161HMFdgWmisv3</tool-use-id>
+<output-file>/private/tmp/claude-501/-Users-djmaam-Projects-Marcos-portfolio-v3/33786be7-d54c-4daa-a55d-df6498965cc0/tasks/af2e2f3f6f9a8ea43.output</output-file>
+<status>completed</status>
+<summary>Agent "Implement Projects grid" finished</summary>
+<note>A task-notification fires each time this agent stops with no live background children of its own. The user can send it another message and resume it, so the same task-id may notify more than once.</note>
+<result>Done. Branch `feat/11-projects` pushed, two commits, no PR.
+
+## Commands
+
+```
+$ bun run lint
+eslint . &amp;&amp; prettier --check . &amp;&amp; tsc --noEmit &amp;&amp; bun scripts/check-tokens.ts
+Checking formatting...
+All matched files use Prettier code style!          → exit 0
+
+$ bun test
+ 207 pass / 0 fail / 7384 expect() calls, 17 files [129ms]   (12 of them new)
+
+$ bun run build
+[build] 2 page(s) built in 165ms · Complete!
+```
+
+## Files
+
+- `src/lib/projects.ts` — `PREVIEWS` table keyed by host, `previewMode(host)`, `projectDelay(i)`
+- `src/components/Projects.astro`
+- `tests/projects.test.ts`
+- `src/pages/index.astro`, `src/pages/en/index.astro` — only the two `projects` markers replaced; the other eight markers are byte-identical.
+
+## Verification against the real build
+
+`grep -o '&lt;iframe[^&gt;]*&gt;' dist/index.html` (and `dist/en/index.html`) returns exactly four, one per iframe host, each identical in shape:
+
+```
+&lt;iframe class="frame" src="https://nera-agro.com/" sandbox="" loading="lazy" aria-hidden="true" tabindex="-1" …&gt;
+```
+
+plus `agropro.ag`, `kodaiverse.com`, `masushuaia.com`. `telecentro.com.ar` and `creativamedialab.com` mount nothing — `grep -c '&lt;img'` is 0 too, since the PNGs are absent, so both fall back to the striped placeholder. `pointer-events:none` is confirmed in the emitted CSS (`.frame[data-astro-cid-…]{…pointer-events:none;…transform:scale(.25)}`), the shimmer only inside `@media (prefers-reduced-motion:no-preference)`, and `data-delay` in the HTML reads `0 90 180 0 90 180` for the six cards. `grep -rl 'addEventListener(.scroll.' dist/` → one file, `_astro/scroll.*.js`; the component ships no `&lt;script&gt;` at all (reveals already come from `bindReveals()` in `Base.astro`).
+
+I also proved the screenshot branch by dropping a dummy `public/previews/creativamedialab.com.png`, rebuilding (`&lt;img class="frame" src="/previews/creativamedialab.com.png" alt="" loading="lazy"&gt;`) and deleting it again — `git status` is clean of it.
+
+## Decisions the spec did not cover
+
+- **`revealDelay` vs. `math.ts`.** The criterion names `revealDelay`, but `math.ts` is off-limits and its existing `revealDelay` is `110·i` (About uses it). The 90·(i%3) stagger ships as `projectDelay` in `src/lib/projects.ts`, which is also where the test can import the host table from. That module is the one new file beyond the component.
+- **Screenshot existence check.** `new URL('../../public/…', import.meta.url)` silently resolves wrong inside the Astro SSR bundle (it built with the file present and still emitted no `&lt;img&gt;`), so the check is `existsSync(join(process.cwd(), 'public', shot))` — correct under both `astro build` and `astro dev`.
+- **Undeclared host → `screenshot`**, not `iframe` and not a thrown build error: fail-safe, and the unit test is what catches a project that nobody declared.
+- Added a scoped `:focus-visible` ring on the card (DESIGN_SPEC §4/§6); no global focus rule exists yet in `app.css` and I left that shared file untouched.
+- Reused the existing `shimmer` keyframe as-is, so — exactly as in the mock — the `skewX(-12deg)` decays over the sweep since the keyframe's `to` replaces the whole transform.
+- `alt=""` on the screenshot: the link's own text already carries name and description, so the image is decorative.</result>
+<usage><subagent_tokens>100856</subagent_tokens><tool_uses>50</tool_uses><duration_ms>374496</duration_ms></usage>
+<worktree><worktreePath>/Users/djmaam/Projects/Marcos/portfolio-v3/.claude/worktrees/agent-af2e2f3f6f9a8ea43</worktreePath><worktreeBranch>worktree-agent-af2e2f3f6f9a8ea43</worktreeBranch></worktree>
+</task-notification>
