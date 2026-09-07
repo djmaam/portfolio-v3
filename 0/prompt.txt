@@ -1,0 +1,192 @@
+Review this change for security vulnerabilities.
+
+Changed files (you may Read these and any other file in the repo):
+  - src/lib/motion/math.ts
+  - src/lib/ui.ts
+  - tests/math.test.ts
+  - tests/ui.test.ts
+  - src/lib/motion/anchors.ts
+  - tests/anchors.test.ts
+
+Unified diff (only + lines are new):
+
+=== DIFF: src/lib/motion/math.ts ===
+@@ -61,3 +61,21 @@ export function scrambleFrame(target: string, p: number, rand: () => number = Ma
+ export function anchorOffset(top: number, navH: number): number {
+   return Math.max(0, top - navH)
+ }
++
++/**
++ * When the element with `data-boot="n"` is revealed (`MOTION_SPEC` §2): 500ms for the
++ * page to settle, then 170ms per step. The console skips to `n = 10`, i.e. 2200ms, which
++ * leaves room for more elements in the text column without moving it.
++ */
++export function bootDelay(n: number): number {
++  return 500 + n * 170
++}
++
++/**
++ * Characters of the typed eyebrow visible after `elapsed` ms at `perChar` ms each
++ * (`MOTION_SPEC` §2). A negative `elapsed` — the wait before the first character — yields
++ * 0, so the driver expresses its delay as an offset instead of a timer of its own.
++ */
++export function typedLength(elapsed: number, perChar: number, total: number): number {
++  return Math.min(total, Math.max(0, Math.floor(elapsed / perChar)))
++}
+
+
+=== DIFF: src/lib/ui.ts ===
+@@ -9,3 +9,11 @@ export const ui: Record<Lang, { themeToggle: string }> = {
+   es: { themeToggle: 'Cambiar el tema' },
+   en: { themeToggle: 'Toggle the theme' },
+ }
++
++/**
++ * The hero stats. Language-independent facts, absent from the read-only `content.json`,
++ * which pairs each number with its label. `companies` is asserted against
++ * `content.jobs.length` in the tests; `years` and `platforms` are editorial and have no
++ * derivable source.
++ */
++export const stats = { years: '8+', companies: '5', platforms: '6' } as const
+
+
+=== DIFF: tests/math.test.ts ===
+@@ -1,6 +1,13 @@
+ import { expect, test } from 'bun:test'
+ 
+-import { anchorOffset, auroraStyle, docProgress, scrambleFrame } from '../src/lib/motion/math'
++import {
++  anchorOffset,
++  auroraStyle,
++  bootDelay,
++  docProgress,
++  scrambleFrame,
++  typedLength,
++} from '../src/lib/motion/math'
+ 
+ test('docProgress is 0 at the top of the document and 1 at the bottom', () => {
+   expect(docProgress(0, 5000, 800)).toBe(0)
+@@ -102,3 +109,24 @@ test('anchorOffset lands the target below the nav, and never above the document'
+   expect(anchorOffset(0, 64)).toBe(0)
+   expect(anchorOffset(30, 64)).toBe(0)
+ })
++
++test('bootDelay staggers the hero 170ms per step after a 500ms wait', () => {
++  expect([0, 1, 2, 3, 4].map((n) => bootDelay(n))).toEqual([500, 670, 840, 1010, 1180])
++  // The console's slot (issue 06) jumps to n=10, which is the 2200ms of MOTION_SPEC §2.
++  expect(bootDelay(10)).toBe(2200)
++})
++
++test('typedLength shows nothing before the first character and clamps at the total', () => {
++  expect(typedLength(-700, 28, 46)).toBe(0)
++  expect(typedLength(0, 28, 46)).toBe(0)
++  expect(typedLength(27, 28, 46)).toBe(0)
++  expect(typedLength(46 * 28, 28, 46)).toBe(46)
++  expect(typedLength(99999, 28, 46)).toBe(46)
++})
++
++test('typedLength advances exactly one character per perChar ms', () => {
++  for (let n = 0; n <= 46; n++) {
++    expect(typedLength(n * 28, 28, 46)).toBe(n)
++    expect(typedLength(n * 28 + 27, 28, 46)).toBe(n)
++  }
++})
+
+
+=== DIFF: tests/ui.test.ts ===
+@@ -0,0 +1,15 @@
++import { expect, test } from 'bun:test'
++
++import { content, LANGS } from '../src/lib/content'
++import { stats } from '../src/lib/ui'
++
++test.each(LANGS)('stats.companies matches the number of jobs in %s', (lang) => {
++  // Adding a company to the read-only content.json must fail here rather than leave the
++  // hero claiming a number nothing backs.
++  expect(stats.companies).toBe(String(content[lang].jobs.length))
++})
++
++test('the editorial stats are the numbers of the design', () => {
++  expect(stats.years).toBe('8+')
++  expect(stats.platforms).toBe('6')
++})
+
+
+=== DIFF: src/lib/motion/anchors.ts ===
+@@ -0,0 +1,32 @@
++import { anchorOffset } from './math'
++import { prefersReducedMotion } from './reduced'
++
++/**
++ * The site's only anchor click handler, delegated on `document`: every `[data-nav-link]`
++ * — the nav links and the hero CTAs — scrolls through here, so the nav offset, the `#top`
++ * case and the reduced-motion fallback exist exactly once. Called once from `Base.astro`.
++ */
++export function bindAnchors(): void {
++  // One number for the sticky height and the scroll offset: app.css owns it.
++  const navH = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--nav-h'))
++
++  document.addEventListener('click', (event) => {
++    const source = event.target
++    const link =
++      source instanceof Element ? source.closest<HTMLAnchorElement>('a[data-nav-link]') : null
++    if (!link) return
++
++    const hash = link.getAttribute('href') ?? ''
++    const target = hash === '#top' ? null : document.getElementById(hash.slice(1))
++    // The sections land in issues 06-13. Until then the link falls back to the browser,
++    // which does nothing with a fragment it cannot resolve.
++    if (hash !== '#top' && !target) return
++
++    event.preventDefault()
++    const top = target ? target.getBoundingClientRect().top + window.scrollY : 0
++    window.scrollTo({
++      top: anchorOffset(top, navH),
++      behavior: prefersReducedMotion() ? 'auto' : 'smooth',
++    })
++  })
++}
+
+
+=== DIFF: tests/anchors.test.ts ===
+@@ -0,0 +1,37 @@
++import { Glob } from 'bun'
++import { expect, test } from 'bun:test'
++
++/**
++ * Anchor scrolling is DOM plumbing, so what the unit tests can guard is the invariant
++ * that keeps it honest: exactly one delegated click handler in the whole source, and
++ * exactly one place that binds it. Nav and the hero CTAs only carry `data-nav-link`.
++ */
++const src = new URL('../src/', import.meta.url)
++
++const files = await Array.fromAsync(
++  (async function* () {
++    for await (const name of new Glob('**/*.{astro,ts}').scan(src.pathname)) {
++      yield { name, text: await Bun.file(new URL(name, src)).text() }
++    }
++  })(),
++)
++
++/** Only the `<script>` bodies of an .astro file run: its markup carries the attribute. */
++const code = ({ name, text }: { name: string; text: string }) =>
++  name.endsWith('.astro')
++    ? [...text.matchAll(/<script[^>]*>([\s\S]*?)<\/script>/g)].map((match) => match[1]).join('\n')
++    : text
++
++test('exactly one module registers the delegated anchor click handler', () => {
++  const handlers = files.filter(
++    (file) => /data-nav-link/.test(code(file)) && /addEventListener\(\s*'click'/.test(code(file)),
++  )
++  expect(handlers.map((file) => file.name)).toEqual(['lib/motion/anchors.ts'])
++})
++
++test('the handler is bound from exactly one place', () => {
++  const callers = files.filter(
++    (file) => file.name !== 'lib/motion/anchors.ts' && /bindAnchors\(\)/.test(code(file)),
++  )
++  expect(callers.map((file) => file.name)).toEqual(['layouts/Base.astro'])
++})
+
+
+Investigate per the method in your instructions, then return the findings list.
