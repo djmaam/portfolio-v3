@@ -1,0 +1,23 @@
+Review this change for security vulnerabilities.
+
+Changed files (you may Read these and any other file in the repo):
+  - lighthouserc.json
+
+Unified diff (only + lines are new):
+
+=== DIFF: lighthouserc.json ===
+@@ -2,7 +2,10 @@
+   "ci": {
+     "collect": {
+       "staticDistDir": "./dist",
+-      "numberOfRuns": 3
++      "numberOfRuns": 3,
++      "settings": {
++        "chromeFlags": "--no-sandbox --disable-dev-shm-usage"
++      }
+     },
+     "assert": {
+       "assertions": {
+
+
+Investigate per the method in your instructions, then return the findings list.
