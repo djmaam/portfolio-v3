@@ -1,0 +1,110 @@
+<task-notification>
+<task-id>ad0738b342d01fae4</task-id>
+<output-file>/private/tmp/claude-501/-Users-djmaam-Projects-Marcos-portfolio-v3/33786be7-d54c-4daa-a55d-df6498965cc0/tasks/ad0738b342d01fae4.output</output-file>
+<status>completed</status>
+<summary>Agent "Site-wide accessibility pass" finished</summary>
+<note>A task-notification fires each time this agent stops with no live background children of its own. The user can send it another message and resume it, so the same task-id may notify more than once.</note>
+<result>Done. Branch `feat/16-a11y` pushed (no PR, no merge).
+
+## The three commands
+
+**`bun run lint` → exit 0**
+```
+$ eslint . &amp;&amp; prettier --check . &amp;&amp; tsc --noEmit &amp;&amp; bun scripts/check-tokens.ts
+Checking formatting...
+All matched files use Prettier code style!
+```
+
+**`bun test` → exit 0**
+```
+bun test v1.4.0 (34cbb9a40)
+ 304 pass
+ 0 fail
+ 8121 expect() calls
+Ran 304 tests across 23 files. [929.00ms]
+```
+(261 before, +43 new: 22 in `tests/contrast.test.ts`, 21 in `tests/a11y.test.ts`. One pre-existing test changed — `tests/contact.test.ts` asserted the old literal value of `--color-contact-accent`.)
+
+**`bun run build` → exit 0**
+```
+$ astro build
+[build] output: "static"  mode: "static"
+[vite] ✓ built in 112ms
+ generating static routes
+   ├─ /en/index.html (+6ms)
+   ├─ /index.html (+2ms)
+[build] 2 page(s) built in 215ms
+[build] Complete!
+```
+
+## Every computed contrast ratio
+
+`tests/contrast.test.ts` parses the `light-dark()` pairs out of `app.css`, composites the translucent ones, and computes WCAG 2.1 luminance. Final numbers:
+
+| pair | light | dark | min |
+|---|---|---|---|
+| `ink` / `bg` | **17.82** | **18.24** | 4.5 |
+| `dim` / `bg` | **5.30** | **6.53** | 4.5 |
+| `dim` / `surface` over `bg` | **5.63** | **6.17** | 4.5 |
+| `accent` / `bg` | **3.46** | **13.35** | 3.0 |
+| `contact-ink` / `contact-card` | **17.81** | **17.81** | 4.5 |
+| `contact-accent` / `contact-card` | **13.03** | **4.55** ← was 3.46 | 4.5 |
+
+Extras I computed while auditing (not in the spec table, all passing): `dim`/`glass` 5.30 / 6.53 · `dim`/`console-bg` 5.66 / 6.29 · `ink`/`console-bg` 19.02 / 17.56 · `accent`/`console-bg` 3.70 / 12.85.
+
+**One failure.** `--color-contact-accent` was documented as "`--color-accent` with its branches swapped", but the swap only fixed one direction: `#3ee7ff` on the dark card is 13.03, while `#0a8faf` on the *light* card is 3.46 — large-text only, and the card carries the accent at 12px in `06 / CONTACTO` and in the pills on hover. Darkened that branch to `#087a95` → 4.55. The page accent is untouched (it only owes 3.0).
+
+## What the reduced-motion sweep found
+
+All **11** `animation:` declarations in the built CSS were already inside a `no-preference` block — that half was clean. The finding was the other half: **5 hover states that still move with `reduce`**, because each section wrote its transform outside its own guard.
+
+- `Hero.astro` — CTA `translateY(-1px)`
+- `About.astro`, `Experience.astro`, `Projects.astro` — card `translateY(-4px)`
+- `Contact.astro` — email `gap: 10px → 16px`
+- plus `Method.astro`'s active-step lift and dot scale (unreachable with `reduce` because `onScroll` never subscribes — but only by accident)
+
+Each transform and its transition moved into the section's existing `no-preference` block. With `reduce` the element still takes its hover border, shadow and color; it just stays put.
+
+## Fixed, by component
+
+| where | fix |
+|---|---|
+| `app.css` | global `:focus-visible` ring; `scroll-padding-top: var(--nav-h)`; `.skip-link` styles; `--color-contact-accent` darkened |
+| `Base.astro` | skip link as first body child; `&lt;main id="main" tabindex="-1"&gt;` |
+| `ui.ts` | `skipToContent` in es/en |
+| `Contact.astro` | ring override to `--color-contact-accent`; `aria-labelledby`; email gap guarded |
+| `Projects.astro` | local `:focus-visible` removed; `.kind`/`.arrow` weight 500; `aria-labelledby`; card lift guarded |
+| `About.astro` | lead `&lt;p&gt;` → `&lt;h2&gt;` (fixes h1→h3 skip); `.accent` weight 500; `aria-labelledby`; card lift guarded |
+| `Method.astro` | `.status` weight 500; `aria-labelledby`; step + dot transforms guarded |
+| `Console.astro` | `.key`, `.live` weight 500 |
+| `Stack.astro` | `.chip.core` weight 500; `aria-labelledby` |
+| `Experience.astro` | `aria-labelledby`; card lift guarded |
+| `Footer.astro` | `.handle`, `.glyph` weight 500 |
+| `Hero.astro` | `.accent` weight restated; CTA lift guarded |
+
+The ARIA audit found the rest already correct: iframes `aria-hidden`+`tabindex="-1"`, canvas `aria-hidden`+`pointer-events:none`, marquee clones hidden, `role="log"`/`aria-live="off"`, every decorative glyph hidden, theme toggle with `aria-label`+`aria-pressed`.
+
+## Keyboard pass
+
+**No browser automation is reachable in this environment** — no `mcp__claude-in-chrome__*` tools, no Playwright (out of scope per the spec anyway). I did not drive a real browser. What I did instead was dump the focusable sequence from both built routes and encode it as a test:
+
+```
+ 1 skip-link #main   2 brand #top   3-6 nav links   7 lang toggle   8 theme button
+ 9-10 hero CTAs     11-16 project cards            17 email        18-20 social pills
+21 footer handle
+```
+
+Identical on `/` and `/en`, matches visual order, no positive `tabindex` anywhere (the only 5 are `-1`, all on preview iframes), so nothing overrides or traps the order. The nav-overlap risk is handled by `scroll-padding-top`. What I cannot certify without a browser: that the ring is *visually* unclipped everywhere (`overflow: hidden` on `.row`, `.preview`, `.edge` could crop a 2px offset ring on an element that sits flush against those edges). Worth one manual pass, or issue 17's Playwright run.
+
+## Decisions the spec did not cover
+
+1. **Weight 500, not larger type.** Eight rules painted small mono labels with the accent at weight 400. `DESIGN_SPEC` §6 offers "≥15px **or** weight 500" — I took the weight, since bumping sizes would be a restyle. 500 is inside the design's own 400–500 range for small mono labels. Note the design's rule is looser than WCAG, which puts large text at ≥18.66px bold / ≥24px; at 3.46:1 in light, these labels satisfy the design spec but not WCAG AA on their own. Raising the light accent would change the whole site's cyan, so I left it and flagged it here.
+2. **`.handle` and `.status` take the weight at rest**, not in the hover/done state — changing weight on hover reflows the line. The test resolves the size/weight from the rule *or* from the rule for that element's own class, which is why this works.
+3. **`Hero.astro`'s `.accent` restates `font-weight: 600`** (the h1's own). Redundant to the browser, but it is what makes the rule auditable without the markup beside it.
+4. **About's lead became the `&lt;h2&gt;`.** It is what the other sections render as `&lt;h2 class="text-h2"&gt;`, and Tailwind's preflight resets heading size/weight to `inherit`, so nothing renders differently. The alternative — promoting the principle cards to `&lt;h2&gt;` — would have been semantically wrong.
+5. **`aria-labelledby` over `aria-label`** for the six named sections: no copy duplicated, `content.json` stays the only source, and it avoids screen readers spelling out the all-caps `secAbout` values.
+6. **`&lt;main&gt;` got `tabindex="-1"`** so the skip link moves focus and not just the viewport (Safari otherwise only scrolls).
+7. **The skip link hides with `top: -100px`, not a transform** — nothing to animate for a `reduce` visitor, and it keeps the hover/transform sweep honest.
+8. **No dependencies added.** Considered axe: it needs a DOM (jsdom + axe-core, two deps) and would *not* catch the two findings that mattered here — the token pair failure, because it never sees the dark theme's inverted card without rendering both themes, and the reduced-motion sweep, which it does not check at all. The CSS-parsing tests cover both and run in 0.9s with the build included.</result>
+<usage><subagent_tokens>197293</subagent_tokens><tool_uses>88</tool_uses><duration_ms>38219135</duration_ms></usage>
+</task-notification>
