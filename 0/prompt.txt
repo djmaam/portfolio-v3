@@ -1,0 +1,9 @@
+<task-notification>
+<task-id>ad0738b342d01fae4</task-id>
+<tool-use-id>toolu_01Tk9gqU7abntoedtQKbNBQG</tool-use-id>
+<output-file>/private/tmp/claude-501/-Users-djmaam-Projects-Marcos-portfolio-v3/33786be7-d54c-4daa-a55d-df6498965cc0/tasks/ad0738b342d01fae4.output</output-file>
+<status>failed</status>
+<summary>Agent "Site-wide accessibility pass" failed: Agent terminated early due to an API error: You've hit your session limit · resets 2:40am (America/Buenos_Aires)</summary>
+<note>A task-notification fires each time this agent stops with no live background children of its own. The user can send it another message and resume it, so the same task-id may notify more than once.</note>
+<result>Now committing in atomic pieces.</result>
+</task-notification>
