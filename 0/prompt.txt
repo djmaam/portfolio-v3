@@ -1,0 +1,38 @@
+<task-notification>
+<task-id>a62418441e2cae796</task-id>
+<tool-use-id>REDACTED</tool-use-id>
+<output-file>/private/tmp/claude-501/-Users-djmaam-Projects-Marcos-portfolio-v3/ff79cbca-912c-4905-8a2c-c8e457538a3d/tasks/a62418441e2cae796.output</output-file>
+<status>completed</status>
+<summary>Agent "Nav: container align + lang toggle" finished</summary>
+<note>A task-notification fires each time this agent stops with no live background children of its own. The user can send it another message and resume it, so the same task-id may notify more than once.</note>
+<result>Working tree is clean, no scratch files left behind. Everything is done.
+
+**Summary**
+
+- Branch: `feat/20-nav-align`
+- PR: https://github.com/djmaam/portfolio-v3/pull/19
+
+**Defects fixed** (both in `src/components/Nav.astro`):
+
+1. **PV3-25** — `.nav` had its own `padding-inline` instead of sharing `container-page`. Fixed by keeping `.nav` full-width (background/border) and adding an inner `&lt;div class="inner container-page"&gt;` wrapper for brand/links/toggles, reusing the existing `container-page` utility (from issue 19) rather than reimplementing it. `--nav-h` untouched.
+2. **PV3-26** — `.toggle { display: grid; place-items: center }` split the lang toggle's stray text run into an anonymous grid item, stacking it below `ES`. Fixed with one property change: `display: flex` (flex's default row direction keeps anonymous items on one line), which also leaves `.theme`'s single-child centering unaffected.
+
+**Measured (1512×950, before → after):**
+- Brand left edge: 48 → 156 (matches `container-page`'s left edge)
+- Theme toggle right edge: 1464 → 1356 (matches `container-page`'s right edge)
+- Lang toggle scrollHeight vs clientHeight: 36 vs 32 (wrapped) → single line, scrollHeight ≤ clientHeight; border-box height stays 34px, radius stays 999px
+
+**TDD**: wrote `docs/superpowers/specs/20-nav-align.md` first and committed it alone, then `tests/nav.test.ts` and `e2e/nav.spec.ts`, watched both fail against the original broken source (3 unit + 4 e2e failures reproducing the exact numbers above), then implemented the fix and watched everything pass.
+
+**Gate results (all green):**
+- `bun test` — 310 pass, 0 fail (305 existing + 5 new)
+- `bun run lint` — eslint, prettier, tsc, check-tokens all clean
+- `bun run build` — succeeds
+- `PORT=4401 bun run test:e2e` — 22 passed (14 existing in `layout.spec.ts`/`smoke.spec.ts`, untouched, plus 8 new in `e2e/nav.spec.ts`)
+
+Files touched: `src/components/Nav.astro`, `tests/nav.test.ts` (new), `e2e/nav.spec.ts` (new), `docs/superpowers/specs/20-nav-align.md` (new). Nothing outside the owned file list was touched.
+
+result: Opened PR #19 (https://github.com/djmaam/portfolio-v3/pull/19) on branch `feat/20-nav-align`, fixing PV3-25 (nav content now aligns to the page's 1200px container instead of drifting 108px outside it) and PV3-26 (lang toggle now renders `ES / en` on one line instead of wrapping); all gates green — 310 unit tests, lint, build, and 22 Playwright e2e tests (including 8 new nav-specific ones) pass.</result>
+<usage><subagent_tokens>103805</subagent_tokens><tool_uses>59</tool_uses><duration_ms>401683</duration_ms></usage>
+<worktree><worktreePath>/Users/djmaam/Projects/Marcos/portfolio-v3/.claude/worktrees/agent-a62418441e2cae796</worktreePath><worktreeBranch>worktree-agent-a62418441e2cae796</worktreeBranch></worktree>
+</task-notification>
