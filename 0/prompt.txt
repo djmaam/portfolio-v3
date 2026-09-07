@@ -1,0 +1,35 @@
+Review this change for security vulnerabilities.
+
+Changed files (you may Read these and any other file in the repo):
+  - package.json
+  - tsconfig.json
+
+Unified diff (only + lines are new):
+
+=== DIFF: package.json ===
+@@ -7,7 +7,7 @@
+     "dev": "astro dev",
+     "build": "astro build",
+     "preview": "astro preview",
+-    "lint": "eslint . && prettier --check . && bun scripts/check-tokens.ts",
++    "lint": "eslint . && prettier --check . && tsc --noEmit && bun scripts/check-tokens.ts",
+     "format": "prettier --write .",
+     "test": "bun test"
+   },
+
+
+=== DIFF: tsconfig.json ===
+@@ -3,9 +3,8 @@
+   "include": [".astro/types.d.ts", "**/*"],
+   "exclude": ["dist"],
+   "compilerOptions": {
+-    "baseUrl": ".",
+     "paths": {
+-      "@/*": ["src/*"]
++      "@/*": ["./src/*"]
+     }
+   }
+ }
+
+
+Investigate per the method in your instructions, then return the findings list.
