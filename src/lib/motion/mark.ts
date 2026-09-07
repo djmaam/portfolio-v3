@@ -229,6 +229,24 @@ export function idleWobble(piece: MarkPiece, t: number, settle: number): Point3 
   return { x: w, y: w * 1.4, z: 0 }
 }
 
+/** How long the pieces take to lock back after a hover loosens them. */
+export const HOVER_MS = 600
+
+/** How far `settle` dips on hover: the pieces loosen, they do not fly apart. */
+export const HOVER_SETTLE = 0.85
+
+/**
+ * `settle` for a mark whose link was last entered at `hoverAt`, sampled at `t`. Rests at
+ * 1 while nothing has been hovered (`hoverAt` of 0), drops to `HOVER_SETTLE` at the
+ * moment of entry, and eases linearly back to 1 over `HOVER_MS`. Clamped at both ends,
+ * so a clock that jumps backwards cannot push the pieces further apart than a hover does.
+ */
+export function hoverSettle(hoverAt: number, t: number): number {
+  if (hoverAt === 0) return 1
+  const decay = Math.min(1, Math.max(0, 1 - (t - hoverAt) / HOVER_MS))
+  return 1 - (1 - HOVER_SETTLE) * decay
+}
+
 /**
  * Indices of the faces turned toward the camera, which sits at `-f` on z. The normal is
  * put through the same rotations as the vertices and tested against the face center.

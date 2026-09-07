@@ -1,4 +1,4 @@
-import { markPolygons, markSpin, polyAlpha, strokeWidth } from './mark'
+import { hoverSettle, markPolygons, markSpin, polyAlpha, strokeWidth } from './mark'
 import { prefersReducedMotion } from './reduced'
 
 /**
@@ -21,8 +21,6 @@ type Mounted = {
 }
 
 const FRAME_MS = 24
-const HOVER_MS = 600
-const HOVER_SETTLE = 0.85
 
 const mounted = new Set<Mounted>()
 let running = false
@@ -52,8 +50,7 @@ function paint(mark: Mounted, t: number): void {
   ctx.strokeStyle = mark.accent
   ctx.fillStyle = mark.accent
 
-  const settle =
-    mark.hoverAt === 0 ? 1 : 1 - (1 - HOVER_SETTLE) * Math.max(0, 1 - (t - mark.hoverAt) / HOVER_MS)
+  const settle = hoverSettle(mark.hoverAt, t)
 
   for (const poly of markPolygons(box, settle, t, markSpin(t))) {
     const alpha = polyAlpha(poly, mark.light)

@@ -5,6 +5,8 @@ import {
   buildMark,
   CUBE_FACES,
   DETAIL_MIN,
+  HOVER_SETTLE,
+  hoverSettle,
   idleWobble,
   ISO_TILT,
   MARK_FOCAL,
@@ -123,6 +125,25 @@ test('every face index a cull returns is a real face', () => {
     for (const face of visibleFaces(piece.pos, pieceRotation(piece, 1), piece.size, cam)) {
       expect(CUBE_FACES[face]).toBeDefined()
     }
+  }
+})
+
+test('hoverSettle rests at 1 until something is hovered', () => {
+  expect(hoverSettle(0, 12_345)).toBe(1)
+})
+
+test('hoverSettle dips on entry and eases back over 600ms', () => {
+  expect(hoverSettle(1000, 1000)).toBeCloseTo(0.85, 10)
+  expect(hoverSettle(1000, 1300)).toBeCloseTo(0.925, 10)
+  expect(hoverSettle(1000, 1600)).toBe(1)
+  expect(hoverSettle(1000, 60_000)).toBe(1)
+})
+
+test('hoverSettle stays inside its two bounds, even if the clock runs backwards', () => {
+  for (let dt = -500; dt <= 1200; dt += 37) {
+    const settle = hoverSettle(1000, 1000 + dt)
+    expect(settle).toBeGreaterThanOrEqual(HOVER_SETTLE)
+    expect(settle).toBeLessThanOrEqual(1)
   }
 })
 
