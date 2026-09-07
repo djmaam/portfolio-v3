@@ -1,0 +1,73 @@
+Review this change for security vulnerabilities.
+
+Changed files (you may Read these and any other file in the repo):
+  - bunfig.toml
+  - eslint.config.js
+  - package.json
+  - tests/scaffold.test.ts
+
+Unified diff (only + lines are new):
+
+=== DIFF: bunfig.toml ===
+@@ -0,0 +1,2 @@
++[test]
++root = "tests"
+
+
+=== DIFF: eslint.config.js ===
+@@ -10,7 +10,18 @@ export default [
+   // `.claude/worktrees/*` holds throwaway agent worktrees, each with its own
+   // tsconfig.json. Left visible, typescript-eslint sees several candidate roots and
+   // refuses to parse anything.
+-  { ignores: ['dist/', '.astro/', 'node_modules/', 'handoff/', '.claude/'] },
++  {
++    ignores: [
++      'dist/',
++      '.astro/',
++      'node_modules/',
++      'handoff/',
++      '.claude/',
++      'test-results/',
++      'playwright-report/',
++      '.lighthouseci/',
++    ],
++  },
+   js.configs.recommended,
+   ...ts.configs.recommended,
+   ...astro.configs.recommended,
+
+
+=== DIFF: package.json ===
+@@ -9,13 +9,17 @@
+     "preview": "astro preview",
+     "lint": "eslint . && prettier --check . && tsc --noEmit && bun scripts/check-tokens.ts",
+     "format": "prettier --write .",
+-    "test": "bun test"
++    "test": "bun test",
++    "test:e2e": "playwright test",
++    "test:lh": "lhci autorun"
+   },
+   "dependencies": {
+     "astro": "^7.3.1"
+   },
+   "devDependencies": {
+     "@eslint/js": "^10.0.1",
++    "@lhci/cli": "^0.15.1",
++    "@playwright/test": "^1.63.0",
+     "@tailwindcss/vite": "^4.3.3",
+     "@types/bun": "^1.4.1",
+     "eslint": "^10.10.0",
+
+
+=== DIFF: tests/scaffold.test.ts ===
+@@ -9,6 +9,6 @@ test('astro.config.mjs declares static output', () => {
+ })
+ 
+ test('package.json exposes every script the workflow depends on', () => {
+-  const scripts = ['dev', 'build', 'preview', 'lint', 'format', 'test']
++  const scripts = ['dev', 'build', 'preview', 'lint', 'format', 'test', 'test:e2e', 'test:lh']
+   expect(Object.keys(pkg.scripts as Record<string, string>).sort()).toEqual(scripts.sort())
+ })
+
+
+Investigate per the method in your instructions, then return the findings list.
