@@ -1,0 +1,219 @@
+<task-notification>
+<task-id>a89937e51adac6e36</task-id>
+<tool-use-id>toolu_014J1u9qBBJotNPgkJbx3ZA8</tool-use-id>
+<output-file>/private/tmp/claude-501/-Users-djmaam-Projects-Marcos-portfolio-v3/ff79cbca-912c-4905-8a2c-c8e457538a3d/tasks/a89937e51adac6e36.output</output-file>
+<status>completed</status>
+<summary>Agent "Task 5 fix round 1: extract hoverSettle" finished</summary>
+<note>A task-notification fires each time this agent stops with no live background children of its own. The user can send it another message and resume it, so the same task-id may notify more than once.</note>
+<result>- **Status:** DONE
+- Commit: `cdfe76c` fix(mark): move the hover-settle formula into pure mark.ts (PV3-30)
+- Test summary: `bun test` 367/367 pass, `bun run lint` clean (eslint/prettier/tsc/check-tokens), `bun run build` succeeds, `bunx playwright test` 48/48 pass
+- Concerns: none
+- Report: `/Users/djmaam/Projects/Marcos/portfolio-v3/.superpowers/sdd/2026-09-07-cube-mark/task-5-report.md` (appended "Fix report" section; file is gitignored so not part of the commit)</result>
+<usage><subagent_tokens>74188</subagent_tokens><tool_uses>22</tool_uses><duration_ms>114274</duration_ms></usage>
+</task-notification>
+
+---
+
+<task-notification>
+<task-id>aa740a74fd4dd6303</task-id>
+<tool-use-id>REDACTED</tool-use-id>
+<output-file>/private/tmp/claude-501/-Users-djmaam-Projects-Marcos-portfolio-v3/ff79cbca-912c-4905-8a2c-c8e457538a3d/tasks/aa740a74fd4dd6303.output</output-file>
+<status>completed</status>
+<summary>Agent "Re-review Task 5 fix round 1" finished</summary>
+<note>A task-notification fires each time this agent stops with no live background children of its own. The user can send it another message and resume it, so the same task-id may notify more than once.</note>
+<result>**Finding: Hover-settle formula motion math in DOM-plumbing file** — ADDRESSED
+
+- `src/lib/motion/mark.ts:240-244` exports `HOVER_MS`, `HOVER_SETTLE`, and pure function `hoverSettle(hoverAt, t)` with no `document`, `window`, or canvas references.
+- `src/lib/motion/markDraw.ts:1` imports `hoverSettle`; lines 84-85 (old `HOVER_MS`, `HOVER_SETTLE`) deleted; line 109 replace inline formula with `const settle = hoverSettle(mark.hoverAt, t)`.
+
+**Boundary values verified by hand:**
+- `t === hoverAt`: decay = 1, settle = 1 - 0.15 × 1 = **0.85** ✓
+- `t === hoverAt + 300`: decay = 0.5, settle = 1 - 0.15 × 0.5 = **0.925** ✓
+- `t === hoverAt + 600`: decay = 0, settle = 1 - 0.15 × 0 = **1** ✓
+- `t &gt; hoverAt + 600`: decay clamped to 0, settle = **1** ✓
+
+**Upper clamp effectiveness:**
+- Original `Math.max(0, 1 - dt/600)` alone: when `dt &lt; 0` (clock backwards), result exceeds 1, yielding settle &lt; 0.85.
+- New `Math.min(1, Math.max(0, 1 - dt/600))`: clamps decay to [0, 1], holding settle in [0.85, 1] for all t.
+- Forward times (dt ≥ 0) unchanged: Math.min(1, x) where x ≤ 1 is identity.
+
+**Tests (`tests/mark.test.ts:155–172`):**
+- Line 156: rest state `hoverSettle(0, 12_345) === 1` (real behavior, not implementation).
+- Lines 160–163: timeline values at 0/300/600/60000ms post-entry (real boundary assertions).
+- Lines 166–172: bounds loop over dt ∈ [−500, 1200]ms in 37ms steps, asserts settle ∈ [HOVER_SETTLE, 1] (exercises negative elapsed time, real constraints).
+
+**New Breakage in Fix Diff**
+
+None. All 367 unit tests pass (+3 new), 48 e2e tests pass, linting clean, build successful.
+
+**Out-of-Scope Observations**
+
+None.
+
+**Verdict**
+
+**Fix round:** All findings addressed, no new Critical/Important breakage.</result>
+<usage><subagent_tokens>39546</subagent_tokens><tool_uses>3</tool_uses><duration_ms>61248</duration_ms></usage>
+</task-notification>
+
+---
+
+<task-notification>
+<task-id>af80b107a2fa1af54</task-id>
+<tool-use-id>REDACTED</tool-use-id>
+<output-file>/private/tmp/claude-501/-Users-djmaam-Projects-Marcos-portfolio-v3/ff79cbca-912c-4905-8a2c-c8e457538a3d/tasks/af80b107a2fa1af54.output</output-file>
+<status>completed</status>
+<summary>Agent "Task 6: correct the spec and plan" finished</summary>
+<note>A task-notification fires each time this agent stops with no live background children of its own. The user can send it another message and resume it, so the same task-id may notify more than once.</note>
+<result>- **Status:** DONE
+- Commit: `2877d21` docs(mark): correct the projection paragraph against the implementation (PV3-35)
+- Tests: 367 unit tests pass, 48 Playwright tests pass, lint and build both clean
+- Concerns: found and fixed an extra spec error beyond the brief's two — the piece-table summary said "fourteen wireframe" but `buildMark()` tallies 13 (`core:1, solid:6, wire:13, panel:6, tick:9` = 35); corrected to "thirteen". Committed both the spec and plan corrections together under the brief's single commit message since the plan fixes had no separate message specified.
+- Not pushed, no `gh` command run, as instructed.
+- Report: `/Users/djmaam/Projects/Marcos/portfolio-v3/.superpowers/sdd/2026-09-07-cube-mark/task-6-report.md`</result>
+<usage><subagent_tokens>104040</subagent_tokens><tool_uses>24</tool_uses><duration_ms>158363</duration_ms></usage>
+</task-notification>
+
+---
+
+<task-notification>
+<task-id>a0dbfda171a7aa3b6</task-id>
+<tool-use-id>REDACTED</tool-use-id>
+<output-file>/private/tmp/claude-501/-Users-djmaam-Projects-Marcos-portfolio-v3/ff79cbca-912c-4905-8a2c-c8e457538a3d/tasks/a0dbfda171a7aa3b6.output</output-file>
+<status>completed</status>
+<summary>Agent "Final whole-branch review" finished</summary>
+<note>A task-notification fires each time this agent stops with no live background children of its own. The user can send it another message and resume it, so the same task-id may notify more than once.</note>
+<result>### Merge verdict
+
+**Ready after the Important finding** — one real visual defect, fixable in a few lines. Nothing else blocks.
+
+### Strengths
+
+- The two-renderer split is the right shape. `mark.ts` is pure, `markDraw.ts` and `CubeMark.astro` are plumbing that only consume `MarkPoly[]`. There is genuinely one geometry, not a build-time copy and a runtime copy — which is what the prototype in `docs/prototypes/` does have, and the contrast makes the point.
+- `markDraw.ts` follows the site's conventions rather than sitting beside them: no `scroll` listener (IntersectionObserver instead, honoring `scroll.ts`'s "one scroll listener" rule), the same 24ms `FRAME_MS` as `network.ts`, the same `getComputedStyle` + `MutationObserver(['data-theme'])` theme read, the same `prefersReducedMotion()` early return that returns a no-op teardown. `readTheme` is called on mount and on theme change only — no `getComputedStyle` in the paint path, which is the mistake this pattern usually makes.
+- The runtime cost is genuinely small. I measured `markPolygons` directly: 0.051 ms/call at box=20, 0.058 at box=16 (51 polys). Two marks at ~42fps is ~0.4% of one core for the geometry, against a node cloud already doing an O(n²) 3486-pair loop per frame. Nothing per-frame that should not be; the `markPieces` memo is what makes that true and it is correctly split from `buildMark()`.
+- `e2e/smoke.spec.ts:135` (`expect(page.locator('canvas')).toHaveCount(0)` under `reducedMotion: 'reduce'`) was already there and now covers the mark for free — acceptance criterion 9 is enforced by an existing whole-site guard, not just by the new nav spec.
+- The `.mark` contrast carve-out in `tests/contrast.test.ts:221` is keyed on `file.endsWith('/CubeMark.astro')` *and* the class, so it cannot silently spread. That is the right way to write an exemption.
+- `e2e/hero.spec.ts` qualifying four bare `canvas` selectors to `canvas.hero-net` is exactly the integration hazard a nav-mounted canvas creates, caught and fixed rather than papered over.
+
+### Findings
+
+#### Critical
+
+None.
+
+#### Important
+
+**`src/components/CubeMark.astro:12` — the build-time SVG and the canvas's first frame are ~42° apart, so the mark visibly snaps on every page load. The comment two lines above claims the opposite.**
+
+```
+const polys = markPolygons(size, 1, 0, Math.PI / 4)
+```
+
+The SVG is baked at `spinY = π/4 ≈ 0.785 rad`. The canvas paints with `markSpin(now)` (`markDraw.ts:55`), where `now` is the rAF timestamp — time since the time origin, small at mount. At a 200–800ms mount, `markSpin(now)` is 0.056–0.224 rad. The cluster's world rotation therefore differs by 0.56–0.73 rad at handover. I measured the projected result at box=20: a max point displacement of ~14–16px inside a 20px box. `idleWobble` adds a second, smaller mismatch (`t = 0` in the SVG vs `t = now` on the canvas).
+
+Why it matters beyond the pixels: the entire build-time-SVG design exists to avoid this. `CubeMark.astro:10-11` says "This is the exact frame the canvas takes over from, which is why there is no jump when it mounts: same module, same numbers", and spec 30:42-44 justifies the seeded LCG because otherwise "the mark visibly jumps when the canvas mounts". The arrangement is stable; the *pose* is not. The comment is load-bearing documentation that is false, and a future reader will trust it.
+
+No gate catches it: `e2e/nav.spec.ts:128` only asserts that two frames 1200ms apart differ, which a jump satisfies as happily as smooth motion.
+
+Fix, matching the convention `NodeNetwork` already uses (`network.ts:271`, `this.born`): give `Mounted` a `born` field set at mount, paint with `t = now - born` (rebasing `hoverAt` to the same origin — `mark.hoverAt = performance.now() - born` at `markDraw.ts:127`), and bake the SVG at `markPolygons(size, 1, 0, markSpin(0))`, i.e. `spinY = 0`. The first canvas frame then reproduces the SVG exactly, which is what both the comment and the spec already promise.
+
+A cheaper partial fix — bake the SVG at `spinY = 0` and leave the clock alone — cuts the jump from ~42° to under 10° but does not eliminate it, and leaves the comment still overstating.
+
+#### Minor
+
+- **`src/lib/motion/mark.ts:155` and `:274` — section banners read "(spec 35)"; there is no spec 35.** The file's own header at line 4 correctly says "(spec 30)", as do `markDraw.ts:5` and `CubeMark.astro`. PV3-35 is the Linear issue; the spec is `30-cube-mark.md`. This is the clearest leftover of three tasks stacked on each other — a reader will go looking for `docs/superpowers/specs/35-*.md`.
+
+- **`docs/superpowers/specs/30-cube-mark.md:129-137` — the Files table never mentions `src/lib/motion/markDraw.ts`.** It attributes "canvas upgrade, shared rAF, IntersectionObserver" to `CubeMark.astro`, which holds none of them. Task 6 existed to reconcile the spec with the implementation and corrected the projection paragraph and the piece tally but not this. The spec is a declared source of truth per `CLAUDE.md`; a file table that omits a shipped module is a defect in it.
+
+- **Acceptance criterion 10 ("No `✳` anywhere under `src/`") is not met as written.** The glyph survives in `src/styles/app.css`, `src/lib/motion/math.ts` and `src/lib/motion/network.ts`. The controller's ruling to narrow the sweep to `components/` (`tests/mark.test.ts:223-231`) is substantively right — those occurrences describe the node cloud's ✳ formation, a live feature — but the correct resolution was to also amend AC 10 to say "under `src/components/`". Right now the spec asserts something false and the test's name ("the asterisk is gone from the components") quietly disagrees with the criterion it implements.
+
+- **`src/lib/motion/mark.ts:167`, `:188`, `:233` — `CUBE_VERTS`, `CUBE_NORMALS` and `HOVER_MS` are exported with zero consumers outside the module** (verified across `src/`, `tests/`, `e2e/`). Everything else exported is imported somewhere. Presumably anticipating spec 31; drop the `export` until it needs them.
+
+- **`src/lib/motion/markDraw.ts:97-99` — DPR is read once at mount and never re-read.** `NodeNetwork.measure()` re-runs on the shared scroll/resize channel and re-sizes its backing store; the mark does not, so after a browser zoom or a move to a different-DPI display the canvas is resampled and soft. It is a 16–20px decoration and the box never changes size, so this is genuinely minor — but it is the one place where "follows `network.ts`" stops being true, and it deserves a comment saying the omission is deliberate rather than looking like an oversight.
+
+- **`tests/a11y.test.ts:200` — `/&lt;span class="mark"[^&gt;]*&gt;/g` matches only while `class` holds exactly `mark`.** It works today (Astro scopes via `data-astro-cid-…`, verified against `dist/index.html`), but adding any second class to that span turns the guard into a vacuous pass — `matchAll` yields nothing and the loop body never runs. `/&lt;span [^&gt;]*class="[^"]*\bmark\b[^"]*"[^&gt;]*&gt;/g` plus an assertion that it matched twice would not have that failure mode.
+
+- **`docs/prototypes/logo-cube.html` — keep it, but mark it.** It is the cited evidence for the spec's detail threshold (spec:46-48) and that is a legitimate reason to commit it. But: it has no header saying it is a frozen design artifact rather than a source; it carries its own copy of the LCG and the face tables, so it will drift from `mark.ts` silently; it is not indexed in `docs/README.md`, which the project calls the central documentation map; and it is written in Spanish ("Cubo", "Prueba de tamaño"), which `CLAUDE.md` permits only under `handoff/`. It is unlinted by construction (`.prettierignore` already has `docs/`, eslint does not scan `.html`, `check-tokens.ts` scans `src/`), so it creates no gate obligation. One comment block at the top — "frozen prototype for spec 30; `src/lib/motion/mark.ts` is the implementation, this file is not kept in sync" — discharges the whole risk.
+
+### Deferred items — triage
+
+- **Tautological cull test (`tests/mark.test.ts:121`)** — **fine as deferred.** It costs one test name and misleads nobody who reads it; the two tests above it (`:108`, `:116`) carry the real coverage. Delete it opportunistically, not on this branch.
+- **`markScale` returns `-0` for an empty piece list** — **fine as deferred.** Unreachable through the real call graph, and the export exists for the tests. If it ever bothers anyone, the fix is a one-line guard, not a merge condition.
+- **Build-time SVG bakes the dark opacities** — **fine as deferred.** Correctly scoped (light theme × no-JS-or-`reduce` only), correctly documented at spec:89-96, and the mark is `aria-hidden` decoration with no contrast floor. Note that the *same* fallback path is where the Important finding above does not apply at all — the no-JS visitor sees a stable SVG — so these two do not compound.
+- **`host._mark` expando not cleared in teardown (`markDraw.ts:135-141`)** — **fine as deferred.** Teardown is never invoked today, and even if it were, the leak is one detached canvas per host, not a growing set: `mounted.delete(mark)` and `observer.unobserve(host)` both run. Same posture as `mountNetwork` in `Hero.astro`.
+- **`visible: true` before the IntersectionObserver reports (`markDraw.ts:110`)** — **fine as deferred.** One 0.05ms paint for the footer before the first callback. Note that the nav mark is inside a `position: sticky` header and is essentially always intersecting, so the observer only ever earns its keep on the footer.
+- **`docs/prototypes/logo-cube.html`** — **fine as deferred, with the caveat above.** It belongs in the repo; it creates no linting obligation; it does need a "not the source" header, which is a Minor, not a blocker.
+
+### Residual risk
+
+- **Nothing in the suite pins the SVG↔canvas handover.** That is why the Important finding survived fourteen commits: the unit tests check the SVG's numbers and the canvas's numbers separately and both are internally consistent. A test asserting `markPolygons(20, 1, 0, SVG_SPIN)` equals the canvas's first frame — same three arguments the two call sites use — would have failed on day one and would keep failing if either side drifts. Worth adding alongside the fix.
+- **The claim that the mark reads correctly in the light theme rests on one eyeballed screenshot.** `polyAlpha`'s `k = 1.35` is spec-acknowledged as unmeasured (spec:84-87). The unit test at `tests/mark.test.ts:191` only proves the light alphas are ≥ dark and ≤ 1 — it cannot fail if 1.35 is the wrong number. Acceptable for `aria-hidden` decoration, but no gate will tell you if a future palette change makes the mark invisible on `#f4f5f7`.
+- **`buildMark`'s determinism depends on `seeded()`'s deliberate float precision loss** (`mark.ts:38-50`, `s * 1103515245` past 2⁵³). The comment is right that IEEE-754 and `ToInt32` are fully specified, so this is safe — but the *ordering* dependency is subtler than the precision one: `push` draws 16 randoms unconditionally so the stream stays in step (`mark.ts:68-72`). Any future edit that adds a piece, reorders the pushes, or short-circuits the `rules` computation silently reshuffles the whole cluster. The determinism test at `:31` compares `buildMark()` to itself and would not notice — only a golden snapshot of the arrangement would.
+- **Two marks now mount a canvas each on every page, including pages with no hero.** The IntersectionObserver covers the footer; the nav mark paints for the entire lifetime of every page view. Measured cost is negligible today, but it is the first always-on animation the site has outside the hero, and spec 31's entry overlay will add a third canvas on top of it. The budget is fine now; it is worth re-measuring when 31 lands rather than assuming.</result>
+<usage><subagent_tokens>104141</subagent_tokens><tool_uses>26</tool_uses><duration_ms>351987</duration_ms></usage>
+</task-notification>
+
+---
+
+<task-notification>
+<task-id>a77327c76408077c4</task-id>
+<tool-use-id>REDACTED</tool-use-id>
+<output-file>/private/tmp/claude-501/-Users-djmaam-Projects-Marcos-portfolio-v3/ff79cbca-912c-4905-8a2c-c8e457538a3d/tasks/a77327c76408077c4.output</output-file>
+<status>completed</status>
+<summary>Agent "Final review fix wave" finished</summary>
+<note>A task-notification fires each time this agent stops with no live background children of its own. The user can send it another message and resume it, so the same task-id may notify more than once.</note>
+<result>- **Status:** DONE
+- Commit: `adfaa51` — fix(cube-mark): rebase the canvas clock so the mark never snaps on mount (PV3-35)
+- Tests: 368/368 unit, 48/48 Playwright, lint and build clean
+- Concern: `hoverSettle`'s `hoverAt === 0` sentinel could theoretically still collide under a synthetic/automated `mouseenter` fired in the same coarsened timer tick as mount (edge case, not fixed per instructions — detailed in report)
+- Report: `/Users/djmaam/Projects/Marcos/portfolio-v3/.superpowers/sdd/2026-09-07-cube-mark/final-fix-report.md`</result>
+<usage><subagent_tokens>97141</subagent_tokens><tool_uses>43</tool_uses><duration_ms>223706</duration_ms></usage>
+</task-notification>
+
+---
+
+<task-notification>
+<task-id>a9569383930a708bb</task-id>
+<tool-use-id>toolu_016PengHg1e1eoE77NxChebw</tool-use-id>
+<output-file>/private/tmp/claude-501/-Users-djmaam-Projects-Marcos-portfolio-v3/ff79cbca-912c-4905-8a2c-c8e457538a3d/tasks/a9569383930a708bb.output</output-file>
+<status>completed</status>
+<summary>Agent "Re-review the final fix wave" finished</summary>
+<note>A task-notification fires each time this agent stops with no live background children of its own. The user can send it another message and resume it, so the same task-id may notify more than once.</note>
+<result>Confirmed — clean, no leftover `markPolygons` reference. Everything checks out. Now finalizing the review.
+
+## Finding verdicts
+
+1. **ADDRESSED.** `restingPolygons(box)` added at `src/lib/motion/mark.ts:397-404` (`markPolygons(box, 1, 0, markSpin(0))`). `src/components/CubeMark.astro:2,13` imports and calls it, dropping the direct `markPolygons`/`Math.PI/4` call. `src/lib/motion/markDraw.ts:22,52-61,125,140` add `born`, derive `t = now - mark.born` in `paint`, feed `t` to both `hoverSettle(mark.hoverAt, t)` and `markPolygons(box, settle, t, markSpin(t))`, and rebase `onHover` (`markDraw.ts:140`) to `performance.now() - mark.born`. Regression test at `tests/mark.test.ts:213-222`. All four required structural pieces are present. (See "New breakage" below for a caveat on the test's strength — that doesn't change the verdict, since the structural sharing, not the test, is what actually prevents drift.)
+2. **ADDRESSED.** `src/lib/motion/mark.ts:4,155,274` — all three "(spec 35)" banners now read "(spec 30)".
+3. **ADDRESSED.** `docs/superpowers/specs/30-cube-mark.md` diff lines 53-55 — `markDraw.ts` row added with the canvas-upgrade/rAF/IntersectionObserver/hover-settle attribution moved off `CubeMark.astro`, which now correctly reads "build-time SVG at the resting frame, and the mount call."
+4. **ADDRESSED.** Same file, diff lines 77-81 — criterion 10 narrowed to `src/components/`, with the explanatory clause naming `app.css`, `math.ts`, `network.ts` and pointing at spec 31.
+5. **ADDRESSED.** `src/lib/motion/mark.ts:167,188,233` — `export` dropped from `CUBE_VERTS`, `CUBE_NORMALS`, `HOVER_MS`; `CUBE_FACES` (line 178) still exported. `grep -rn "CUBE_VERTS\|CUBE_NORMALS\|HOVER_MS" src/ tests/ e2e/` shows zero external references, and `tsc --noEmit` (part of the passing `bun run lint`) confirms nothing broke.
+6. **ADDRESSED.** `src/lib/motion/markDraw.ts:106-108` — comment added at the DPR read site explaining the deliberate one-shot read.
+7. **ADDRESSED.** `tests/a11y.test.ts:398-404` — regex widened to `/&lt;span class="[^"]*\bmark\b[^"]*"[^&gt;]*&gt;/g` (matches `mark` as a whole word in any `class` value) plus `expect(marks).toHaveLength(2)`, so the guard now fails loudly instead of passing vacuously.
+8. **ADDRESSED.** `docs/prototypes/logo-cube.html:1-6` (diff) — header comment states it's a frozen prototype for spec 30, names `mark.ts` as the real implementation, and explains the Spanish copy is deliberate (same rationale as `handoff/`). No other line in the file changed.
+
+## New breakage in the fix diff
+
+None Critical/Important. One test-quality gap worth flagging (Minor, not blocking):
+
+- `tests/mark.test.ts:213-222` — the new regression test is tautological with respect to the actual bug. It asserts `markPolygons(box, hoverSettle(0, 0), 0, markSpin(0))` equals `restingPolygons(box)`, but `restingPolygons` is *defined* (`mark.ts:402-404`) as exactly `markPolygons(box, 1, 0, markSpin(0))`, and `hoverSettle(0, 0)` is `1` by construction (`mark.ts:245`). The two sides reduce to the same expression by definition — the test can only fail if `hoverSettle`'s sentinel itself breaks, not if the *wiring* regresses. It never imports or renders `CubeMark.astro`, and no other test (unit or e2e) checks that `CubeMark.astro`'s source calls `restingPolygons` rather than some other hand-baked value (confirmed: `tests/mark.test.ts` has source-text checks for other `CubeMark.astro` properties at lines 256-262 but none for the import/call), nor does any e2e test pixel-diff the baked SVG against the canvas's first frame. So yes — if `CubeMark.astro` reverted to baking `markPolygons(size, 1, 0, Math.PI / 4)` today, `bun test` and `bunx playwright test` would both still pass. What actually prevents the regression is the structural sharing (one function, both call sites), not this test — the test only pins `mark.ts`'s internal self-consistency, which is a smaller, still-useful thing to pin, just not "the handover" as the finding names it.
+
+## The sentinel concern
+
+Ship as is. The implementer's characterization is accurate and, if anything, slightly generous to the risk: the collision requires a real (or synthetic) `mouseenter` landing in the same coarsened `performance.now()` tick as `mark.born` was sampled — for a human user this needs the pointer to already be crossing onto a 16-20px decorative logo within about a millisecond of script mount, which `mouseenter` (a boundary-crossing event) essentially cannot produce from ordinary interaction. It's realistically reachable only via privacy-hardened timer coarsening (Firefox `resistFingerprinting`, Tor Browser) combined with a synthetic/automated dispatch right after `mountMark()` returns. The failure mode is a single missed hover-loosen animation frame on an `aria-hidden` decoration, and it self-heals on the very next `mouseenter` (which will almost certainly compute a nonzero `hoverAt`). No data loss, no exception, no persistent broken state, nothing accessibility-relevant since the element is `aria-hidden`. A structurally cleaner sentinel (e.g., a separate boolean instead of overloading `hoverAt === 0`) would close this permanently, but that's added complexity for a near-zero-probability cosmetic corner case that already existed in a different, even-less-probable form before this fix. Not worth blocking the branch over.
+
+## Out-of-scope observations
+
+None.
+
+## Verdict
+
+**Fix wave:** All findings addressed, no new Critical/Important breakage. One Minor note: the new `tests/mark.test.ts` regression test pins `mark.ts`'s internal consistency but not the actual `CubeMark.astro`/`markDraw.ts` wiring it was meant to guard — worth a follow-up test (e.g., a source-text assertion that `CubeMark.astro` calls `restingPolygons`, mirroring the pattern already used at `tests/mark.test.ts:256-262`) but not a reason to hold the branch.</result>
+<usage><subagent_tokens>79554</subagent_tokens><tool_uses>12</tool_uses><duration_ms>138679</duration_ms></usage>
+</task-notification>
+
+---
+
+2 pushea y crea un pr contra main
