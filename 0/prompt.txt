@@ -1,0 +1,1 @@
+podemos checkear la integracion de github con linear porque no puedo conectarlo con este nuevo workspace
