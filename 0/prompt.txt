@@ -1,0 +1,91 @@
+<task-notification>
+<task-id>a00b443ba44d3fe06</task-id>
+<output-file>/private/tmp/claude-501/-Users-djmaam-Projects-Marcos-portfolio-v3/33786be7-d54c-4daa-a55d-df6498965cc0/tasks/a00b443ba44d3fe06.output</output-file>
+<status>completed</status>
+<summary>Agent "Implement content and i18n" finished</summary>
+<note>A task-notification fires each time this agent stops with no live background children of its own. The user can send it another message and resume it, so the same task-id may notify more than once.</note>
+<result>Done — all four commits are on `feat/02-content-i18n`, nothing merged, no PR.
+
+## Final command output
+
+```
+$ bun run lint
+$ eslint . &amp;&amp; prettier --check . &amp;&amp; tsc --noEmit &amp;&amp; bun scripts/check-tokens.ts
+Checking formatting...
+All matched files use Prettier code style!
+lint exit=0
+
+$ bun test
+bun test v1.4.0 (34cbb9a40)
+ 89 pass
+ 0 fail
+ 790 expect() calls
+Ran 89 tests across 6 files. [118.00ms]
+test exit=0
+
+$ bun run build
+[build] ✓ Completed in 166ms.
+[build] 2 page(s) built in 210ms
+[build] Complete!
+build exit=0
+
+dist JSON count: 0
+```
+
+## What was built
+
+- `/Users/djmaam/Projects/Marcos/portfolio-v3/src/lib/content.ts` — re-exports `handoff/content.json`; `Content = (typeof raw)['i18n']['es']`.
+- `/Users/djmaam/Projects/Marcos/portfolio-v3/src/lib/i18n.ts` — `DEFAULT_LANG`, `langFromPath`, `siblingPath`, both pure. One shared `/^\/en(?=\/|$)/` regex drives both, so `/endgame` stays Spanish and `/en/` normalizes.
+- `/Users/djmaam/Projects/Marcos/portfolio-v3/src/pages/index.astro` and `src/pages/en/index.astro` — token bench and its Spanish copy deleted.
+- `tests/content.test.ts`, `tests/i18n.test.ts` — written first, watched fail (`Cannot find module '../src/lib/content'`), then made green.
+
+## Verification
+
+**hreflang / lang:** `dist/index.html` is `&lt;html lang="es"&gt;`, `dist/en/index.html` is `&lt;html lang="en"&gt;`; both carry the three alternates, built from `links.domain` rather than a literal URL.
+
+**No-JS toggle** — served the real build with `bun run preview` and followed the anchors with curl (no JS anywhere in the loop):
+
+```
+GET /  → href="/en" rel="alternate" hreflang="en"
+GET /en   status=200  &lt;html lang="en"  &lt;h1&gt;I think the product.
+GET /en → href="/"   rel="alternate" hreflang="es"
+GET /     status=200  &lt;html lang="es"  &lt;h1&gt;Pienso el producto.
+```
+
+**Redirect** — I extracted the *shipped* head script out of `dist/*.html` and executed it against a stubbed browser (scratchpad script, not committed), so this exercises the exact emitted code, not a re-implementation:
+
+```
+no navigation  ← / with no stored lang
+replace(/en)   ← / with localStorage.lang='en'
+no navigation  ← / with lang='en', already redirected this session
+no navigation  ← / with lang='es' (agrees)
+no navigation  ← / with junk lang='xx'
+replace(/)     ← /en with lang='es'
+no navigation  ← /en with lang='en' (toggle just wrote it)
+
+sequence:
+ 1. open /     → replace("/en")
+ 2. now on /en → null
+ 3. back to /  → null   (no bounce)
+```
+
+`location.replace`, never `location.href`. The toggle's `localStorage.setItem` fires on click before navigation, so case 7 covers "explicit toggle wins". No real browser tooling was reachable from this environment, so the back-button step is verified at the script level (sessionStorage is per-tab and survives the replace; bfcache would skip the script entirely on back, which is strictly safer).
+
+**No JSON in `dist/`** — `find dist -name '*.json'` returns nothing; Astro inlines the handoff JSON. Only `_astro/i18n.*.css` plus the static public assets ship. (`dist/.!46664!favicon.ico` is a pre-existing junk file copied out of `public/` — from issue 00, unrelated.)
+
+**No hardcoded copy** — `grep` for literal text nodes in `src/**/*.astro` returns nothing.
+
+## Decisions the spec did not cover
+
+1. **`tsc --noEmit` added to `bun run lint`.** The criterion asks the `Content`-is-derived check be a *compile-time* check, but nothing in the pipeline typechecked — `bun test` doesn't, and `ts.configs.recommended` isn't type-aware — so the assertion would have been decorative. I chained `tsc --noEmit` into the existing `lint` script (no new script key, so `tests/scaffold.test.ts`'s frozen script-set assertion still holds). That surfaced one pre-existing error, `baseUrl` deprecated in TS 6/removed in TS 7; I deleted `baseUrl` since `paths` resolves relative to the tsconfig without it. I confirmed the check bites: swapping `Content` for a hand-written `{ h1a: string }` makes `tsc` fail. Separate `chore` commit if you want to drop it.
+2. **`stepVerbs` is a pipe-separated string, not an array.** "Same length in both languages" only makes sense as segment count, so the test compares `split('|').length` (5 = 5).
+3. **`&lt;title&gt;` is `{t.eyebrow}`.** The old title was the hardcoded literal `Marcos Arrieta`, which the no-hardcoded-copy rule forbids and `content.json` has no name/title key for. `eyebrow` is identical in both languages and reads acceptably. Issue 03 owns the real meta layer.
+4. **Toggle label is the language code** (`{otherLang}`, e.g. `en`), since there's no toggle-label key in content. Given no invented copy, accessibility rides on `hreflang` + `lang` + `rel="alternate"` on the anchor.
+5. **Inline script gets its values via `define:vars`** rather than restating the path logic as a JS string. `siblingPath`/`langFromPath` can't be imported into an `is:inline` script, so the page computes `siblingHref` at build time and passes it in — one source of truth for the routing rules.
+6. **Redirect guard is `stored === otherLang`, not `stored &amp;&amp; stored !== lang`.** The spec's snippet would redirect on a junk `localStorage.lang` value; comparing against the known other language ignores garbage.
+7. **`siblingPath` preserves the sub-path** (`/en/x` ⇄ `/x`) instead of hard-returning `/` or `/en`. Same line count, and it avoids an unused `pathname` parameter that `@typescript-eslint/no-unused-vars` would reject.
+8. **Head and markup are duplicated across both pages** rather than factored into a layout — spec §3 says issue 03 hoists it into `Base.astro`, and layouts are explicitly out of scope here.
+
+No dependencies added.</result>
+<usage><subagent_tokens>78743</subagent_tokens><tool_uses>48</tool_uses><duration_ms>10756479</duration_ms></usage>
+</task-notification>
