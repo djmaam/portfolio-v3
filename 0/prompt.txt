@@ -1,0 +1,82 @@
+<task-notification>
+<task-id>a93e2621d32702f0a</task-id>
+<tool-use-id>REDACTED</tool-use-id>
+<output-file>/private/tmp/claude-501/-Users-djmaam-Projects-Marcos-portfolio-v3/33786be7-d54c-4daa-a55d-df6498965cc0/tasks/a93e2621d32702f0a.output</output-file>
+<status>completed</status>
+<summary>Agent "Implement tokens and theme" finished</summary>
+<note>A task-notification fires each time this agent stops with no live background children of its own. The user can send it another message and resume it, so the same task-id may notify more than once.</note>
+<result>Listo. Rama `feat/01-tokens-tema`, 5 commits atómicos, working tree limpio.
+
+## Salida final de los tres comandos
+
+```
+$ bun run lint
+$ eslint . &amp;&amp; prettier --check . &amp;&amp; bun scripts/check-tokens.ts
+Checking formatting...
+All matched files use Prettier code style!
+exit=0
+
+$ bun test
+bun test v1.4.0 (34cbb9a40)
+ 78 pass
+ 0 fail
+ 130 expect() calls
+Ran 78 tests across 4 files. [95.00ms]
+
+$ bun run build
+generating static routes
+  ├─ /index.html (+4ms)
+[build] ✓ Completed in 147ms.
+[build] 1 page(s) built in 190ms
+[build] Complete!
+```
+
+## Qué se implementó
+
+- `src/styles/app.css`: 17 tokens de color con `light-dark()` (+ 5 del semáforo, literales en ambos temas), escala tipográfica completa con `--leading-*` / `--tracking-*` por rol, `@font-face` de las tres caras, `:root { color-scheme: light dark }` y los 11 keyframes verbatim del mock, fuera de `@theme`.
+- `public/fonts/`: `manrope-var.woff2` (24 KB), `ibm-plex-mono-400.woff2` (10 KB), `ibm-plex-mono-500.woff2` (8.8 KB). Las tres URLs de la spec descargaron bien al primer intento.
+- `src/lib/theme.ts`: `getTheme` / `setTheme` / `toggleTheme`.
+- `scripts/check-tokens.ts`, enganchado a `bun run lint`.
+- `src/pages/index.astro`: script inline de tema antes de todo CSS, dos `preload`, y un banco de pruebas que consume tokens.
+- Tests: `tests/tokens.test.ts` (parsea el CSS y compara contra la lista esperada, con split de argumentos de `light-dark()` a nivel de paréntesis), `tests/theme.test.ts` (stubs de `localStorage`/`matchMedia`/`document`), `tests/check-tokens.test.ts` (corre el script sobre fixtures en tmp y sobre el `src/` real).
+
+TDD: los tests se escribieron primero y fallaron 65/73 antes de implementar.
+
+## Cómo verifiqué tema y fuentes
+
+No agregué dependencias: levanté `bun run preview` sobre `dist/` y manejé el `chrome-headless-shell` que ya estaba en la caché de Playwright del sistema por CDP crudo (WebSocket de bun), con dos scripts descartables en el scratchpad.
+
+**Fuentes** — `curl` contra el server y lectura de requests reales del navegador:
+
+```
+/fonts/manrope-var.woff2       -&gt; 200 font/woff2 24576b
+/fonts/ibm-plex-mono-400.woff2 -&gt; 200 font/woff2 10060b
+/fonts/ibm-plex-mono-500.woff2 -&gt; 200 font/woff2  8848b
+```
+
+Requests de la página cargada (lista completa, sin filtrar):
+`/`, `/fonts/manrope-var.woff2`, `/fonts/ibm-plex-mono-400.woff2`, `/_astro/index.*.css`. Cero a `fonts.googleapis.com` o `fonts.gstatic.com` (`grep -ri` sobre `dist/` también da cero). `document.fonts` reporta `Manrope 200 800 loaded` — o sea la variable cargó y expone el rango — y `IBM Plex Mono 400 loaded`; el 500 queda `unloaded` porque esta página no lo usa, que es exactamente por qué no se precarga.
+
+**Tema** — las cuatro permutaciones con `Emulation.setEmulatedMedia`:
+
+| prefers | localStorage | `colorScheme` | `data-theme` | `body` bg | accent |
+|---|---|---|---|---|---|
+| dark | (vacío) | dark | dark | `rgb(8,9,12)` | `rgb(62,231,255)` |
+| light | (vacío) | light | light | `rgb(244,245,247)` | `rgb(10,143,175)` |
+| light | dark | dark | dark | `rgb(8,9,12)` | `rgb(62,231,255)` |
+| dark | light | light | light | `rgb(244,245,247)` | `rgb(10,143,175)` |
+
+**Sin flash** — `prefers-color-scheme: light` + `localStorage.theme = 'dark'`, red throttleada (latencia 1500 ms, 50 kB/s) y una ráfaga de 22 capturas cada 200 ms desde el `navigate`, decodificando el píxel (0,0) del PNG. Los 22 frames, desde el 0 ms hasta después de que llega el CSS, dan `rgb(8, 9, 12)`. Control: la misma página con el `&lt;script&gt;` inline borrado da `rgb(244, 245, 247)` en todos los frames — o sea el chequeo detecta el flash cuando existe.
+
+## Decisiones que no estaban en la spec
+
+1. **`@theme static` en vez de `@theme`.** Tailwind v4 poda del output las variables que ninguna utilidad usa. Como acá los tokens *son* la API para los issues siguientes (y `--text-h1--line-height: var(--leading-h1)` referencia otro token), sin `static` la mitad no llegaba al CSS. Verificado en el build: `--color-step-1` y `--text-h2-contact` aparecen en `dist/_astro/*.css` sin que nada los use.
+2. **Tailwind v4 y `light-dark()` se portaron como decía la spec**, sin sorpresas. `bg-accent`, `text-dim`, `border-line`, `bg-step-1` generan utilidades correctas y resuelven por tema; los modificadores de opacidad efectivamente no sirven, así que en el banco de pruebas usé `color-mix(in srgb, var(--color-accent) 45%, transparent)` para el borde de hover, tal como indica la spec.
+3. **Cada `--text-*` lleva además los sub-tokens nativos de v4** (`--text-h1--line-height`, `--letter-spacing`, `--font-weight`), definidos como `var(--leading-h1)` / `var(--tracking-h1)`. Así `text-h1` aplica tamaño + línea + tracking + peso en una sola clase, sin duplicar valores y sin perder los `--leading-*` / `--tracking-*` sueltos que pide la spec.
+4. **`var` → `let`/`const` en el script inline.** El snippet de la spec usa `var` y ESLint (`no-var`) rechaza el archivo. Cambié las dos declaraciones; el comportamiento es idéntico y el script sigue sin transpilar (`is:inline`).
+5. **`--color-contact-ink` en `@theme`** aunque la tabla de `DESIGN_SPEC.md` §2 solo nombra `contact-card`: la spec del issue lo lista explícitamente y la tarjeta invertida necesita el par.
+6. **Estilos base mínimos** (`body { background-color / color / font-family }`) en `@layer base`. Sin eso la página se pinta blanca y el criterio de "no flash" no sería verificable. Es lo único que agregué fuera de tokens; no hay componentes ni layout.
+
+Sin dependencias nuevas.</result>
+<usage><subagent_tokens>92031</subagent_tokens><tool_uses>44</tool_uses><duration_ms>558298</duration_ms></usage>
+</task-notification>
