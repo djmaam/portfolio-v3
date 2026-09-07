@@ -1,0 +1,20 @@
+Review this change for security vulnerabilities.
+
+Changed files (you may Read these and any other file in the repo):
+  - src/lib/motion/scramble.ts
+
+Unified diff (only + lines are new):
+
+=== DIFF: src/lib/motion/scramble.ts ===
+@@ -8,7 +8,7 @@ import { prefersReducedMotion } from './reduced'
+  * freezing a half-scrambled frame.
+  *
+  * Shared by the nav brand and the company names of the experience timeline — the timing
+- * lives here, the maths in `math.ts`, and neither is copied anywhere else.
++ * lives here, the math in `math.ts`, and neither is copied anywhere else.
+  */
+ export function scramble(el: HTMLElement, duration: number): void {
+   if (prefersReducedMotion()) return
+
+
+Investigate per the method in your instructions, then return the findings list.
