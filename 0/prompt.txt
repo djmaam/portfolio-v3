@@ -1,0 +1,7 @@
+<task-notification>
+<task-id>bzawm54hb</task-id>
+<tool-use-id>toolu_01QDWP8qn6j1qxo8qiDFuNFN</tool-use-id>
+<output-file>/private/tmp/claude-501/-Users-djmaam-Projects-Marcos-portfolio-v3/33786be7-d54c-4daa-a55d-df6498965cc0/tasks/bzawm54hb.output</output-file>
+<status>completed</status>
+<summary>Background command "Wait for CI on both PRs" completed (exit code 0)</summary>
+</task-notification>
