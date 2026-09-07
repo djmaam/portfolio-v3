@@ -1,0 +1,7 @@
+<task-notification>
+<task-id>bft6a8fw6</task-id>
+<tool-use-id>REDACTED</tool-use-id>
+<output-file>/private/tmp/claude-501/-Users-djmaam-Projects-Marcos-portfolio-v3/ff79cbca-912c-4905-8a2c-c8e457538a3d/tasks/bft6a8fw6.output</output-file>
+<status>completed</status>
+<summary>Background command "Wait for CI after the sandbox fix" completed (exit code 0)</summary>
+</task-notification>
