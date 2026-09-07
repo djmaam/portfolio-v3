@@ -64,5 +64,11 @@ const points = (poly: (typeof polys)[number]) =>
 </style>
 
 <script>
-  // Task 5 fills this in.
+  import { mountMark } from '../lib/motion/markDraw'
+
+  for (const host of document.querySelectorAll<HTMLElement>('[data-mark]')) {
+    const box = Number(host.dataset.mark)
+    // The brand anchor is what already fires the name scramble; the mark loosens with it.
+    mountMark(host, box, host.closest('[data-brand]'))
+  }
 </script>

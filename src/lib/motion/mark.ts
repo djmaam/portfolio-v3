@@ -137,11 +137,19 @@ export function buildMark(): readonly MarkPiece[] {
 const isCorner = (piece: MarkPiece) =>
   [piece.pos.x, piece.pos.y, piece.pos.z].filter((v) => v !== 0).length === 3
 
+// Memoized separately from `buildMark`, which `tests/mark.test.ts` still calls uncached to
+// assert the build is deterministic. `markDraw.ts`'s rAF loop calls `markPolygons` — and
+// therefore this — for every visible mark on every frame; without a cache that reruns the
+// 560-draw build roughly 84 times a second per mark.
+let cached: readonly MarkPiece[] | undefined
+let cachedReduced: readonly MarkPiece[] | undefined
+
 /** The pieces a box of `box` CSS pixels can carry without turning into noise. */
 export function markPieces(box: number): readonly MarkPiece[] {
-  const all = buildMark()
-  if (box >= DETAIL_MIN) return all
-  return all.filter((piece) => piece.kind !== 'tick' && piece.kind !== 'panel' && !isCorner(piece))
+  if (box >= DETAIL_MIN) return (cached ??= buildMark())
+  return (cachedReduced ??= buildMark().filter(
+    (piece) => piece.kind !== 'tick' && piece.kind !== 'panel' && !isCorner(piece),
+  ))
 }
 
 // ── Rotation and culling (spec 35) ───────────────────────────────────────────
