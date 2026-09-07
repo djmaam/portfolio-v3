@@ -3,6 +3,9 @@
 Issue: [PV3-9](https://linear.app/portfolio-djmaam-v3/issue/PV3-9) · Branch: `feat/04-nav`
 Design: `handoff/DESIGN_SPEC.md` §3.1, §4 · `handoff/MOTION_SPEC.md` §1 · `docs/superpowers/specs/2026-09-05-portfolio-v3-design.md` §6, §7
 
+> [!NOTE]
+> Refined and aligned against the 1200px page container in [20 · Nav Align](./20-nav-align.md).
+
 ## Goal
 
 The first real component. It fills the `nav` slot `Base.astro` left empty, and it brings

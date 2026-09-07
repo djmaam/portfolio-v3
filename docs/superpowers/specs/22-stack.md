@@ -3,6 +3,9 @@
 Issue: [PV3-27](https://linear.app/portfolio-djmaam-v3/issue/PV3-27) · Branch: `feat/22-stack`
 Design: `handoff/DESIGN_SPEC.md` §3.7 · `handoff/MOTION_SPEC.md` §10 · `handoff/reference/Portfolio.dc.html`
 
+> [!NOTE]
+> Refines the initial stack marquee component from [12 · Stack](./12-stack.md).
+
 ## Goal
 
 Two things, one file. First: the stack makes the **whole document** 3540px wide inside a

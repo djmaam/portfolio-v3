@@ -4,6 +4,9 @@ Issues: [PV3-25](https://linear.app/portfolio-djmaam-v3/issue/PV3-25),
 [PV3-26](https://linear.app/portfolio-djmaam-v3/issue/PV3-26) · Branch: `feat/20-nav-align`
 Design: `handoff/DESIGN_SPEC.md` §1, §4 · `handoff/reference/Portfolio.dc.html`
 
+> [!NOTE]
+> Refines the initial navigation bar component from [04 · Nav](./04-nav.md).
+
 Two independent defects in `src/components/Nav.astro`. They ship together because they
 are the same file.
 

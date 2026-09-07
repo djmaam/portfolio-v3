@@ -18,9 +18,16 @@ Spanish and English (that is product content, not code).
 ## Sources of truth
 
 - `handoff/` — design, motion and content specs. **Read-only.** Never edit.
+- `docs/README.md` — central documentation map and spec index across all phases.
 - `docs/superpowers/specs/2026-09-05-portfolio-v3-design.md` — technical design.
 - `docs/superpowers/specs/NN-<block>.md` — one spec per Linear issue, written before
   the code.
+- `docs/architecture/` — AST-derived architecture knowledge graph and Obsidian canvas (`graph.canvas`).
+
+## Exploration & AST Graph
+
+- **CodeGraph is enabled (`.codegraph/`)**: Call `codegraph_explore` FIRST for inspecting symbols, callers, and blast radius before modifying any code. It replaces multi-turn grep/read loops with a single call.
+- **Graphify / Architecture Knowledge Graph**: Lives in `docs/architecture/` (and `graphify-out/graph.html`). Re-run `graphify ./src --obsidian --obsidian-dir ./docs/architecture` after adding new components or major architectural changes.
 
 ## Conventions
 

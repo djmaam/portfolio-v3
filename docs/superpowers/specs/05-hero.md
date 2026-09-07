@@ -3,6 +3,9 @@
 Issue: [PV3-10](https://linear.app/portfolio-djmaam-v3/issue/PV3-10) · Branch: `feat/05-hero`
 Design: `handoff/DESIGN_SPEC.md` §3.2 · `handoff/MOTION_SPEC.md` §2 · `docs/superpowers/specs/2026-09-05-portfolio-v3-design.md` §6
 
+> [!NOTE]
+> Refined and calibrated against the mock in [27 · Hero](./27-hero.md).
+
 ## Goal
 
 The left column of the hero and the boot sequence that reveals it. The right column —

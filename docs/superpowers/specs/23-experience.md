@@ -3,6 +3,9 @@
 Issue: [PV3-28](https://linear.app/portfolio-djmaam-v3/issue/PV3-28) · Branch: `feat/23-experience`
 Design: `handoff/DESIGN_SPEC.md` §5 · `handoff/reference/Portfolio.dc.html`
 
+> [!NOTE]
+> Refines the initial timeline component from [10 · Experience](./10-experience.md).
+
 ## Goal
 
 Fix two rendering defects in `src/components/Experience.astro`, the "how I work"
