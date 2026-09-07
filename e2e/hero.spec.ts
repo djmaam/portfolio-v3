@@ -16,7 +16,7 @@ test.use({ colorScheme: 'dark' })
 const VIEWPORT = { width: 1512, height: 950 }
 
 /** The mock's hero: 909px tall, stats row ending at y=862, console centered at x=1074. */
-const MOCK = { heroHeight: 909, statsBottom: 862, consoleCenterX: 1074, asteriskLeft: 803 }
+const MOCK = { heroHeight: 909, statsBottom: 862, consoleCenterX: 1074 }
 
 const open = async (page: Page) => {
   await page.setViewportSize(VIEWPORT)
@@ -137,53 +137,124 @@ test('the mask is applied: the cloud fades out below 55% of the canvas', async (
   expect(cloud(masked)).toBeLessThan(0.6 * cloud(bare))
 })
 
-test('the ✳ forms on the console and clears the H1, like the mock', async ({ page }) => {
+test('the mark lands on the nav slot and the overlay is destroyed', async ({ page }) => {
   await open(page)
 
-  // Sampled across the whole formation beat rather than at one timestamp: the frame with
-  // the tightest horizontal spread is the ✳ at full `form`, whenever the load happened to
-  // let it land. `MOTION_SPEC` §3 holds it from 1200 to 1900ms.
-  const star = await page.evaluate(async () => {
-    const canvas = document.querySelector<HTMLCanvasElement>('canvas.hero-net')!
-    const ctx = canvas.getContext('2d')!
-    const dpr = canvas.width / canvas.getBoundingClientRect().width
-    let best: { spread: number; centerX: number; left: number } | null = null
+  // The overlay is created on the first frame and removed on the last one (spec 31).
+  await page.waitForSelector('#entry', { state: 'attached', timeout: 2000 })
 
-    for (let i = 0; i < 26; i++) {
-      await new Promise((resolve) => setTimeout(resolve, 100))
+  // Sampled while it flies: the last frame with ink on it is the landing, whichever frame
+  // the machine happened to give us. The centroid of that frame is where the mark is.
+  const landing = await page.evaluate(async () => {
+    let last: { x: number; y: number } | null = null
+
+    while (true) {
+      const canvas = document.querySelector<HTMLCanvasElement>('#entry')
+      if (!canvas) break
+      const ctx = canvas.getContext('2d')!
+      const dpr = canvas.width / canvas.getBoundingClientRect().width
       const px = ctx.getImageData(0, 0, canvas.width, canvas.height).data
       let sum = 0
-      let weighted = 0
-      let min = Infinity
-      let max = -Infinity
+      let wx = 0
+      let wy = 0
       for (let y = 0; y < canvas.height; y += 2)
         for (let x = 0; x < canvas.width; x += 2) {
           const a = px[(y * canvas.width + x) * 4 + 3] as number
           if (a < 40) continue
           sum += a
-          weighted += a * x
-          if (x < min) min = x
-          if (x > max) max = x
+          wx += a * x
+          wy += a * y
         }
-      if (sum === 0) continue
-      const spread = (max - min) / dpr
-      if (!best || spread < best.spread) {
-        best = { spread, centerX: weighted / sum / dpr, left: min / dpr }
-      }
+      if (sum > 0) last = { x: wx / sum / dpr, y: wy / sum / dpr }
+      await new Promise((resolve) => setTimeout(resolve, 80))
     }
-    return best
+
+    return last
   })
 
-  expect(star).not.toBeNull()
-  // Centered on the console, which is what `MOTION_SPEC` §3 means by "centrado en la
-  // consola" and what the mock does — it measures x=1072 against a console center of 1074.
-  expect(star!.centerX).toBeCloseTo(MOCK.consoleCenterX, -2)
-  // And therefore clear of the headline, which is the complaint that opened this issue.
-  const h1Right = await page.evaluate(
-    () => document.querySelector('.hero h1')!.getBoundingClientRect().right,
-  )
-  expect(star!.left).toBeGreaterThan(h1Right)
-  expect(star!.left).toBeGreaterThan(MOCK.asteriskLeft - 60)
+  const slot = await page.evaluate(() => {
+    const host = document.querySelector<HTMLElement>('[data-brand] [data-mark]')!
+    const rect = host.getBoundingClientRect()
+    return { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2, box: rect.width }
+  })
+
+  expect(landing).not.toBeNull()
+  // Inside the nav slot itself, not merely near it: the box is 20px across.
+  expect(Math.abs(landing!.x - slot.x)).toBeLessThan(slot.box / 2)
+  expect(Math.abs(landing!.y - slot.y)).toBeLessThan(slot.box / 2)
+
+  // And the nav's own canvas has taken over, painting where the overlay stopped.
+  const navInk = await page.evaluate(() => {
+    const canvas = document.querySelector<HTMLCanvasElement>('[data-brand] [data-mark] canvas')!
+    const px = canvas.getContext('2d')!.getImageData(0, 0, canvas.width, canvas.height).data
+    let sum = 0
+    for (let i = 3; i < px.length; i += 4) sum += px[i] as number
+    return sum
+  })
+  expect(navInk).toBeGreaterThan(0)
+
+  // The name resolved with the landing, instead of being left mid-scramble.
+  await expect(page.locator('[data-brand-text]')).toHaveText('Marcos Arrieta')
+})
+
+test('a click during the entry destroys the overlay and lands on the end state', async ({
+  page,
+}) => {
+  await open(page)
+  await page.waitForSelector('#entry', { state: 'attached', timeout: 2000 })
+
+  await page.mouse.click(VIEWPORT.width / 2, VIEWPORT.height - 60)
+  // Within a frame or two, not after the remaining three seconds of the sequence.
+  await page.waitForSelector('#entry', { state: 'detached', timeout: 500 })
+
+  const state = await page.evaluate(() => ({
+    entry: document.documentElement.dataset.entry,
+    h1: document.querySelector<HTMLElement>('.hero h1')!.style.opacity,
+    card: document.querySelector<HTMLElement>('[data-console]')!.style.opacity,
+    mark: document.querySelector<HTMLElement>('[data-brand] [data-mark]')!.style.opacity,
+  }))
+
+  expect(state).toEqual({ entry: 'done', h1: '1', card: '1', mark: '' })
+})
+
+test('the entry runs once per session', async ({ page }) => {
+  await open(page)
+  await page.waitForSelector('#entry', { state: 'detached', timeout: 8000 })
+
+  // The other language, so this also covers navigating between `/` and `/en`.
+  await page.goto('/en/')
+  await page.waitForFunction(() => document.documentElement.dataset.entry === 'done')
+
+  const second = await page.evaluate(() => ({
+    overlay: Boolean(document.querySelector('#entry')),
+    stored: sessionStorage.getItem('pv3-entry'),
+    h1: getComputedStyle(document.querySelector('.hero h1')!).opacity,
+    card: getComputedStyle(document.querySelector('[data-console]')!).opacity,
+  }))
+
+  // No overlay at all, and the hero is in its end state on the first frame.
+  expect(second).toEqual({ overlay: false, stored: 'done', h1: '1', card: '1' })
+})
+
+test('with no JavaScript the hero copy and the console are still there', async ({ browser }) => {
+  // The entry hides nothing the markup carries: the `[data-boot]` and `[data-console]`
+  // resting states apply only under `html.has-js`, which no script ever adds here.
+  const context = await browser.newContext({ javaScriptEnabled: false, viewport: VIEWPORT })
+  const page = await context.newPage()
+  await page.goto('/')
+
+  await expect(page.locator('.hero h1')).toBeVisible()
+  await expect(page.locator('.hero .stats')).toBeVisible()
+  await expect(page.locator('[data-console]')).toBeVisible()
+  await expect(page.locator('#entry')).toHaveCount(0)
+
+  const opacity = await page.evaluate(() => ({
+    h1: getComputedStyle(document.querySelector('.hero h1')!).opacity,
+    card: getComputedStyle(document.querySelector('[data-console]')!).opacity,
+  }))
+  expect(opacity).toEqual({ h1: '1', card: '1' })
+
+  await context.close()
 })
 
 /** Mean ink of the bottom fifth of a screenshot, decoded inside the page itself. */
