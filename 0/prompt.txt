@@ -1,0 +1,53 @@
+Review this change for security vulnerabilities.
+
+Changed files (you may Read these and any other file in the repo):
+  - astro.config.mjs
+  - playwright.config.ts
+
+Unified diff (only + lines are new):
+
+=== DIFF: astro.config.mjs ===
+@@ -10,5 +10,13 @@ export default defineConfig({
+   // to one `JSON.parse` of the whole file, so a client script that imports a single key
+   // — the console log — ships every string of both languages with it (5.9kB gz instead
+   // of 0.8kB). As an object literal, Rollup drops what nobody imports.
+-  vite: { plugins: [tailwindcss()], json: { stringify: false } },
++  // `strictPort`: `astro preview` otherwise walks forward to the next free port, which is
++  // silent and fine for a human and wrong for Playwright — it waits on the port it asked
++  // for and times out after 60s with nothing to read. Erroring on a busy port is what
++  // makes several worktrees able to run the suite at the same time.
++  vite: {
++    plugins: [tailwindcss()],
++    json: { stringify: false },
++    preview: { strictPort: true },
++  },
+ })
+
+
+=== DIFF: playwright.config.ts ===
+@@ -1,8 +1,10 @@
+ import { defineConfig, devices } from '@playwright/test'
+ 
+-// The static build, served exactly as it ships. `astro preview` defaults to this port
+-// and the tests never hardcode it anywhere else.
+-const PORT = 4321
++// The static build, served exactly as it ships. 4321 is `astro preview`'s own default and
++// stays the default here; `PORT` exists because several worktrees run this suite at once.
++// Without it they all share one port, and `reuseExistingServer` would quietly hand every
++// run the *first* worktree's `dist/` — a suite that passes against someone else's build.
++const PORT = Number(process.env.PORT) || 4321
+ const baseURL = `http://localhost:${PORT}`
+ const isCI = Boolean(process.env.CI)
+ 
+@@ -18,7 +20,7 @@ export default defineConfig({
+   // CI time for very little here (spec 17, "out of scope").
+   projects: [{ name: 'chromium', use: devices['Desktop Chrome'] }],
+   webServer: {
+-    command: 'bun run preview',
++    command: `bun run preview --port ${PORT}`,
+     url: baseURL,
+     reuseExistingServer: !isCI,
+     // Astro 7 daemonizes `preview` when it auto-detects a coding-agent environment, and
+
+
+Investigate per the method in your instructions, then return the findings list.
