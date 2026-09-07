@@ -1,4 +1,4 @@
-import type { Point3 } from './math'
+import type { Point, Point3 } from './math'
 
 // ── The mark (spec 30) ───────────────────────────────────────────────────────
 // A 3×3×3 lattice read isometrically: a wireframe core, cubes on the face axes and the
@@ -242,4 +242,159 @@ export function visibleFaces(pos: Point3, rot: Point3, size: number, cam: MarkCa
     if (n.x * cx + n.y * cy + n.z * (cz + cam.f) < 0) out.push(i)
   })
   return out
+}
+
+// ── Projection to polygons (spec 35) ─────────────────────────────────────────
+
+/**
+ * One shape to paint. Two points mean a stroked segment, four a filled face. Both the
+ * build-time SVG and the runtime canvas consume nothing but this.
+ */
+export type MarkPoly = {
+  kind: MarkKind | 'rule'
+  points: readonly Point[]
+  /** Face lighting in [0,1]. `-1` on the strokes, which have no face. */
+  lit: number
+  /** Mean depth, for the painter's sort. */
+  depth: number
+}
+
+/** Light from above and slightly behind the viewer's left shoulder. */
+const LIGHT: Point3 = { x: -0.32, y: -0.86, z: 0.4 }
+
+const PANEL_QUAD: readonly Point3[] = [
+  { x: -1, y: -1, z: 0 },
+  { x: 1, y: -1, z: 0 },
+  { x: 1, y: 1, z: 0 },
+  { x: -1, y: 1, z: 0 },
+]
+
+const add = (a: Point3, b: Point3): Point3 => ({ x: a.x + b.x, y: a.y + b.y, z: a.z + b.z })
+const scale3 = (p: Point3, k: number): Point3 => ({ x: p.x * k, y: p.y * k, z: p.z * k })
+const lerp = (a: number, b: number, t: number) => a + (b - a) * t
+
+/**
+ * Pixels per lattice unit. The extent is the Euclidean norm, not the largest component:
+ * a piece at (1,1,0) reaches 1.41 on screen once the camera turns, and framing it by its
+ * largest component clips it. `√3 · size` is the half space-diagonal of a rotating cube.
+ */
+export function markScale(box: number, pieces: readonly MarkPiece[]): number {
+  const extent = Math.max(
+    ...pieces.map(
+      (piece) => Math.hypot(piece.pos.x, piece.pos.y, piece.pos.z) + piece.size * Math.sqrt(3),
+    ),
+  )
+  return (box / 2 / extent) * 0.94
+}
+
+/** The idle turn of the whole cluster: a full revolution takes about 22 seconds. */
+export function markSpin(t: number): number {
+  return t * 2.8e-4
+}
+
+function bilinear(quad: readonly Point[], u: number, v: number): Point {
+  const top = { x: lerp(quad[0]!.x, quad[1]!.x, u), y: lerp(quad[0]!.y, quad[1]!.y, u) }
+  const bottom = { x: lerp(quad[3]!.x, quad[2]!.x, u), y: lerp(quad[3]!.y, quad[2]!.y, u) }
+  return { x: lerp(top.x, bottom.x, v), y: lerp(top.y, bottom.y, v) }
+}
+
+/**
+ * The mark at time `t`, drawn into a `box`×`box` square, sorted back to front. `settle`
+ * is 0 while the pieces are still turning into place and 1 at rest; `spinY` is the turn
+ * of the whole cluster, which the entry choreography drives on its own.
+ */
+export function markPolygons(box: number, settle: number, t: number, spinY: number): MarkPoly[] {
+  const pieces = markPieces(box)
+  const s = markScale(box, pieces)
+  const cam: MarkCamera = { world: { x: ISO_TILT, y: spinY, z: 0 }, f: MARK_FOCAL }
+  const half = box / 2
+  const polys: MarkPoly[] = []
+
+  const project = (w: Point3): Point => {
+    const sc = cam.f / (cam.f + w.z)
+    return { x: half + w.x * sc * s, y: half + w.y * sc * s }
+  }
+
+  for (const piece of pieces) {
+    const rot = add(pieceRotation(piece, settle), idleWobble(piece, t, settle))
+    const world = (v: Point3) =>
+      rotate3(add(rotate3(scale3(v, piece.size), rot), piece.pos), cam.world)
+
+    if (piece.kind === 'tick') {
+      const a = world({ x: -0.6, y: 0, z: 0 })
+      const b = world({ x: 0.6, y: 0, z: 0 })
+      polys.push({
+        kind: 'tick',
+        points: [project(a), project(b)],
+        lit: -1,
+        depth: (a.z + b.z) / 2,
+      })
+      continue
+    }
+
+    if (piece.kind === 'panel') {
+      const corners = PANEL_QUAD.map(world)
+      const quad = corners.map(project)
+      const depth = corners.reduce((sum, corner) => sum + corner.z, 0) / 4
+      polys.push({ kind: 'panel', points: quad, lit: 0, depth })
+      for (const rule of piece.rules) {
+        // A hair in front of its panel, so the sort can never put a rule behind it.
+        polys.push({
+          kind: 'rule',
+          points: [
+            bilinear(quad, rule.x, rule.y),
+            bilinear(quad, Math.min(0.94, rule.x + rule.w), rule.y),
+          ],
+          lit: -1,
+          depth: depth - 1e-3,
+        })
+      }
+      continue
+    }
+
+    for (const face of visibleFaces(piece.pos, rot, piece.size, cam)) {
+      const corners = CUBE_FACES[face]!.map((i) => world(CUBE_VERTS[i]!))
+      const n = rotate3(rotate3(CUBE_NORMALS[face]!, rot), cam.world)
+      const lit = -(n.x * LIGHT.x + n.y * LIGHT.y + n.z * LIGHT.z)
+      polys.push({
+        kind: piece.kind,
+        points: corners.map(project),
+        lit: Math.max(0, Math.min(1, lit)),
+        depth: corners.reduce((sum, corner) => sum + corner.z, 0) / 4,
+      })
+    }
+  }
+
+  return polys.sort((a, b) => b.depth - a.depth)
+}
+
+/**
+ * Opacities, never colors: `scripts/check-tokens.ts` fails on a literal color under
+ * `src/`, and both consumers paint in the resolved `--color-accent`. On the near-white
+ * light background the accent loses body, so everything is lifted by a third — a starting
+ * value confirmed by eye, not a measured ratio: the mark is `aria-hidden` decoration.
+ */
+export function polyAlpha(poly: MarkPoly, light: boolean): { fill: number; stroke: number } {
+  const k = light ? 1.35 : 1
+  const cap = (a: number) => Math.min(1, a)
+  const wash = cap((0.02 + 0.06 * Math.max(0, poly.lit)) * k)
+  switch (poly.kind) {
+    case 'solid':
+      return { fill: light ? 1 : 0.42 + 0.5 * poly.lit, stroke: cap(0.95 * k) }
+    case 'core':
+      return { fill: wash, stroke: cap(0.62 * k) }
+    case 'wire':
+      return { fill: wash, stroke: cap(0.42 * k) }
+    case 'panel':
+      return { fill: cap(0.05 * k), stroke: cap(0.55 * k) }
+    case 'rule':
+      return { fill: 0, stroke: cap(0.45 * k) }
+    case 'tick':
+      return { fill: 0, stroke: cap(0.5 * k) }
+  }
+}
+
+/** Hairline floor, so the mark does not dissolve at 16px. */
+export function strokeWidth(kind: MarkPoly['kind'], box: number): number {
+  return Math.max(0.6, box * (kind === 'core' ? 0.006 : 0.0042))
 }

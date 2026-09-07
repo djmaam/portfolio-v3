@@ -8,8 +8,13 @@ import {
   ISO_TILT,
   MARK_FOCAL,
   markPieces,
+  markPolygons,
+  markScale,
+  markSpin,
   pieceRotation,
+  polyAlpha,
   rotate3,
+  strokeWidth,
   visibleFaces,
 } from '../src/lib/motion/mark'
 
@@ -118,4 +123,68 @@ test('every face index a cull returns is a real face', () => {
       expect(CUBE_FACES[face]).toBeDefined()
     }
   }
+})
+
+const REST = { settle: 1, t: 0, spin: Math.PI / 4 }
+
+test('the polygons come back sorted back to front', () => {
+  const depths = markPolygons(64, REST.settle, REST.t, REST.spin).map((poly) => poly.depth)
+  expect([...depths].sort((a, b) => b - a)).toEqual(depths)
+})
+
+test('a panel is drawn before its own rules', () => {
+  const polys = markPolygons(64, REST.settle, REST.t, REST.spin)
+  const panel = polys.findIndex((poly) => poly.kind === 'panel')
+  const rule = polys.findIndex((poly) => poly.kind === 'rule')
+  expect(panel).toBeGreaterThanOrEqual(0)
+  expect(rule).toBeGreaterThan(panel)
+})
+
+test('ticks and rules are two-point strokes; every face is a quad', () => {
+  for (const poly of markPolygons(64, REST.settle, REST.t, REST.spin)) {
+    const stroke = poly.kind === 'tick' || poly.kind === 'rule'
+    expect(poly.points).toHaveLength(stroke ? 2 : 4)
+  }
+})
+
+test('nothing is drawn outside its box, at any size or angle', () => {
+  for (const box of [16, 20, 64, 240]) {
+    for (const spin of [0, 1.4, Math.PI / 4, 5]) {
+      for (const poly of markPolygons(box, 1, 5000, spin)) {
+        for (const point of poly.points) {
+          expect(point.x).toBeGreaterThanOrEqual(0)
+          expect(point.x).toBeLessThanOrEqual(box)
+          expect(point.y).toBeGreaterThanOrEqual(0)
+          expect(point.y).toBeLessThanOrEqual(box)
+        }
+      }
+    }
+  }
+})
+
+test('the reduced set is framed larger, since it has no ticks to make room for', () => {
+  expect(markScale(64, markPieces(16))).toBeGreaterThan(markScale(64, markPieces(64)))
+})
+
+test('the light theme lifts every alpha and never passes 1', () => {
+  for (const poly of markPolygons(64, REST.settle, REST.t, REST.spin)) {
+    const dark = polyAlpha(poly, false)
+    const light = polyAlpha(poly, true)
+    expect(light.stroke).toBeGreaterThanOrEqual(dark.stroke)
+    expect(light.fill).toBeGreaterThanOrEqual(dark.fill)
+    expect(light.stroke).toBeLessThanOrEqual(1)
+    expect(light.fill).toBeLessThanOrEqual(1)
+  }
+})
+
+test('strokes never fall below a hairline, and the core is the heaviest', () => {
+  expect(strokeWidth('wire', 16)).toBeGreaterThanOrEqual(0.6)
+  expect(strokeWidth('core', 240)).toBeGreaterThan(strokeWidth('wire', 240))
+})
+
+test('the global spin is monotonic and slow', () => {
+  expect(markSpin(0)).toBe(0)
+  expect(markSpin(1000)).toBeGreaterThan(markSpin(0))
+  // A full turn takes about 22 seconds: peripheral, never a distraction.
+  expect((Math.PI * 2) / markSpin(1)).toBeGreaterThan(20_000)
 })
