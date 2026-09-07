@@ -5,6 +5,9 @@ Issues: [PV3-29](https://linear.app/portfolio-djmaam-v3/issue/PV3-29) (shimmer c
 Branch: `feat/24-projects`
 Design: `handoff/MOTION_SPEC.md` §9
 
+> [!NOTE]
+> Refines the initial projects grid component from [11 · Projects](./11-projects.md).
+
 ## Defect 1 — the shimmer loop is visibly cut (PV3-29)
 
 `src/components/Projects.astro` and `src/styles/app.css` today:

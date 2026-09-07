@@ -7,3 +7,8 @@ dist/
 test-results/
 playwright-report/
 .lighthouseci/
+
+# AI & Knowledge Graph Local Artifacts
+.obsidian/
+graphify-out/
+.codegraph/

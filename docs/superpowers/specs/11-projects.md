@@ -3,6 +3,9 @@
 Issue: [PV3-16](https://linear.app/portfolio-djmaam-v3/issue/PV3-16) · Branch: `feat/11-projects`
 Design: `handoff/DESIGN_SPEC.md` §3.6 · `handoff/MOTION_SPEC.md` §9 · design doc §8
 
+> [!NOTE]
+> Refined in [24 · Projects](./24-projects.md) (shimmer loop and link fixes).
+
 ## Goal
 
 Six project cards, each with a live preview or a screenshot, and a shimmer over it.

@@ -1,0 +1,16 @@
+---
+source_file: "node:path"
+type: "code"
+community: "Community 6"
+tags:
+  - graphify/code
+  - graphify/EXTRACTED
+  - community/Community_6
+---
+
+# node:path
+
+## Connections
+- [[Projects.astro]] - `imports_from` [EXTRACTED]
+
+#graphify/code #graphify/EXTRACTED #community/Community_6

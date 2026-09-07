@@ -3,6 +3,9 @@
 Issue: [PV3-17](https://linear.app/portfolio-djmaam-v3/issue/PV3-17) · Branch: `feat/12-stack`
 Design: `handoff/DESIGN_SPEC.md` §3.7 · `handoff/MOTION_SPEC.md` §10 · `handoff/README.md` rule 4
 
+> [!NOTE]
+> Refined in [22 · Stack](./22-stack.md) (resolves horizontal page overflow and balances row chips).
+
 ## Goal
 
 Three marquee rows of technology chips. **Zero percentage bars** — that is a

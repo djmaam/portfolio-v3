@@ -3,6 +3,9 @@
 Issue: [PV3-15](https://linear.app/portfolio-djmaam-v3/issue/PV3-15) · Branch: `feat/10-experience`
 Design: `handoff/DESIGN_SPEC.md` §3.5 · `handoff/MOTION_SPEC.md` §8
 
+> [!NOTE]
+> Refined in [23 · Experience](./23-experience.md) (dot centering & horizontal "Also with" row layout).
+
 ## Goal
 
 The vertical timeline of five roles, with the company name scrambling as each item

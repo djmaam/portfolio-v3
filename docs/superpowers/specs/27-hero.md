@@ -3,6 +3,9 @@
 Issue: [PV3-32](https://linear.app/portfolio-djmaam-v3/issue/PV3-32) · Branch: `feat/27-hero`
 Design: `handoff/DESIGN_SPEC.md` §2 · `handoff/MOTION_SPEC.md` §3 · `handoff/reference/Portfolio.dc.html`
 
+> [!NOTE]
+> Refines the initial hero implementation from [05 · Hero](./05-hero.md).
+
 ## Goal
 
 Finish matching the hero to the mock. Three complaints were filed against the pre-19
