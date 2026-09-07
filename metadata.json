@@ -1,0 +1,27 @@
+{
+  "cli_version": "0.10.5",
+  "checkpoint_id": "01M1YQ6EXJARYV2A5GPW92WMMH",
+  "strategy": "manual-commit",
+  "branch": "feat/31-entry-choreography",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "src/lib/motion/boot.ts",
+    "src/lib/motion/entryDriver.ts"
+  ],
+  "sessions": [
+    {
+      "metadata": "/0/metadata.json",
+      "transcript": "/0/full.jsonl",
+      "compact_transcript": "/0/transcript.jsonl",
+      "content_hash": "/0/content_hash.txt",
+      "prompt": ""
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 50,
+    "cache_creation_tokens": 55359,
+    "cache_read_tokens": 4834173,
+    "output_tokens": 24092,
+    "api_call_count": 25
+  }
+}
