@@ -1,0 +1,51 @@
+<task-notification>
+<task-id>a66547082ab734b27</task-id>
+<tool-use-id>toolu_01BEWmVz8J4mnYQgmwxtPK4B</tool-use-id>
+<output-file>/private/tmp/claude-501/-Users-djmaam-Projects-Marcos-portfolio-v3/33786be7-d54c-4daa-a55d-df6498965cc0/tasks/a66547082ab734b27.output</output-file>
+<status>completed</status>
+<summary>Agent "Implement About section" finished</summary>
+<note>A task-notification fires each time this agent stops with no live background children of its own. The user can send it another message and resume it, so the same task-id may notify more than once.</note>
+<result>Done. Branch `feat/08-about` pushed (2 commits, no PR, no merge).
+
+## Command output
+
+```
+$ bun run lint
+eslint . &amp;&amp; prettier --check . &amp;&amp; tsc --noEmit &amp;&amp; bun scripts/check-tokens.ts
+Checking formatting...
+All matched files use Prettier code style!          # exit 0
+
+$ bun test
+186 pass / 0 fail / 7313 expect() calls, 15 files
+
+$ bun run build
+2 page(s) built in 176ms — Complete!
+```
+
+## What was built
+
+- `src/lib/motion/reveal.ts` — `bindReveals(root: ParentNode = document): () =&gt; void`. One `IntersectionObserver` (threshold .15, rootMargin `0px 0px -8% 0px`), unobserves each element as it fires, applies `data-delay` as `transitionDelay`, returns `disconnect`. Under `reduce` it returns a no-op and never constructs the observer. Bound once from `Base.astro` (the diff there is exactly the import + the call).
+- `src/lib/motion/math.ts` — `aboutProgress`, `wordOpacity`, `revealDelay`, all pure, no DOM.
+- `src/styles/app.css` — resting states for `[data-reveal]` and `[data-word]` next to `[data-boot]`, both gated on `.has-js` + `no-preference`; new `--color-shadow-card` token (`DESIGN_SPEC` §2/§4 card hover shadow — the only other black shadow of the design; the console token's values differ, .12/.6 vs .1/.5).
+- `src/components/About.astro` + both pages. Lead split server-side, body wrapped in `[data-reveal]`, principles as `&lt;li data-reveal data-delay&gt;` with the hover transform on the inner `.card`. Driver subscribes to `onScroll`; no new listener, and it re-measures the lead's rect only when the viewport size string changes (a resize already produces a scroll-engine frame, so caching per resize needed no listener).
+- Tests: `tests/reveal.test.ts` (5 tests, stubbed `IntersectionObserver`), 8 new cases in `tests/math.test.ts`. Written first, watched fail (`Export named 'aboutProgress' not found`, `Cannot find module '../src/lib/motion/reveal'`), then implemented.
+
+## Verification against the real build
+
+- **No JS**: `dist/_astro/Base.*.css` has exactly two matching rules, `.has-js [data-reveal]{opacity:0;…}` and `.has-js [data-word]{opacity:.16;…}`, both inside `@media (prefers-reduced-motion:no-preference)`. `has-js` is only added by the inline `&lt;head&gt;` script, so with JS off every word and every reveal paints at full opacity.
+- **Copy fidelity**: stripped the tags from the built `&lt;p class="text-lead"&gt;` in both `dist/index.html` and `dist/en/index.html` and compared to `content.json` — byte-identical to `aboutLead`, spaces included. Delays render as `0/110/220`.
+- **One scroll listener**: `tests/scroll.test.ts` guard still passes; About subscribes via `onScroll`.
+- **No `[data-reveal]` with a hover transform**: the only two hover rules with a `transform` in the built CSS are `.card…:hover` (child of the `&lt;li&gt;` that carries `data-reveal`) and the hero's `.primary…:hover`.
+- **`#about` nav link**: the id is in both pages and the nav link carries `data-nav-link`, so `anchors.ts` intercepts it and applies `anchorOffset(top, --nav-h)` (unit-tested). This one I could **not** exercise in a browser — no browser automation is available in this environment — so it is verified structurally, not by a real click.
+
+## Decisions the spec did not cover
+
+1. **The lead is inline spans, not flex items.** The spec asks for `display:flex; flex-wrap:wrap; gap:0 .26em` *and* for the sentence to copy with its spaces. Those conflict: a flex item is a block-level box, and browsers serialize block boxes to the clipboard with line breaks, not spaces. I kept the spans and put the separating space inside each word (`" interesa"`), so layout, wrapping and per-word opacity are unchanged while the clipboard gets the real sentence — verified above. Manrope's word space is ≈ the .26em the design asked the gap to be.
+2. **Grid breakpoint.** `repeat(auto-fit, minmax(min(100%,300px),1fr))` plus a content column spanning 2 tracks creates an *implicit* third track at mobile widths and overflows. So the grid is a single column below 720px (the breakpoint `DESIGN_SPEC` §5 already sanctions) and the auto-fit grid above it, with `.content { grid-column: 2 / -1 }` — which never creates an implicit track.
+3. **Card typography**: `n` → `text-label-sm` accent, `h` → `text-card-title`, `d` → `text-body` dim. The mock's raw 17px/14px are not tokens; `DESIGN_SPEC` §2 allows 15–18px for card body and 19–22px for card titles, so no new type token was added.
+4. **Noticed, not fixed (out of scope):** the nav is `position: sticky`, so a *native* fragment jump (JS disabled) lands the section under the nav. A site-wide `scroll-margin-top: var(--nav-h)` would fix it, but that belongs to the nav/base block rather than to one section — flagging rather than adding it in About alone.
+
+No dependencies added.</result>
+<usage><subagent_tokens>132071</subagent_tokens><tool_uses>50</tool_uses><duration_ms>575756</duration_ms></usage>
+<worktree><worktreePath>/Users/djmaam/Projects/Marcos/portfolio-v3/.claude/worktrees/agent-a66547082ab734b27</worktreePath><worktreeBranch>worktree-agent-a66547082ab734b27</worktreeBranch></worktree>
+</task-notification>
