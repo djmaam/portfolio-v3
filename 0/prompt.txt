@@ -1,0 +1,172 @@
+This session is being continued from a previous conversation that ran out of context. The summary below covers the earlier portion of the conversation.
+
+Summary:
+1. **Primary Request and Intent:**
+
+   The user (Marcos Arrieta, `marcosarrietaarg@gmail.com`) asked to build his personal portfolio site `marcosarrieta.dev` from a design handoff produced by Claude Design. Explicit requests, in order:
+   - Create the GitHub repo (already existed as `djmaam/portfolio-v3`).
+   - Read ALL the handoff documentation and build from it. Stack: Bun + Astro + whatever libraries are needed.
+   - **Work scheme must be SDD (Spec-Driven Development) + TDD.** Create issues in Linear in workspace **Portfolio-djmaam-v3**, generate a spec per task, and **I decide which subagent executes each one and orchestrate the development**.
+   - Font decision: **Manrope** (over Geist).
+   - Logos: create the task but **do not define anything yet — leave it to plan later**.
+   - Later: "vamos con la ultima version de todo, asi lo tenemos lo mas actualizado posible" (latest version of every dependency).
+   - `.DS_Store` must not be in the repo, and `.gitignore` must prevent recurrence.
+   - **"la idea es que todo el proyecto este en ingles para mejorar la legilibidad de agentes y personas"** — all code comments, then all specs and Linear issues, translated to English.
+   - **"seria bueno actualizarlo a ingles americano porque es el que entiendo y hablo"** — American English spelling specifically.
+   - Run two, then four blocks in parallel when they don't collide.
+   - Resolve merge conflicts on PRs #12, #13, #14 when they arose.
+   - Check the GitHub↔Linear integration (user couldn't connect the new workspace).
+   - When Lighthouse couldn't pass deterministically with live iframes, chose **"Screenshots estáticos"** for all six project previews.
+
+2. **Key Technical Concepts:**
+   - Astro 7.3.1 static output, Bun 1.4.0 (runtime, package manager, test runner), TypeScript strict (pinned ^6.0.3), Tailwind v4.3.3 via `@tailwindcss/vite`.
+   - `@theme static` in Tailwind v4 (needed so unused tokens still emit), `light-dark()` CSS function, `color-mix()` for one-off alphas (Tailwind opacity modifiers do NOT work on `light-dark()` colors).
+   - SDD + TDD: one Linear issue = one block = one branch `feat/NN-<block>` = one PR; spec written and committed before code; acceptance criteria are the tests.
+   - Motion math extracted to pure functions in `src/lib/motion/math.ts`, unit-tested without a DOM, so Playwright stays small.
+   - Single scroll listener for the whole site (`src/lib/motion/scroll.ts`) with a subscriber API (`onScroll`); guarded by tests.
+   - Progressive enhancement: `html.has-js` gates all `opacity: 0` resting states; `prefers-reduced-motion: no-preference` gates all animation.
+   - Marker-based parallel work: `// section-import: <name>` and `{/* section: <name> */}` lines in both page files so parallel branches replace distinct lines.
+   - Git worktree isolation for parallel subagents.
+   - WCAG 2.1 relative luminance computed in a unit test from parsed CSS tokens.
+   - Lighthouse CI with mobile preset, four categories at ≥ 0.90, error level.
+
+3. **Files and Code Sections:**
+
+   - **`CLAUDE.md`** (root, created by me) — the root-cause fix for the language convention; it's what subagents read first. Key section:
+     ```markdown
+     ## Language
+
+     **Everything is written in American English** — code comments, identifiers, commit
+     messages, script output, test names, `README.md`, `CLAUDE.md` and the specs under
+     `docs/superpowers/specs/`. This applies to code written by subagents too. Watch the
+     easy slips: `color` not `colour`, `math` not `maths`, `behavior` not `behaviour`,
+     `normalize` not `normalise`.
+
+     The only exception is `handoff/`, which stays in Spanish on purpose: it is the
+     read-only design source of truth, and `handoff/content.json` holds the site copy in
+     Spanish and English (that is product content, not code).
+     ```
+     Also documents: no literal colors outside `src/styles/app.css`, no hardcoded copy, motion math in pure functions, one scroll listener, reduced-motion, `has-js`.
+
+   - **`docs/superpowers/specs/2026-09-05-portfolio-v3-design.md`** — the technical design doc. Records Astro 7 (not 5), Manrope + IBM Plex Mono (no variable version of the mono exists on Google Fonts), no UI framework in v1 (React only as a single island for the v1.1 agent console), and §8 (rewritten in the last block) now says all six previews are static JPEG screenshots.
+
+   - **`docs/superpowers/specs/NN-<block>.md`** — 00-scaffold, 01-tokens-tema, 02-content-i18n, 03-base-layout, 04-nav, 05-hero, 06-console, 07-network-canvas, 08-about, 09-method, 10-experience, 11-projects, 12-stack, 13-contact, 14-footer, 16-a11y, 17-e2e-lighthouse. All in English.
+
+   - **`src/lib/content.ts`** — single content source, types derived from JSON:
+     ```ts
+     import raw from '../../handoff/content.json'
+     export type Lang = 'es' | 'en'
+     export type Content = (typeof raw)['i18n']['es']
+     export const LANGS = ['es', 'en'] as const satisfies readonly Lang[]
+     export const site = { name: 'Marcos Arrieta', handle: '@djmaam' } as const
+     export const content: Record<Lang, Content> = raw.i18n
+     export const { links, stack, consoleLog } = raw
+     ```
+
+   - **`src/lib/ui.ts`** — UI chrome that `content.json` (read-only) has no key for: `ui.es/en.themeToggle`, `ui.*.skipToContent`, `stats = { years: '8+', companies: '5', platforms: '6' }`, `consoleChrome`, and `alsoWithCompanies = ['Creativa Media Lab', 'Kodai', 'Hashme', 'Demedis'] as const` (sourced from the mock at `Portfolio.dc.html:697`).
+
+   - **`src/lib/projects.ts`** — preview modes keyed by **host, never by index**:
+     ```ts
+     export type PreviewMode = 'screenshot'
+     export const PREVIEWS: Record<string, PreviewMode> = {
+       'nera-agro.com': 'screenshot', 'agropro.ag': 'screenshot',
+       'kodaiverse.com': 'screenshot', 'masushuaia.com': 'screenshot',
+       'creativamedialab.com': 'screenshot', 'telecentro.com.ar': 'screenshot',
+     }
+     export function previewMode(host: string): PreviewMode { return PREVIEWS[host] ?? 'screenshot' }
+     ```
+
+   - **`src/lib/motion/math.ts`** — ~25 pure functions: `auroraStyle`, `docProgress`, `scrambleFrame(target, p, rand = Math.random)`, `anchorOffset`, `bootDelay(n) = 500 + n*170`, `typedLength`, `metricsAt(tick)` (`agents = 3 + tick%2`, `specs = 12 + ⌊tick/11⌋`, `shipped = 41 + ⌊tick/6⌋`), `logWindow`, `wordOpacity`, `aboutProgress`, `revealDelay`, `methodStep`, `methodCardState`, `methodProgress`, `methodLabel`, plus 19 canvas functions (`ellipsoidPoint`, `projectNode`, `asteriskTarget`, `formationPhase`, `connectionAlpha`, `collapseFactor`, `commandHopDelay`, `nodeCountFor`, etc.).
+
+   - **`src/styles/app.css`** — all tokens in `@theme static` with `light-dark()`; 11 keyframes; `@utility container-page/section-y/section-divider`; `--nav-h: 64px`; global `:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px }`; `scroll-margin-top`/`scroll-padding-top: var(--nav-h)`; `--color-contact-accent: light-dark(#087a95, #0a8faf)` (darkened in issue 16 from `#3ee7ff` for contrast).
+
+   - **`scripts/check-tokens.ts`** — the anti-hex lint, run from `bun run lint`. Note: it scans comments too.
+
+   - **`lighthouserc.json`** — most recent edit, the CI fix:
+     ```json
+     "collect": {
+       "staticDistDir": "./dist",
+       "numberOfRuns": 3,
+       "settings": { "chromeFlags": "--no-sandbox --disable-dev-shm-usage" }
+     }
+     ```
+
+   - **`scripts/capture-previews.ts`** — regenerates the six screenshots with Playwright; viewport 1440×990, `deviceScaleFactor: 2/3`, dismisses consent banners, waits 4s for entrance animations, writes `public/previews/<host>.jpg` at `quality: 82`.
+
+   - **`e2e/smoke.spec.ts`** — 7 Playwright tests: hero boots, theme toggle round-trips, language toggle navigates, reveal fires on scroll, method sticky advances 0→4, `reduce` mounts no canvas, and **the focus ring is never clipped by an overflow ancestor**.
+
+4. **Errors and fixes:**
+
+   - **`git reset --hard` ran on `main`**: the `git checkout -q feat/08-about` failed ("branch already exists"), so the chained `git reset --hard origin/feat/08-about` moved local `main` to the About commit. Fixed with `git branch -f main origin/main`; `origin/main` was untouched and the specs commit survived in both feature branches. I stated this plainly as my error.
+   - **Reported green on a red test**: I verified with `bun test 2>&1 | tail -2`, which cut off the `1 fail` line. CI caught it. Switched to `tail -4` and told the subagents to read the full summary.
+   - **False lint failure from agent worktrees**: `.claude/worktrees/*` each carry a `tsconfig.json`, so typescript-eslint refused to parse anything ("multiple candidate TSConfigRootDirs"). Fixed by adding `.claude/` to `eslint.config.js` ignores and `.prettierignore`.
+   - **Sibling-marker test coupling** (3 occurrences): `experience.test.ts`, `stack.test.ts`, `contact.test.ts` each asserted the *other* sections' markers still exist — a transient state that broke on every sibling merge. All three rewritten to assert only their own marker. This was induced by my own spec wording ("don't touch the other markers").
+   - **Merge conflicts on PR #12, #13, #14**: markers on adjacent lines merge as one hunk. Resolved mechanically each time, keeping both sides in design order.
+   - **`content.json` not tree-shakeable**: importing `consoleLog` into a client module pulled the whole file (5.9 kB gz vs 0.5 kB). Fixed with `json: { stringify: false }` in `astro.config.mjs` + named imports.
+   - **`loading="lazy"` didn't defer iframes**: 50 external requests fired with zero scrolling. Fixed with `data-src` + IntersectionObserver (later removed entirely when previews became screenshots).
+   - **Lighthouse "No usable sandbox!" in CI**: GitHub's Ubuntu runners restrict unprivileged user namespaces via AppArmor. Playwright passes its own flags; LHCI launches Chrome itself. Fixed with `chromeFlags: "--no-sandbox --disable-dev-shm-usage"`.
+   - **PNG previews weighed 2.5 MB**: converted to JPEG q82 via macOS `sips` → 723 KB; `cwebp`/`magick` unavailable, `sips` webp produced no output.
+   - **British spelling slipped in** ("maths") despite CLAUDE.md: fixed the files, left the commit subject, and added explicit examples of the easy slips to CLAUDE.md.
+
+5. **Problem Solving:**
+
+   Solved: the mock is a dc-runtime React-like component (math portable, plumbing/CSS not); IBM Plex Mono has no variable version; Tailwind opacity modifiers don't work on `light-dark()`; canvas can't read `--color-accent` directly (returns unresolved `light-dark()`), so the element carries `color: var(--color-accent)` and the class reads `styles.color` back; console timestamps must be client-side (a static build would freeze one clock forever) while the footer's year is correctly build-time; `aria-live="off"` not `polite` for a decorative auto-cycling log; the contact card inverts the theme so it needs its own accent token; a stylesheet cannot override an inline custom property (hence the `--step`/`--lit` indirection in Method); Lighthouse's 0.96 accessibility is a single `color-contrast` audit on Method's intentionally-dimmed upcoming cards (`opacity: .22` per MOTION_SPEC §7) — documented, not "fixed".
+
+   Ongoing/open: the GitHub↔Linear integration (user was told to check `https://github.com/settings/installations`; it now works — issues receive PR attachments); `public/previews` PNGs are now generated so that pending item is closed; company logos (issue 15) still undefined.
+
+6. **All user messages:**
+   - "creemos el repositorio en mi github llamemoslo portofolio-v3"
+   - "ahora lee el readme para que iniciemos la construccion del proyecto, lo diseñe todo con claude design y el hizo el handoff de lo que vamos a construir, la idea es usar bun con Astro, y las librerias que necesitemos para construir todo, la idea es que te leas toda la documentacion y a partir de eso vayamos construyendo, quiero que el esquema de trabajo sea SDD y TDD creando los issues en linear en el workspace Portfolio-djmaam-v3 para ir tomando los issues con subagentes la idea es que generemos los specs de cada tarea y que tu decidas que subagente la ejecuta y orquestremos el desarrollo"
+   - "con respecto a las dudas la fuente que mas me gusto es la Manrope, con el tema de los logos creemos la tarea pero no definamos nada todavia dejala para planificarla despues, y con el el tema del preview de los proyectos no se que dudas tenias, ya reconecte el workspace"
+   - "haria falta meter react para que funcione mejor? o con astro se resuelve todo? con respecto a el math me parece bien para que playwright no pese tanto en el CI/CD"
+   - "dale, aprobada, creá los issues"
+   - "dale arranquemos con la 00"
+   - "vamos con la ultima version de todo, asi lo tenemos lo mas actualizado posible"
+   - "antes que nada se subio al repositorio el .DS_Store eso es un archivo local de la mac, no deberia estar en el repositorio. ademas deberiamos tener el gitignore para que esto no vuelva a suceder"
+   - "Listo el pr quedo mergeado y borre la rama"
+   - "podemos cambiar todos los comments que has dejado en el codigo en ingles, la idea es que todo el proyecto este en ingles para mejorar la legilibidad de agentes y personas, cambiemos todo al ingles porfa"
+   - "si cambiemoslo tambien todo a ingles"
+   - "seria bueno actualizarlo a ingles americano porque es el que entiendo y hablo."
+   - "listo mergeada y borrada la rama"
+   - "dale, mergeada, seguimos con la 03"
+   - "podemos checkear la integracion de github con linear porque no puedo conectarlo con este nuevo workspace"
+   - "listo mergeada, seguimos con la 04"
+   - "listo mergeada, seguimos con la 05"
+   - "listo mergeada, seguimos con la 06"
+   - "listo mergeada, seguimos con la 07"
+   - "listo, mergeada, sigamos con dos en paralelo"
+   - "ya mergee la 09 ahora que hago?"
+   - "listo la otra"
+   - "resuelve los conflictos del pr 12"
+   - "lo mismo paso con el 13"
+   - "listo mergeada la 13, resolve la 14"
+   - "listo mergeada, seguimos con la 09"
+   - "listo mergeada, seguimos con la 16"
+   - "mergeado"
+   - (AskUserQuestion answer) "Screenshots estáticos" for the project previews
+
+7. **Pending Tasks:**
+   - **Block 18 — Deploy** (PV3-23): Cloudflare Pages, domain `marcosarrieta.dev`, Email Routing for `hi@marcosarrieta.dev`, CSP/security headers, `robots.txt`, `sitemap.xml`, Lighthouse ≥ 90 measured against production.
+   - **Block 15 — Company logos** (PV3-20): deliberately undefined, to be planned later per the user's instruction.
+   - User-side pending: confirm the "TAMBIÉN CON" company list (Creativa Media Lab, Kodai, Hashme, Demedis) taken from the mock; decide whether to renew `marcosarrieta.ar` for a 301 to `.dev`; confirm start month for Nera; confirm role/stack for Creativa Media Lab and Kodai.
+
+8. **Current Work:**
+
+   Block 17 (Playwright smoke + Lighthouse CI), PR **#17** at `https://github.com/djmaam/portfolio-v3/pull/17`, branch `feat/17-e2e-lighthouse`.
+
+   Sequence just completed: the subagent built the 7-test Playwright suite and Lighthouse config, but Lighthouse failed the budget because four live cross-origin iframes dragged 40–50 third-party requests in (`/en` scored Performance 0.82, Best Practices 0.79, and the `/` vs `/en` gap was CDN warmth, not a page difference). The agent correctly measured first, refused to degrade shimmer/aurora/nodes (TBT 0ms, CLS 0.005) and refused to lower a threshold. I asked the user, who chose static screenshots. A follow-up subagent captured the six screenshots but died mid-task when the machine slept, at "Now remove the dead IntersectionObserver script."
+
+   I finished it myself: converted the six PNGs (2.48 MB) to JPEG q82 via `sips` (723 KB total), updated `scripts/capture-previews.ts` to emit JPEG at `quality: 82`, updated `src/components/Projects.astro` and `src/lib/projects.ts` from `.png` to `.jpg`, rewrote 5 tests that asserted iframe behavior (3 in `tests/projects.test.ts`, 2 in `tests/a11y.test.ts` — the latter now keeps the guard but no longer requires iframes to exist), removed the now-unused `BLOCKED` constant, and rewrote §8 of the design doc.
+
+   Then CI failed on the `browser` job with Chrome's `No usable sandbox!`; I added `chromeFlags: "--no-sandbox --disable-dev-shm-usage"` to `lighthouserc.json`, verified locally (1.00 / 0.96 / 1.00 / 1.00 on both pages), committed and pushed.
+
+   **The final tool result received:** CI on PR #17 now passes both jobs — `browser pass 2m50s`, `check pass 30s`. **I have not yet reported this result to the user.**
+
+   Current local state: on branch `main`, `feat/17-e2e-lighthouse` pushed and green. Test counts: 305 unit tests, 7 Playwright tests.
+
+9. **Optional Next Step:**
+
+   Report to the user that CI on PR #17 is now fully green (`browser pass 2m50s`, `check pass 30s`) and that the block is ready to merge, then — on their confirmation — proceed to block 18 (deploy). This follows directly from the established rhythm: I told the user after the sandbox fix, "Arreglado y verificado local con los flags nuevos: **1.00 / 0.96 / 1.00 / 1.00** en ambas páginas. CI corriendo de nuevo," and earlier stated the remaining sequence: "Después de esta queda la `18` (deploy) y el `15` de logos, que sigue sin definir." I should not start block 18 until the user confirms PR #17 is merged, per the pattern they have followed for all sixteen previous blocks.
+
+If you need specific details from before compaction (like exact code snippets, error messages, or content you generated), read the full transcript at: /Users/djmaam/.claude/projects/-Users-djmaam-Projects-Marcos-portfolio-v3/ff79cbca-912c-4905-8a2c-c8e457538a3d.jsonl
+Continue the conversation from where it left off without asking the user any further questions. Resume directly — do not acknowledge the summary, do not recap what was happening, do not preface with "I'll continue" or similar. Pick up the last task as if the break never happened.
