@@ -1,8 +1,9 @@
 <!--
-  Frozen design prototype for spec 30 (docs/superpowers/specs/30-cube-mark.md).
-  `src/lib/motion/mark.ts` is the implementation; this file is deliberately not kept in
-  sync with it and carries its own copy of the LCG and the face tables. Its interface copy
-  is in Spanish because, like `handoff/`, it is a design communication artifact, not code.
+  Frozen design prototype for specs 30 and 31 (docs/superpowers/specs/30-cube-mark.md,
+  31-entry-choreography.md). `src/lib/motion/mark.ts` is the implementation; this file is
+  deliberately not kept in sync with it and carries its own copy of the LCG and the face
+  tables. It records the state the design was approved in, so its open questions are the
+  ones that were open then, not now.
 -->
 <title>Cubo Arrieta</title>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -519,11 +520,11 @@
 <div class="wrap">
   <h1>Cubo Arrieta</h1>
   <p class="lede">
-    Prototipo vivo del logo y de la coreografía de entrada. El cubo se dibuja con el mismo
-    motor de proyección que ya usa <code>src/lib/motion/network.ts</code>: cada pieza tiene
-    su propia rotación en X/Y/Z y el conjunto entero gira aparte. Las fases se
-    solapan a propósito: la energía sale mientras el cubo todavía vuela. Mové el scrubber
-    para recorrer la secuencia, o tocá los knobs para afinar la geometría.
+    A live prototype of the mark and of the entry choreography. The cube is drawn with the
+    same projection <code>src/lib/motion/network.ts</code> already uses: every piece turns on
+    its own X/Y/Z axes and the whole cluster turns separately. The phases overlap on purpose
+    — the energy leaves while the cube is still in flight. Drag the scrubber to walk the
+    sequence, or work the knobs to tune the geometry.
   </p>
 
   <div class="stage" id="stage">
@@ -534,17 +535,17 @@
     <div class="stage-nav">
       <div class="nav-slot" id="navSlot"></div>
       <div class="nav-name" id="navName">MARCOS ARRIETA</div>
-      <div class="nav-links"><span>Sobre mí</span><span>Trabajo</span><span>Contacto</span></div>
+      <div class="nav-links"><span>About</span><span>Work</span><span>Contact</span></div>
     </div>
 
     <div class="stage-hero">
       <div class="hero-col">
-        <p class="eyebrow" data-boot="0"><i></i><span id="typed">DISEÑO Y CONSTRUYO PRODUCTO</span></p>
-        <p class="h1" data-boot="1">Ingeniero de producto<br /><b>que envía a producción</b></p>
+        <p class="eyebrow" data-boot="0"><i></i><span id="typed">I DESIGN AND BUILD PRODUCT</span></p>
+        <p class="h1" data-boot="1">Product engineer<br /><b>who ships to production</b></p>
         <p class="sub" data-boot="2">
-          Diez años construyendo plataformas que aguantan usuarios de verdad.
+          Ten years building platforms that hold up under real users.
         </p>
-        <div class="ctas" data-boot="3"><span>Ver trabajo</span><span>Contacto</span></div>
+        <div class="ctas" data-boot="3"><span>See work</span><span>Contact</span></div>
       </div>
 
       <div class="console" id="console">
@@ -559,7 +560,7 @@
   </div>
 
   <div class="transport">
-    <button id="play">Reproducir</button>
+    <button id="play">Play</button>
     <div class="scrub">
       <input type="range" id="scrub" min="0" max="1000" value="0" />
       <span class="t" id="tLabel">0 ms</span>
@@ -567,39 +568,39 @@
     <button id="loop" data-on="true">Loop</button>
   </div>
 
-  <h2>Fases</h2>
+  <h2>Phases</h2>
   <p class="lede">
-    Cada fila es un tramo. Hacé clic para saltar. Los tramos se pisan entre sí — por eso
-    entran seis fases en 4.2s — y el knob <b>duración</b> reescala todo junto.
+    Each row is one stretch. Click to jump. The stretches overlap — which is how six phases
+    fit into 4.2s — and the <b>duration</b> knob rescales all of them together.
   </p>
   <div class="scroller">
     <table>
       <thead>
         <tr>
           <th>ms</th>
-          <th>Fase</th>
-          <th>Qué pasa</th>
-          <th>Dónde vive</th>
+          <th>Phase</th>
+          <th>What happens</th>
+          <th>Where it lives</th>
         </tr>
       </thead>
       <tbody id="phaseRows"></tbody>
     </table>
   </div>
 
-  <h2>Geometría</h2>
+  <h2>Geometry</h2>
   <div class="knobs" id="knobs"></div>
   <div class="toggles">
-    <button data-toggle="files" data-on="true">Paneles-archivo</button>
-    <button data-toggle="ticks" data-on="true">Marcas de acento</button>
+    <button data-toggle="files" data-on="true">File panels</button>
+    <button data-toggle="ticks" data-on="true">Accent ticks</button>
     <button data-toggle="glow" data-on="true">Glow</button>
-    <button data-toggle="wire" data-on="true">Cubos wireframe</button>
-    <button data-toggle="light">Fondo claro</button>
+    <button data-toggle="wire" data-on="true">Wireframe cubes</button>
+    <button data-toggle="light">Light background</button>
   </div>
 
-  <h2>Prueba de tamaño</h2>
+  <h2>Size test</h2>
   <p class="lede">
-    La prueba que decide si el logo sirve: a 14px, dentro del nav, tiene que leerse como una
-    forma, no como ruido. Si a 14px no se distingue, hay que bajar el número de piezas.
+    The test that decides whether the mark works: at 14px, inside the nav, it has to read as
+    a shape rather than as noise. If it does not, the piece count has to come down.
   </p>
   <div class="sizes">
     <div class="size"><canvas data-size="14"></canvas>14px · nav</div>
@@ -608,59 +609,57 @@
     <div class="size"><canvas data-size="64"></canvas>64px</div>
     <div class="size">
       <div class="size-row"><canvas data-size="16"></canvas>MARCOS ARRIETA</div>
-      en contexto
+      in context
     </div>
   </div>
 
-  <h2>Cómo se parte el trabajo</h2>
+  <h2>How the work splits</h2>
   <div class="grid">
     <div class="card">
-      <h3>PV3-A · Logo cubo</h3>
+      <h3>PV3-35 · Cube mark</h3>
       <p>
-        Geometría de las piezas, render del cubo, reemplazo del ✳ en <code>Nav.astro</code> y
-        <code>Footer.astro</code>, idle lento. Mergeable solo: el sitio queda con logo nuevo
-        aunque la coreografía no exista todavía.
+        The piece geometry, the cube renderer, the ✳ replaced in <code>Nav.astro</code> and
+        <code>Footer.astro</code>, slow idle motion. Mergeable on its own: the site gets the
+        new mark whether or not the choreography ever lands.
       </p>
     </div>
     <div class="card">
-      <h3>PV3-B · Coreografía</h3>
+      <h3>PV3-36 · Choreography</h3>
       <p>
-        Overlay de entrada, vuelo al nav, energía → red de nodos → consola → contenido.
-        Reescribe el timing de <code>boot.ts</code> y el arranque de <code>network.ts</code>.
-        Usa el logo que ya dejó PV3-A.
+        The entry overlay, the flight to the nav, energy → node network → console → content.
+        Retimes <code>boot.ts</code> and the start of <code>network.ts</code>. Uses the mark
+        PV3-35 already shipped.
       </p>
     </div>
   </div>
 
-  <h2>Decisiones abiertas</h2>
+  <h2>Open questions</h2>
   <ul>
     <li>
-      <b>Duración total.</b> 4.2s con las fases solapadas. Movete el knob: por debajo de
-      3.2s el EXPAND deja de leerse, por encima de 5s se siente que el sitio te hace esperar.
+      <b>Total duration.</b> 4.2s with the phases overlapped. Work the knob: below 3.2s the
+      EXPAND stops reading, above 5s the site feels like it is making you wait.
     </li>
     <li>
-      <b>Revisitas.</b> La secuencia corre una vez por sesión
-      (<code>sessionStorage</code>), no en cada navegación entre ES y EN. Un clic o un
-      scroll durante la animación salta al final.
+      <b>Revisits.</b> The sequence runs once per session (<code>sessionStorage</code>), not
+      on every navigation between ES and EN. A click or a scroll during it jumps to the end.
     </li>
     <li>
-      <b>El nombre.</b> Ya no se forma con partículas: aparece en el nav con el
-      <code>scramble</code> que el sitio ya tiene (<code>MOTION_SPEC</code> §1, resuelve de
-      izquierda a derecha con easing cuadrático). Cero código nuevo y cero riesgo de que
-      el nav salte de ancho.
+      <b>The name.</b> No longer formed out of particles: it resolves in the nav with the
+      <code>scramble</code> the site already has (<code>MOTION_SPEC</code> §1, left to right
+      with quadratic easing). No new code, and no risk of the nav changing width.
     </li>
     <li>
-      <b><code>prefers-reduced-motion: reduce</code>.</b> El cubo se dibuja quieto, ya
-      expandido y ya en el nav, y el contenido está desde el primer frame. Sin overlay,
-      sin vuelo.
+      <b><code>prefers-reduced-motion: reduce</code>.</b> The cube is drawn still, already
+      expanded and already in the nav, and the content is there from the first frame. No
+      overlay, no flight.
     </li>
     <li>
-      <b>Sin JS.</b> El nav necesita un fallback estático. Un SVG inline del cubo en reposo
-      cubre eso y además sirve de favicon y de imagen OG.
+      <b>No JS.</b> The nav needs a static fallback. An inline SVG of the cube at rest covers
+      it, and doubles as the favicon and the OG image.
     </li>
     <li>
-      <b>Fondo claro.</b> Probá el toggle: el cian sobre <code>#f4f5f7</code> pierde
-      cuerpo. Probablemente necesite su propia alpha, como terminó pasando con la aurora.
+      <b>Light background.</b> Try the toggle: the cyan loses body on <code>#f4f5f7</code>.
+      It probably needs its own alpha, the way the aurora ended up needing one.
     </li>
   </ul>
 </div>
@@ -795,13 +794,13 @@
 
   // ---------- knobs ----------
   const K = {
-    duration: { v: 4200, min: 2500, max: 12000, step: 100, label: 'duración total (ms)' },
-    spread: { v: 1, min: 0.6, max: 1.8, step: 0.01, label: 'separación de piezas' },
-    globalSpin: { v: 0.5, min: 0, max: 4, step: 0.05, label: 'giro del conjunto' },
-    pieceSpin: { v: 1, min: 0, max: 4, step: 0.05, label: 'giro de cada pieza' },
-    tilt: { v: 0.62, min: 0, max: 1.2, step: 0.01, label: 'inclinación isométrica' },
-    scale: { v: 0.85, min: 0.5, max: 1.8, step: 0.01, label: 'tamaño en el hero' },
-    nodes: { v: 64, min: 0, max: 120, step: 1, label: 'nodos de la red' },
+    duration: { v: 4200, min: 2500, max: 12000, step: 100, label: 'total duration (ms)' },
+    spread: { v: 1, min: 0.6, max: 1.8, step: 0.01, label: 'piece spread' },
+    globalSpin: { v: 0.5, min: 0, max: 4, step: 0.05, label: 'cluster spin' },
+    pieceSpin: { v: 1, min: 0, max: 4, step: 0.05, label: 'per-piece spin' },
+    tilt: { v: 0.62, min: 0, max: 1.2, step: 0.01, label: 'isometric tilt' },
+    scale: { v: 0.85, min: 0.5, max: 1.8, step: 0.01, label: 'size in the hero' },
+    nodes: { v: 64, min: 0, max: 120, step: 1, label: 'network nodes' },
   }
   const ON = { files: true, ticks: true, glow: true, wire: true, light: false }
 
@@ -833,12 +832,12 @@
   // ---------- phases ----------
   // Fractions of the total duration, so the duration knob rescales everything at once.
   const PHASES = [
-    [0, 0.095, 'SEED', 'Un punto de luz. El core respira, colapsado en el centro.', 'overlay nuevo'],
-    [0.09, 0.38, 'EXPAND', 'Las piezas salen a su sitio girando cada una en su eje, y se alinean.', 'logo/cube.ts'],
-    [0.355, 0.57, 'DOCK', 'El conjunto encoge y vuela al nav. Al aterrizar, el nombre hace scramble.', 'FLIP + scramble.ts'],
-    [0.52, 0.76, 'ENERGY', 'Del logo salen partículas al hero y se vuelven los 84 nodos.', 'network.ts'],
-    [0.69, 0.88, 'CONSOLE', 'Los nodos se anclan a la consola. Entra con el barrido.', 'network.ts + Console'],
-    [0.78, 1, 'CONTENT', 'Eyebrow, H1, sub, CTAs y stats en cascada.', 'boot.ts'],
+    [0, 0.095, 'SEED', 'A point of light. The core breathes, collapsed at the center.', 'new overlay'],
+    [0.09, 0.38, 'EXPAND', 'The pieces fly out, each turning on its own axes, and lock into the lattice.', 'mark.ts'],
+    [0.355, 0.57, 'DOCK', 'The cluster shrinks and flies to the nav. On landing, the name scrambles in.', 'FLIP + scramble.ts'],
+    [0.52, 0.76, 'ENERGY', 'Particles leave the mark for the hero and become the 84 nodes.', 'network.ts'],
+    [0.69, 0.88, 'CONSOLE', 'The nodes anchor to the console. It enters with the scan line.', 'network.ts + Console'],
+    [0.78, 1, 'CONTENT', 'Eyebrow, H1, sub, CTAs and stats, cascading.', 'boot.ts'],
   ]
 
   const rows = document.getElementById('phaseRows')
