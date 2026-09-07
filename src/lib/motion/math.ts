@@ -149,7 +149,7 @@ export function fade(dist: number, radius: number): number {
   return clamp01(1 - dist / radius)
 }
 
-/** The ease-in-out cubic of the base curve, used by the asterisk formation. */
+/** The ease-in-out cubic of the base curve, used by the ✳ formation. */
 function easeInOut(t: number): number {
   return t < 0.5 ? 4 * t ** 3 : 1 - (-2 * t + 2) ** 3 / 2
 }
@@ -213,7 +213,7 @@ export function focalLength(w: number, h: number): number {
 }
 
 /**
- * Where node `i` of `total` sits on the six-armed asterisk it converges into, relative to the
+ * Where node `i` of `total` sits on the six-armed ✳ it converges into, relative to the
  * center (`MOTION_SPEC` §3). Consecutive nodes go to consecutive arms and each full turn
  * of six steps one ring further out, so the arms fill evenly and the figure stays
  * balanced about the center.
@@ -227,7 +227,7 @@ export function asteriskTarget(i: number, total: number, radius: number): Point 
 }
 
 /**
- * The asterisk formation timeline of `MOTION_SPEC` §3, `p` being how far the nodes are pulled
+ * The ✳ formation timeline of `MOTION_SPEC` §3, `p` being how far the nodes are pulled
  * toward their target: converge 300 → 1200ms on an ease-in-out cubic, hold to 1900, then
  * dissolve to 2800 as the console arrives. Outside that window the cloud is on its own.
  */
@@ -364,7 +364,7 @@ export function insideCard(x: number, y: number, rect: Rect | null, pad = 10): b
  * the middle of the canvas, so the ellipsoid still covers the text column. Before the
  * card has been measured it falls back to the resting position of the design.
  *
- * `pull` is that fraction. The asterisk formation asks for 1, because `MOTION_SPEC` §3 centers
+ * `pull` is that fraction. The ✳ formation asks for 1, because `MOTION_SPEC` §3 centers
  * it "en la consola" — on the card itself, not on the damped center the cloud orbits.
  * At 0.35 it forms 210px to the left of the console and lands on the H1.
  */
@@ -413,12 +413,12 @@ export function median(values: readonly number[]): number {
     : ((sorted[mid - 1] as number) + (sorted[mid] as number)) / 2
 }
 
-/** Straight interpolation from `a` to `b`; the asterisk formation pulls each node along one. */
+/** Straight interpolation from `a` to `b`; the ✳ formation pulls each node along one. */
 export function lerp(a: number, b: number, t: number): number {
   return a + (b - a) * t
 }
 
-/** Radius of the asterisk the nodes converge into: 26% of the shorter side (`MOTION_SPEC` §3). */
+/** Radius of the ✳ the nodes converge into: 26% of the shorter side (`MOTION_SPEC` §3). */
 export function asteriskRadius(w: number, h: number): number {
   return Math.min(w, h) * 0.26
 }
