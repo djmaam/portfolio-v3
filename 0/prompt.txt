@@ -1,0 +1,7 @@
+<task-notification>
+<task-id>be1ppafwj</task-id>
+<tool-use-id>toolu_01MdPD8CQBZq3bfAAedUDZDM</tool-use-id>
+<output-file>/private/tmp/claude-501/-Users-djmaam-Projects-Marcos-portfolio-v3/33786be7-d54c-4daa-a55d-df6498965cc0/tasks/be1ppafwj.output</output-file>
+<status>completed</status>
+<summary>Background command "Wait for CI on PR 15" completed (exit code 0)</summary>
+</task-notification>
