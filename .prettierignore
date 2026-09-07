@@ -8,3 +8,5 @@ docs/
 test-results/
 playwright-report/
 .lighthouseci/
+.superpowers/
+.entire/tmp/
