@@ -1,3 +1,4 @@
+import { Glob } from 'bun'
 import { expect, test } from 'bun:test'
 
 import {
@@ -196,4 +197,26 @@ test('cloudFade brings the real cloud up over the energy phase', () => {
   expect(cloudFade(to, D)).toBe(1)
   expect(cloudFade(D, D)).toBe(1)
   expect(cloudFade((from + to) / 2, D)).toBeGreaterThan(0.5)
+})
+
+/**
+ * Criterion 13 of the spec. The ✳ formation is not deprecated, it is gone: the entry
+ * expands the real mark where the cloud used to draw a glyph, and a leftover call site
+ * would be a silent second choreography.
+ */
+test('nothing references the asterisk formation any more', async () => {
+  const root = new URL('../', import.meta.url)
+  const dead = /asteriskTarget|formationPhase|asteriskRadius/
+  const holdouts: string[] = []
+
+  for (const dir of ['src', 'tests', 'e2e']) {
+    for await (const name of new Glob('**/*.{astro,ts,css}').scan(new URL(dir, root).pathname)) {
+      const path = `${dir}/${name}`
+      // This file names all three in the line above, which is the one exception.
+      if (path === 'tests/entry.test.ts') continue
+      if (dead.test(await Bun.file(new URL(path, root)).text())) holdouts.push(path)
+    }
+  }
+
+  expect(holdouts).toEqual([])
 })
