@@ -1,0 +1,57 @@
+<task-notification>
+<task-id>a9612620a17b3a23e</task-id>
+<tool-use-id>toolu_01XDXcqSHi9FLJD9s9HLtZMP</tool-use-id>
+<output-file>/private/tmp/claude-501/-Users-djmaam-Projects-Marcos-portfolio-v3/33786be7-d54c-4daa-a55d-df6498965cc0/tasks/a9612620a17b3a23e.output</output-file>
+<status>completed</status>
+<summary>Agent "Implement Experience timeline" finished</summary>
+<note>A task-notification fires each time this agent stops with no live background children of its own. The user can send it another message and resume it, so the same task-id may notify more than once.</note>
+<result>Done. Branch `feat/10-experience` pushed, 2 commits, no PR.
+
+## Command output
+
+```
+$ bun run lint
+$ eslint . &amp;&amp; prettier --check . &amp;&amp; tsc --noEmit &amp;&amp; bun scripts/check-tokens.ts
+Checking formatting...
+All matched files use Prettier code style!
+EXIT=0
+
+$ bun test
+206 pass / 0 fail / 7523 expect() calls  (17 files, incl. 10 new in tests/experience.test.ts)
+
+$ bun run build
+generating static routes: /en/index.html, /index.html
+[build] 2 page(s) built in 200ms — Complete!
+```
+
+## Files
+
+- `/Users/djmaam/Projects/Marcos/portfolio-v3/.claude/worktrees/agent-a9612620a17b3a23e/src/components/Experience.astro` (new)
+- `/Users/djmaam/Projects/Marcos/portfolio-v3/.claude/worktrees/agent-a9612620a17b3a23e/tests/experience.test.ts` (new)
+- `src/pages/index.astro`, `src/pages/en/index.astro` — **only** the two `experience` marker lines replaced (1 line each in frontmatter, 1 in the body). The other eight markers are byte-identical and a test asserts they stay.
+
+`git status` is clean; nothing else was touched.
+
+## Verification against the real build
+
+**No raw `dot`/`glow` color.** The built `#work` section contains zero hex/`rgb(` strings, and the component's 20 scoped CSS rules contain no theme literal — the single `#0000` in them is lightningcss minifying `transparent` on `border: 1px solid transparent`. The six `3ee7ff` hits in `dist/_astro/Base.CpTTC8El.css` are all pre-existing `light-dark()` pairs from the `--color-accent` token, the aurora and Tailwind's `bg-accent/*`. The current dot is styled from `--color-accent`, the rest from `--color-line`; exactly one `&lt;span class="dot current"&gt;` ships per page.
+
+**No-JS legibility.** Extracted the `#work` section from both `dist/index.html` and `dist/en/index.html`, stripped tags, and diffed the text against `content.json`: every one of the 5 jobs' `abbr`/`company`/`period`/`role`/`note`/`stack`, plus `secWork`, `workTitle` and `alsoWith`, is present in both languages — zero missing strings. The section carries no `style=` attribute at all, and the only rule in the whole stylesheet that hides a `[data-reveal]` is `.has-js [data-reveal]{opacity:0…}`, inside `@media (prefers-reduced-motion: no-preference)`. `&lt;html&gt;` ships without `has-js` (the inline head script adds it), so with JS off nothing is hidden and nothing animates.
+
+**One scroll listener.** `grep -c 'addEventListener(`scroll`'` over all 12 built JS chunks: `scroll.CdvhKnjh.js:1`, every other file `0`. The Experience chunk is 4 lines and imports only `reduced` and `scramble`.
+
+## Decisions the spec did not cover
+
+- **`glow` is `"transparent"`, not absent, on the four past roles.** "An item whose `glow` is set" therefore had to become `job.glow !== 'transparent'`. The test asserts both that the content still has exactly one such job and that the component compares against `transparent` rather than emitting anything.
+- **`check-tokens` scans comments.** My first version explained the trap by quoting `#3EE7FF` and `rgba(62,231,255,.6)` in a code comment — the checker flagged both. Reworded to describe them instead. Worth knowing for the other three agents.
+- **The scramble needs an `IntersectionObserver` of its own.** `bindReveals` drives opacity/transform and cannot carry a text callback, and the spec forbids a second reveal implementation, so the section observes `[data-company]` directly and calls the shared `scramble(el, 1000)`. `reveal.ts`'s doc comment calls itself "the site's only `IntersectionObserver`" — that claim is now slightly stale, but I left the file untouched to avoid a conflict with the parallel branches. Someone should reword it after the merges.
+- **Hover styling.** The mock's timeline items are borderless, but spec 10 requires `translateY(-4px)` + accent border + shadow. Compromise: the card is transparent-bordered at rest (mock look) and materializes `--color-surface` + accent border + shadow on hover. `data-reveal` sits on the `&lt;li&gt;`, the transform on the `&lt;article&gt;` below it.
+- **Dropped `revealDelay`.** Timeline items are a full card apart vertically and each crosses the threshold on its own, so an index stagger would just make the fifth item 440 ms late. No `math.ts` import.
+- **`white-space: nowrap` + ellipsis on the company name.** The scramble preserves length but not glyph widths, so a wrapping name could rewrap mid-animation; the ellipsis is the safety valve in the 260 px minimum column.
+
+## Flagged
+
+**`alsoWith` renders with its label and an empty list**, as instructed — the box is `TAMBIÉN CON` / `ALSO WITH` and nothing else. The names do exist, but in the mock rather than in `content.json`: `handoff/reference/Portfolio.dc.html:697` has `companies: ["Creativa Media Lab", "Kodai", "Hashme", "Demedis"]` (a single shared list, not per-language). Adding a `companies` key to `content.json` and one `.map` in the component would finish it — but `handoff/` is read-only and the key is not mine to add, so it stays empty and the component carries a comment saying so.</result>
+<usage><subagent_tokens>118724</subagent_tokens><tool_uses>59</tool_uses><duration_ms>513295</duration_ms></usage>
+<worktree><worktreePath>/Users/djmaam/Projects/Marcos/portfolio-v3/.claude/worktrees/agent-a9612620a17b3a23e</worktreePath><worktreeBranch>worktree-agent-a9612620a17b3a23e</worktreeBranch></worktree>
+</task-notification>
