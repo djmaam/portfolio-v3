@@ -1,0 +1,26 @@
+{
+  "cli_version": "0.10.5",
+  "checkpoint_id": "01M1Y3CNXFRYC9RBF7Z7XYHBNR",
+  "strategy": "manual-commit",
+  "branch": "feat/30-cube-mark",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "docs/superpowers/plans/2026-09-07-cube-mark.md"
+  ],
+  "sessions": [
+    {
+      "metadata": "/0/metadata.json",
+      "transcript": "/0/full.jsonl",
+      "compact_transcript": "/0/transcript.jsonl",
+      "content_hash": "/0/content_hash.txt",
+      "prompt": "/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 20,
+    "cache_creation_tokens": 55101,
+    "cache_read_tokens": 1974002,
+    "output_tokens": 49800,
+    "api_call_count": 10
+  }
+}
