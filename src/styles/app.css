@@ -257,7 +257,13 @@
 @layer components {
   .aurora {
     position: fixed;
-    inset: 0;
+    /* The layer hangs 13vh below the viewport. `translateY(-12vh · p)` of §4 moves the
+       element *and its `overflow` clip box* up, so with `inset: 0` the bottom 12vh·p of
+       the viewport ends up outside the box: an untinted strip with a hard edge that
+       grows as you scroll and vanishes back at the top (spec 26). 13 rather than the
+       12vh of the travel because the two `vh` round independently, and at 12 the box
+       lands a hundredth of a pixel short of the viewport. */
+    inset: 0 0 -13vh 0;
     z-index: 0;
     overflow: hidden;
     pointer-events: none;

@@ -134,6 +134,30 @@ it. No hue and no opacity ceiling rescues it either: the light `--color-dim` and
 that strength eats the whole margin. Dropping the light blobs to 8%/5%/4% is what buys it
 back. The dark theme keeps §4's alphas.
 
+## The second defect: the layer's clip box travels with it
+
+Found while validating the retune. A dark, hard-edged band grows along the bottom of the
+viewport as you scroll, and disappears when you go back to the top.
+
+`.aurora` is `position: fixed; inset: 0; overflow: hidden`, and §4 drives
+`transform: translateY(-12vh · p)` on it. A transform moves the element **and its overflow
+clip box**, so the bottom `12vh · p` of the viewport falls outside the box and paints no
+aurora at all — an untinted strip whose top edge is the clip rectangle, not a blur. It
+grows from 0 to 108px at 900px tall, and unwinds on the way back up. Measured on the
+built page: `getBoundingClientRect()` on the layer reads `bottom = 792` in a 900px
+viewport at `p = 1`.
+
+Independent of hue and opacity, and older than this issue — it is `translateY` that
+causes it, and `translateY` is unchanged.
+
+The fix is one declaration: `inset: 0 0 -13vh 0`, so the layer hangs below the viewport
+by more than the travel and the clipped edge never enters view. 13 rather than 12 because
+the two `vh` lengths round independently: at exactly 12 the box lands 0.01px short.
+
+`e2e/layout.spec.ts` asserts it where it can be seen — at full scroll, with the drift
+applied, the layer's rect still covers the viewport top to bottom. A stylesheet reads
+correct either way; only a layout engine can say where the box actually is.
+
 ## Acceptance criteria
 
 - [ ] `auroraStyle` is unit-tested at `p = 0, .2, .4, .7, 1` against the table above, in
@@ -144,5 +168,7 @@ back. The dark theme keeps §4's alphas.
 - [ ] Footer `dim` and `ink` clear 4.5:1, and `accent` clears its large-text 3:1, over the
       aurora at its strongest, in both themes.
 - [ ] The deviation from `MOTION_SPEC` §4 is recorded — this file.
+- [ ] The layer covers the viewport at every point of the scroll — asserted on the
+      rendered page, in `e2e/layout.spec.ts`, not in the stylesheet.
 - [ ] `bun run build && bun test && bun run lint` green; Lighthouse accessibility does not
       drop.
