@@ -1,0 +1,1 @@
+vamos a ejecutar el issue 31 de linear, tiene su spec creado vamos a arrancar de ahi
