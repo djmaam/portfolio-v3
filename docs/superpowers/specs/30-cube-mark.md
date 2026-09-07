@@ -129,7 +129,8 @@ The client script replaces the SVG with a `<canvas>` of the same box on mount, u
 | File                              | Change                                                                 |
 | --------------------------------- | ---------------------------------------------------------------------- |
 | `src/lib/motion/mark.ts`          | new — geometry table, seeded LCG, per-piece rotation, projection, draw   |
-| `src/components/CubeMark.astro`   | new — build-time SVG, canvas upgrade, shared rAF, IntersectionObserver   |
+| `src/components/CubeMark.astro`   | new — build-time SVG at the resting frame, and the mount call           |
+| `src/lib/motion/markDraw.ts`      | new — canvas upgrade, shared rAF, IntersectionObserver, hover settle     |
 | `src/components/Nav.astro`        | ✳ and its `think` keyframes out, `<CubeMark size={20} />` in            |
 | `src/components/Footer.astro`     | same, at 16                                                            |
 | `src/styles/app.css`              | `@keyframes think` deleted if nothing else uses it                      |
@@ -154,7 +155,10 @@ These are the tests.
 8. With JavaScript enabled, the nav mark is a `<canvas>` and its pixels change between two
    frames 500ms apart.
 9. Under `prefers-reduced-motion: reduce`, the mark is an `<svg>` and no rAF is scheduled.
-10. No `✳` anywhere under `src/`.
+10. No `✳` anywhere under `src/components/`. The glyph legitimately survives in
+    `src/styles/app.css`, `src/lib/motion/math.ts` and `src/lib/motion/network.ts`, which
+    describe the node cloud's ✳ formation (`MOTION_SPEC` §3) — a live feature that spec
+    [31](./31-entry-choreography.md) replaces, not this one.
 
 ## Out of scope
 

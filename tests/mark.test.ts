@@ -16,6 +16,7 @@ import {
   markSpin,
   pieceRotation,
   polyAlpha,
+  restingPolygons,
   rotate3,
   strokeWidth,
   visibleFaces,
@@ -209,6 +210,16 @@ test('the global spin is monotonic and slow', () => {
   expect(markSpin(1000)).toBeGreaterThan(markSpin(0))
   // A full turn takes about 22 seconds: peripheral, never a distraction.
   expect((Math.PI * 2) / markSpin(1)).toBeGreaterThan(20_000)
+})
+
+test('the canvas first frame is the frame the SVG bakes', () => {
+  // `CubeMark.astro` bakes `restingPolygons`; `markDraw.ts` paints
+  // `markPolygons(box, hoverSettle(...), t, markSpin(t))` with `t` rebased to its own
+  // mount, so its first frame is this. If either side drifts the mark snaps on mount,
+  // which is the one thing the build-time SVG exists to prevent.
+  for (const box of [16, 20, 64]) {
+    expect(markPolygons(box, hoverSettle(0, 0), 0, markSpin(0))).toEqual(restingPolygons(box))
+  }
 })
 
 const src = new URL('../src/', import.meta.url)

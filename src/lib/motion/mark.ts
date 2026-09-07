@@ -152,7 +152,7 @@ export function markPieces(box: number): readonly MarkPiece[] {
   ))
 }
 
-// ── Rotation and culling (spec 35) ───────────────────────────────────────────
+// ── Rotation and culling (spec 30) ───────────────────────────────────────────
 
 /**
  * The perspective distance, in lattice units. Deliberately far: at |z| ≤ 3.2 the scale
@@ -164,7 +164,7 @@ export const MARK_FOCAL = 900
 
 export type MarkCamera = { world: Point3; f: number }
 
-export const CUBE_VERTS: readonly Point3[] = [
+const CUBE_VERTS: readonly Point3[] = [
   { x: -1, y: -1, z: -1 },
   { x: 1, y: -1, z: -1 },
   { x: 1, y: 1, z: -1 },
@@ -185,7 +185,7 @@ export const CUBE_FACES: readonly (readonly number[])[] = [
 ]
 
 /** Analytic, in the order of `CUBE_FACES`. See the culling test for why not the winding. */
-export const CUBE_NORMALS: readonly Point3[] = [
+const CUBE_NORMALS: readonly Point3[] = [
   { x: 0, y: 0, z: -1 },
   { x: 0, y: 0, z: 1 },
   { x: 0, y: -1, z: 0 },
@@ -230,7 +230,7 @@ export function idleWobble(piece: MarkPiece, t: number, settle: number): Point3 
 }
 
 /** How long the pieces take to lock back after a hover loosens them. */
-export const HOVER_MS = 600
+const HOVER_MS = 600
 
 /** How far `settle` dips on hover: the pieces loosen, they do not fly apart. */
 export const HOVER_SETTLE = 0.85
@@ -271,7 +271,7 @@ export function visibleFaces(pos: Point3, rot: Point3, size: number, cam: MarkCa
   return out
 }
 
-// ── Projection to polygons (spec 35) ─────────────────────────────────────────
+// ── Projection to polygons (spec 30) ─────────────────────────────────────────
 
 /**
  * One shape to paint. Two points mean a stroked segment, four a filled face. Both the
@@ -392,6 +392,15 @@ export function markPolygons(box: number, settle: number, t: number, spinY: numb
   }
 
   return polys.sort((a, b) => b.depth - a.depth)
+}
+
+/**
+ * The frame both renderers start from: settled, unwobbled, and unturned. `CubeMark.astro`
+ * bakes exactly this into the build-time SVG and `markDraw.ts` reproduces it on its first
+ * canvas frame, so the handover is invisible. One function, so the two cannot drift.
+ */
+export function restingPolygons(box: number): MarkPoly[] {
+  return markPolygons(box, 1, 0, markSpin(0))
 }
 
 /**

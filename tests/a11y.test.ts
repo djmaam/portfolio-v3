@@ -198,7 +198,12 @@ test.each(Object.keys(pages))('%s keeps the decorative glyphs out of the tree', 
     }
   }
   // The mark replaced the ✳ in the nav and the footer (spec 30); it is decoration too.
-  for (const match of html.matchAll(/<span class="mark"[^>]*>/g)) {
+  // Matches `class="mark"` and `class="mark foo"` alike — a `class` attribute containing
+  // `mark` as a whole word — so a second class added to the span later cannot make this
+  // pattern match nothing and the guard pass vacuously.
+  const marks = [...html.matchAll(/<span class="[^"]*\bmark\b[^"]*"[^>]*>/g)]
+  expect(marks).toHaveLength(2)
+  for (const match of marks) {
     expect(match[0]).toContain('aria-hidden="true"')
   }
   expect(html).toContain('role="log"')

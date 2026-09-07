@@ -16,7 +16,12 @@ type Mounted = {
   visible: boolean
   light: boolean
   accent: string
-  /** When the pointer last entered the mark's link, so the pieces can loosen and settle. */
+  /** `performance.now()` at mount. Every other time in `Mounted` is rebased onto this, the
+   *  way `network.ts` rebases onto its own `born` — so the first frame is always `t = 0`,
+   *  which is the frame `restingPolygons` bakes into the build-time SVG. */
+  born: number
+  /** When the pointer last entered the mark's link, in the same `born`-relative time base
+   *  as `t`, so the pieces can loosen and settle. */
   hoverAt: number
 }
 
@@ -44,12 +49,16 @@ function readTheme(mark: Mounted): void {
   mark.light = document.documentElement.dataset.theme === 'light'
 }
 
-function paint(mark: Mounted, t: number): void {
+function paint(mark: Mounted, now: number): void {
   const { ctx, box } = mark
   ctx.clearRect(0, 0, box, box)
   ctx.strokeStyle = mark.accent
   ctx.fillStyle = mark.accent
 
+  // Rebased onto this mark's own mount, not the page's time origin: at `t = 0` this is
+  // `restingPolygons(box)` exactly, which is what `CubeMark.astro` baked into the SVG the
+  // canvas just replaced.
+  const t = now - mark.born
   const settle = hoverSettle(mark.hoverAt, t)
 
   for (const poly of markPolygons(box, settle, t, markSpin(t))) {
@@ -94,6 +103,9 @@ export function mountMark(
   if (prefersReducedMotion()) return () => {}
 
   const canvas = document.createElement('canvas')
+  // Read once and never again, unlike `network.ts`, which re-measures on the shared scroll
+  // channel. Deliberate: this box never resizes, and a zoom or a monitor swap leaving a
+  // 16-20px decoration slightly soft is not worth a second listener to chase.
   const dpr = Math.min(2, window.devicePixelRatio || 1)
   canvas.width = Math.round(box * dpr)
   canvas.height = Math.round(box * dpr)
@@ -110,6 +122,7 @@ export function mountMark(
     visible: true,
     light: false,
     accent: 'currentColor',
+    born: performance.now(),
     hoverAt: 0,
   }
   readTheme(mark)
@@ -124,7 +137,7 @@ export function mountMark(
     attributeFilter: ['data-theme'],
   })
 
-  const onHover = () => (mark.hoverAt = performance.now())
+  const onHover = () => (mark.hoverAt = performance.now() - mark.born)
   hoverTarget?.addEventListener('mouseenter', onHover)
 
   if (!running) {
