@@ -5,6 +5,8 @@
   "branch": "feat/30-cube-mark",
   "checkpoints_count": 2,
   "files_touched": [
+    "src/lib/motion/mark.ts",
+    "src/lib/motion/markDraw.ts",
     "tests/mark.test.ts"
   ],
   "sessions": [
@@ -17,17 +19,10 @@
     }
   ],
   "token_usage": {
-    "input_tokens": 10,
-    "cache_creation_tokens": 14544,
-    "cache_read_tokens": 1869686,
-    "output_tokens": 10149,
-    "api_call_count": 5,
-    "subagent_tokens": {
-      "input_tokens": 138,
-      "cache_creation_tokens": 188732,
-      "cache_read_tokens": 5724714,
-      "output_tokens": 18336,
-      "api_call_count": 70
-    }
+    "input_tokens": 0,
+    "cache_creation_tokens": 0,
+    "cache_read_tokens": 0,
+    "output_tokens": 0,
+    "api_call_count": 0
   }
 }
