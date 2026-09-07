@@ -1,0 +1,33 @@
+{
+  "cli_version": "0.10.5",
+  "checkpoint_id": "01M1Y61FXTVQ8MVX0DZMYDS6EH",
+  "strategy": "manual-commit",
+  "branch": "feat/30-cube-mark",
+  "checkpoints_count": 2,
+  "files_touched": [
+    "tests/contrast.test.ts"
+  ],
+  "sessions": [
+    {
+      "metadata": "/0/metadata.json",
+      "transcript": "/0/full.jsonl",
+      "compact_transcript": "/0/transcript.jsonl",
+      "content_hash": "/0/content_hash.txt",
+      "prompt": "/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 14,
+    "cache_creation_tokens": 14369,
+    "cache_read_tokens": 2391332,
+    "output_tokens": 8652,
+    "api_call_count": 7,
+    "subagent_tokens": {
+      "input_tokens": 50,
+      "cache_creation_tokens": 185812,
+      "cache_read_tokens": 2500265,
+      "output_tokens": 11994,
+      "api_call_count": 25
+    }
+  }
+}

@@ -1,0 +1,71 @@
+<task-notification>
+<task-id>ae6af3bfcdd2e184c</task-id>
+<tool-use-id>toolu_01HPztAqZej76sS1PpKeAoZa</tool-use-id>
+<output-file>/private/tmp/claude-501/-Users-djmaam-Projects-Marcos-portfolio-v3/ff79cbca-912c-4905-8a2c-c8e457538a3d/tasks/ae6af3bfcdd2e184c.output</output-file>
+<status>completed</status>
+<summary>Agent "Implement Task 4: component and glyph removal" finished</summary>
+<note>A task-notification fires each time this agent stops with no live background children of its own. The user can send it another message and resume it, so the same task-id may notify more than once.</note>
+<result>**Status:** DONE
+
+Commits:
+- `c4097c9` — feat(mark): the cube replaces the ✳ in the nav and the footer (PV3-35)
+- `8e76260` — fix(mark): narrow the asterisk sweep to components, restore node-cloud comments
+
+One-line test summary: `bun test` 364 pass / 0 fail; `bun run lint` (eslint+prettier+tsc+check-tokens) exit 0; `bun run build` exit 0.
+
+Concerns: none remaining — `math.ts`/`network.ts` restored verbatim to `f80247f`, the source-sweep test narrowed to `components/` only and verified it still fails correctly when the glyph is temporarily reintroduced, and the `contrast.test.ts` `.mark` exemption was left untouched as instructed.
+
+Report: `/Users/djmaam/Projects/Marcos/portfolio-v3/.superpowers/sdd/2026-09-07-cube-mark/task-4-report.md` (fix report appended at the end)</result>
+<usage><subagent_tokens>123762</subagent_tokens><tool_uses>81</tool_uses><duration_ms>92557</duration_ms></usage>
+</task-notification>
+
+---
+
+<task-notification>
+<task-id>a3444cab735acd715</task-id>
+<tool-use-id>REDACTED</tool-use-id>
+<output-file>/private/tmp/claude-501/-Users-djmaam-Projects-Marcos-portfolio-v3/ff79cbca-912c-4905-8a2c-c8e457538a3d/tasks/a3444cab735acd715.output</output-file>
+<status>completed</status>
+<summary>Agent "Review Task 4 (spec + quality)" finished</summary>
+<note>A task-notification fires each time this agent stops with no live background children of its own. The user can send it another message and resume it, so the same task-id may notify more than once.</note>
+<result>### Spec Compliance
+- ✅ Spec compliant, with one scope note: `tests/contrast.test.ts` is modified (diff lines 360–388) but is not in the brief's "Files" list (brief lists only `CubeMark.astro`, `Nav.astro`, `Footer.astro`, `app.css`, `tests/footer.test.ts`, `tests/tokens.test.ts`, `tests/a11y.test.ts`, `tests/mark.test.ts`). Treated as **Extra**, addressed under Issues below since it touches an a11y guard.
+- Verified directly:
+  - `src/components/CubeMark.astro:36-42`: emits `&lt;span class="mark" style={...--mark-size...} data-mark={size} aria-hidden="true"&gt;` wrapping an inline `&lt;svg data-mark-svg&gt;` from frontmatter — no script, no `has-js` gate.
+  - `CubeMark.astro:54-69`: 2-point polys → `&lt;polyline&gt;`, else `&lt;polygon&gt;`; `stroke-opacity`/`fill-opacity`/`stroke-width` all sourced from `polyAlpha`/`strokeWidth`, no hardcoded numbers.
+  - `Nav.astro:1,16` and `Footer.astro:2,17`: import `CubeMark`, mount at `size={20}` and `size={16}` respectively.
+  - `.glyph` rules and both `@media (prefers-reduced-motion: no-preference)` blocks (whose sole content was the `.glyph` animation) are fully deleted in both `Nav.astro` and `Footer.astro` — confirmed clean removal, no orphaned rule left.
+  - `app.css:472` area: `@keyframes think` removed; independently re-grepped `think` across `src/` (via the report's own command reasoning) — nothing else references it.
+  - `tests/footer.test.ts`, `tests/tokens.test.ts`, `tests/a11y.test.ts` updated exactly per the brief's literal replacement text.
+- Independently verified (not just trusted from the report):
+  - `git status --porcelain` on this checkout is clean, and `src/lib/motion/math.ts` / `network.ts` still contain their original nine `✳` comment sites (`math.ts:152,216,230,367,416,421`, `network.ts:86,302,391`) — the revert claimed in commit `8e76260` is confirmed complete and exact; neither file appears in the final diff, which is only possible if they match `f80247f` exactly.
+  - `app.css:361` still names `✳` in its own comment, consistent with the narrowed test's own explanation.
+  - Manually re-derived the narrowed test's logic (`tests/mark.test.ts:453-461`): filters `sources` by `file.name.startsWith('components/')`, so it inspects real files (`CubeMark.astro`, `Nav.astro`, `Footer.astro`, etc.) and is not vacuous — the implementer's own re-injection test (glyph put back into `Nav.astro`, confirmed red, reverted) is consistent with this.
+  - Built `dist/index.html` in the working tree: `grep -o data-mark-svg | wc -l` → 2, `data-mark="20"`/`data-mark="16"` both present, and no `CubeMark`-named script chunk exists among the built `&lt;script type="module" src=...&gt;` tags (only About/Base/Console/Experience/Footer/Hero/Method/Nav bundles) — the empty `&lt;script&gt;// Task 5 fills this in.&lt;/script&gt;` placeholder produces zero JS output, so "no JavaScript involved" holds in practice despite the literal `&lt;script&gt;` tag in source.
+- ⚠️ Cannot fully verify from diff alone: whether the mark reads correctly in the light theme. `CubeMark.astro:37` calls `markPolygons(size, 1, 0, Math.PI / 4)` and line 53 calls `polyAlpha(poly, false)` — `false` is hardcoded, meaning the build-time SVG always bakes in the *dark*-theme alpha values (opacity is a static SVG attribute, not a CSS variable, so it cannot react to theme switching). `mark.ts:372-376`'s own comment says light backgrounds need alpha lifted "by a third." This is exactly per the brief's literal Step 3 code (not an implementer deviation), and the brief itself pre-flagged the `1.35` knob as the fix if needed. The implementer reports visually checking both themes via Playwright and seeing no thinness. I did not re-run the dev server to confirm; recommend a manual light-theme check before this branch merges, since a static, non-reactive opacity is a real (if brief-mandated) design constraint that only a screenshot can settle.
+
+### Strengths
+- `CubeMark.astro` is presentation-only: no duplicated math, geometry, or opacity logic — every number comes from `markPolygons`/`polyAlpha`/`strokeWidth` (Task 3). Good separation of concerns.
+- `fill="none"` and `stroke="currentColor"` set once on the `&lt;svg&gt;` root and inherited by children instead of being repeated per-shape — avoids duplication without sacrificing correctness (children that need `fill="currentColor"` for `&lt;polygon&gt;` override it explicitly).
+- CSS deletions in `Nav.astro`/`Footer.astro` are complete and precise — both `.glyph` rules and both single-purpose `@media (prefers-reduced-motion)` blocks are removed wholesale, leaving no dead selectors or empty at-rules.
+- The correction commit (`8e76260`) is a genuine, verifiable fix, not just a claim: git history confirms the revert of `math.ts`/`network.ts` is exact, and the narrowed test was re-validated against a reintroduced glyph before being trusted.
+- Test coverage additions (`tests/mark.test.ts`) match the brief's literal Step 1 text (as corrected) and independently exercise real file content via `Bun`'s `Glob`, not mocked data.
+
+### Issues
+
+#### Critical (Must Fix)
+None.
+
+#### Important (Should Fix)
+- **`tests/contrast.test.ts:378`** — the `.mark` exemption from the accent/text-contrast guard is keyed on **class name alone** (`ownClasses(selector).includes('mark')`), not on the specific file (`CubeMark.astro`) the rationale is written for. Any future component that reuses the generic class name `.mark` for a rule that paints `color: var(--color-accent)` on actual text would silently inherit this carve-out and bypass the WCAG large-text check, with no signal that it's happening. The stated rationale ("`.mark` paints SVG graphics through `currentColor`, never text") is true today only because it's scoped to one specific file's one specific selector — but the code doesn't enforce that scoping. This is exactly the kind of a11y-guard hole flagged as worth close attention: it's currently correct but fragile by construction. Suggest tightening to also check the file identity (e.g., `file === 'CubeMark.astro' &amp;&amp; ownClasses(selector).includes('mark')`), or renaming the exemption check to something less collision-prone than a bare class-name match.
+- **Out-of-scope file touched without brief authorization**: `tests/contrast.test.ts` is not in the brief's "Files" section, and it is an accessibility-relevant guard, not incidental cleanup. The change itself is narrow and documented, and the controller apparently reviewed and left it in place per the report — but it should have been called out as a plan/brief gap requiring explicit sign-off (labeled plan-mandated: the brief's file list is incomplete relative to what "all green" actually required), not decided unilaterally by the implementer. No code change requested here beyond the fix above, but flagging the process gap.
+
+#### Minor (Nice to Have)
+- `CubeMark.astro:16` (`// Task 5 fills this in.`) — the empty `&lt;script&gt;` tag is per the brief's literal Step 3 code, and build output confirms it compiles to zero emitted JS, so this is not a functional issue. Worth noting only because the outer framing text ("this task adds no `&lt;script&gt;`") reads as a stronger claim than the source literally shows; harmless in practice.
+- The `polyAlpha(poly, false)` static light-theme fidelity concern above is Minor rather than Important because it is plan-mandated, pre-flagged by the brief itself as a possible follow-up, and already spot-checked (if not independently re-verified by this review) by the implementer.
+
+### Assessment
+**Task quality:** Approved
+**Reasoning:** All brief-mandated files, deletions, and test replacements are present and correct, independently re-verified (not just trusted) for the two flagged judgment calls — the asterisk-sweep revert is exact and the narrowed test is non-vacuous. The one real concern is the `tests/contrast.test.ts` exemption's class-name-only scoping, which is a latent a11y-guard fragility rather than a live defect; fixing it to scope by file as well as class name would close the gap cheaply.</result>
+<usage><subagent_tokens>86807</subagent_tokens><tool_uses>8</tool_uses><duration_ms>247750</duration_ms></usage>
+</task-notification>
