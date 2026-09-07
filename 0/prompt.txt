@@ -1,0 +1,56 @@
+<task-notification>
+<task-id>a98fc8bfd0354d980</task-id>
+<tool-use-id>toolu_015RC1cP1H5Ez71KgwgeP4aj</tool-use-id>
+<output-file>/private/tmp/claude-501/-Users-djmaam-Projects-Marcos-portfolio-v3/33786be7-d54c-4daa-a55d-df6498965cc0/tasks/a98fc8bfd0354d980.output</output-file>
+<status>completed</status>
+<summary>Agent "Implement base layout and scroll engine" finished</summary>
+<note>A task-notification fires each time this agent stops with no live background children of its own. The user can send it another message and resume it, so the same task-id may notify more than once.</note>
+<result>All three commands pass. Work is on `feat/03-base-layout` in four commits, not merged, no PR.
+
+## Final command output
+
+```
+$ bun run lint
+$ eslint . &amp;&amp; prettier --check . &amp;&amp; tsc --noEmit &amp;&amp; bun scripts/check-tokens.ts
+Checking formatting...
+All matched files use Prettier code style!          exit=0
+
+$ bun test
+ 101 pass · 0 fail · 830 expect() calls · 8 files    (12 of them new)
+
+$ bun run build
+ generating static routes
+   ├─ /en/index.html (+5ms)
+   ├─ /index.html (+1ms)
+ 2 page(s) built in 194ms — Complete!
+```
+
+## What shipped
+
+- `src/lib/motion/math.ts` — `docProgress`, `auroraStyle` (pure, no DOM).
+- `src/lib/motion/reduced.ts` — `prefersReducedMotion()`, the JS twin of the CSS media queries.
+- `src/lib/motion/scroll.ts` — `onScroll(fn) =&gt; unsubscribe`. Event raises a flag, the rAF reads `scrollY`/`innerHeight`/`scrollHeight` once and passes one shared `ScrollState` object to every subscriber. Attaches on the first subscription (scroll + resize, both `passive`), detaches and cancels the pending frame on the last. Returns a no-op under `reduce` without attaching anything. Subscribing schedules a first frame so a new subscriber starts from the real scroll position instead of bootstrapping its own measurement — that is what keeps issues 08/09 from ever needing a listener or a `getBoundingClientRect` of their own.
+- `src/styles/app.css` — `@utility container-page / section-y / section-divider`, plus an `@layer components` aurora block.
+- `src/layouts/Base.astro` — full head, aurora, `nav` / default / `footer` slots, one bundled script (aurora subscription + language-choice persistence).
+- Both pages reduced to `lang` + the scaffold content block.
+
+## Verifications against the real build
+
+- **Single listener:** `grep -rhoE "addEventListener\([\"'\`][a-z]+" dist/` → ``2 click, 2 resize, 2 scroll``. Astro inlines the page bundle into each HTML file, so the site's one `scroll` call site appears once per page (1 per page, 2 pages) — there is exactly one call site in one module, `scroll.ts`. Note the minifier emits backticks, so a literal `addEventListener('scroll'` grep returns zero matches; the character-class grep above is the honest check.
+- **Redirect after the move:** the inline script diffs byte-identical against `git show HEAD~4:src/pages/index.astro` (as do the font preloads). I then extracted the script *as shipped in `dist/index.html`* and executed it against stubbed `localStorage` / `sessionStorage` / `location`: no stored lang → no navigation; `lang=en` fresh session → `replace(/en)` and sets `langRedirected`; `langRedirected` already set → nothing; `lang=es` → nothing; two loads sharing one session → exactly 1 redirect. Only `location.replace` is ever called.
+- **No-JS:** both `dist/*.html` carry the full content and the three aurora divs; the `.45` resting opacity is scoped to `.has-js .aurora` *inside* `@media (prefers-reduced-motion: no-preference)`, so with JS off (or with `reduce`) the aurora renders static at full strength, and there is no first-frame opacity flash when JS is on.
+- **Head:** each page has canonical=1, description=1, 3 hreflang alternates, 6 `og:*`, twitter:card=1; `og:locale` is `es_AR` / `en_US`, `og:image` points at `https://marcosarrieta.dev/og.png` (file intentionally absent). The stylesheet link lands *after* the inline script in the built head, so the theme still settles before first paint.
+- **Page parity:** structural diff of the two HTML files (attributes stripped) differs only in `lang`, the two `define:vars` values, and the translated copy.
+
+## Decisions the spec did not cover
+
+1. **The language toggle anchor stayed in the pages.** The spec's context lists it among the duplicated things that "move here", but §1 does not list it under what Base owns, the `nav` slot must stay empty, and the toggle is Nav's markup (issue 04). I moved only its *behavior* — the `localStorage.setItem('lang', …)` click handler — into Base's script, next to the redirect it pairs with, and left the throwaway anchor in the page scaffold so the redirect remains exercisable by hand until Nav exists.
+2. **Third blob uses `alternate-reverse`.** The spec says "all alternate"; the mock (`handoff/reference/Portfolio.dc.html:39`) uses `alternate-reverse` for blob 3. I followed the mock — two blobs running `aur1` in lockstep at 16s/24s reads as correlated.
+3. **Aurora alphas via `color-mix` on the tokens**, per the convention `app.css` itself declares for one-off alphas, wrapped in `light-dark()` where the mock's light and dark alphas differ (.22/.16 and .12/.08). Lightning CSS emits static hex fallbacks plus an `@supports` upgrade, so old browsers still get the blobs.
+4. **`auroraStyle` string formatting:** degrees rounded (as the mock does) and `translateY` / `saturate` rounded to 2/3 decimals, to keep style strings free of float noise (`-2.4vh`, not `-2.4000000000000004vh`). Values are unchanged at every point MOTION_SPEC §4 pins down.
+5. **Content sits in a `relative z-[1]` wrapper** around all three slots, so nav and footer clear the aurora too without each component minding z-index.
+6. **Canonical derives from `siblingPath(pathname, lang)`** — reusing the existing normalizer instead of hardcoding the two routes, so it keeps working when more pages land.
+
+No dependencies added.</result>
+<usage><subagent_tokens>98947</subagent_tokens><tool_uses>43</tool_uses><duration_ms>457979</duration_ms></usage>
+</task-notification>
