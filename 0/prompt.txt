@@ -1,0 +1,7 @@
+<task-notification>
+<task-id>btwao91hx</task-id>
+<tool-use-id>toolu_01Bp5eNXGNaWGStyzpqqGLHn</tool-use-id>
+<output-file>/private/tmp/claude-501/-Users-djmaam-Projects-Marcos-portfolio-v3/ff79cbca-912c-4905-8a2c-c8e457538a3d/tasks/btwao91hx.output</output-file>
+<status>completed</status>
+<summary>Background command "Watch CI on PRs 21 and 22" completed (exit code 0)</summary>
+</task-notification>
