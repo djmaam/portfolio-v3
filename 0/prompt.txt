@@ -1,0 +1,60 @@
+<task-notification>
+<task-id>a49afa3007dc33872</task-id>
+<tool-use-id>toolu_01Nd77LmMKWbt3J21VDTCKAo</tool-use-id>
+<output-file>/private/tmp/claude-501/-Users-djmaam-Projects-Marcos-portfolio-v3/33786be7-d54c-4daa-a55d-df6498965cc0/tasks/a49afa3007dc33872.output</output-file>
+<status>completed</status>
+<summary>Agent "Implement node network canvas" finished</summary>
+<note>A task-notification fires each time this agent stops with no live background children of its own. The user can send it another message and resume it, so the same task-id may notify more than once.</note>
+<result>Done. All three commands pass; three atomic commits on `feat/07-network-canvas` (nothing merged, no PR).
+
+## Command output
+
+```
+$ bun run lint
+$ eslint . &amp;&amp; prettier --check . &amp;&amp; tsc --noEmit &amp;&amp; bun scripts/check-tokens.ts
+Checking formatting...
+All matched files use Prettier code style!
+exit=0
+
+$ bun test
+ 174 pass
+ 0 fail
+ 7237 expect() calls
+Ran 174 tests across 14 files. [101.00ms]
+
+$ bun run build
+19:14:54 [build] ✓ Completed in 135ms.
+19:14:54 [build] 2 page(s) built in 196ms
+19:14:54 [build] Complete!
+```
+
+Commits: `6d6b311` math + tests → `25aca0b` full-bleed hero shell → `3454437` canvas class and wiring. No new dependencies.
+
+## Measured frame time
+
+**Median 0.30 ms, p95 0.70 ms, max 1.1 ms** — comfortably inside the 4 ms budget.
+
+Method: headless Chrome (real one, driven over the DevTools protocol from a throwaway Bun script in the scratchpad — no dep added), `Page.addScriptToEvaluateOnNewDocument` wrapping `requestAnimationFrame` to time each callback, sampled over a settled 5 s window (~190 drawing frames), 1440×994 CSS px (so `nodeCountFor` = 84), on an Apple M4 Pro. Identical numbers at `dpr` 1 and 2. Degradation never triggers.
+
+Honest caveat: this is main-thread rAF-callback time (the math plus recording the canvas display list). Chrome rasterizes off the main thread, so GPU raster cost is not in that number — but it is the number `MOTION_SPEC` §13's budget is about, and the loop held a steady 60 rAF / 40 drawn fps throughout.
+
+## Verifications against the real build
+
+- **`prefers-reduced-motion: reduce`** (`Emulation.setEmulatedMedia`): `document.querySelectorAll('canvas').length === 0`. No element, not merely invisible.
+- **JavaScript disabled** (`Emulation.setScriptExecutionDisabled`): 0 canvases, and I built `main` in a temp worktree to compare side by side. `h1`, `.stats` and `[data-console]` client rects are **bit-identical** (`card top 410.390625`, `x 756`, `w 516`, `h 331.5` on both); the only difference is the hero section itself going 1200→1440 wide, which is the intended full-bleed change. Visible text identical.
+- **Listeners**: `addEventListener('scroll'` and `('resize'` appear only in `scroll.ts` (both now have a guarding test); `bindAnchors()` is still called once, from `Base.astro`. `network.ts` adds only `pointermove`.
+- **Theme flip**: with the canvas painting, setting `data-theme=light` repaints the brightest canvas pixel from `62,231,255` to `10,143,175` — i.e. the drawn accent follows the token.
+- **Scroll parking**: with the page artificially grown (nothing sits below the hero yet), drawn frames go 29 → **0** while collapsed → 35 after scrolling back. Zero page errors across all runs.
+
+## Decisions the spec did not cover
+
+1. **How the canvas learns the token colors.** `getComputedStyle(el).getPropertyValue('--color-accent')` returns the unresolved `light-dark(#…, #…)` token stream, so it is useless. `.hero-net` instead carries `color: var(--color-accent)` and `border-color: var(--color-violet)` (border-width 0), and the class reads `styles.color` / `styles.borderTopColor` back resolved. A `MutationObserver` on `documentElement`'s `data-theme` re-reads them.
+2. **Alpha via `ctx.globalAlpha`, not `rgba()` strings.** `scripts/check-tokens.ts` fails on the literal `rgba(` anywhere outside `app.css`, so the mock's per-line string building was not an option. Setting `strokeStyle` once per group and modulating `globalAlpha` is also cheaper — it is most of why the frame time came in so low.
+3. **The console rect comes from the `offsetParent` chain**, not `getBoundingClientRect`. Offsets ignore transforms, so the card's boot `translateY(24px) scale(.96)` cannot drag the anchors, and they are scroll-invariant by construction. Walking the chain up to the section keeps it correct regardless of which ancestors are positioned.
+4. **Camera rotation.** The mock reached ±.075 rad through an accumulated-delta hack; `MOTION_SPEC` says ±.15. `cameraAngles` returns the spec's ±.25 tilt / ±.15 rot directly and the class eases toward it — same feel, no hidden state.
+5. **`asteriskTarget` is deterministic.** The mock jitters arm angle and radius by ±.05/±.04; the spec's signature has no `rand`, and the acceptance criterion asks for exact symmetry, so the jitter is gone.
+6. **`mountNetwork()` owns the reduced-motion guard**, so "no element is ever created" is a unit test rather than an assertion about an `.astro` script.
+7. **More math functions than the spec listed.** The eight named ones plus `fade`, `lerp`, `median`, `cloudCenter`, `consoleAnchors`, `insideCard`, `nearestPoint`, `commandPulses`, `ellipsoidRadii`, `focalLength`, `rotateX`, `asteriskRadius`, `verticalDrift`, `twinkle`, `nodeRadius`, `nodeAlpha`, `cursorPull`, `cameraAngles`, `rotationStep` — that is what "no arithmetic worth testing in the class" costs. What stayed in the class: `Math.hypot` inside the draw loops (geometry the loop must do anyway) and the alpha combination `min(.9, base + cursorBoost + flash·.5)`.
+8. **Canvas extent.** `MOTION_SPEC` §3 says 100vw × 100vh; spec 07's Context section says `inset: 0` on the hero section. I followed spec 07 — the canvas is the size of the hero (1440×994 at this viewport), which is also what makes the `mask-image` fade land where the hero ends.</result>
+<usage><subagent_tokens>164294</subagent_tokens><tool_uses>64</tool_uses><duration_ms>968159</duration_ms></usage>
+</task-notification>
