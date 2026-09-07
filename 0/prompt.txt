@@ -1,0 +1,59 @@
+<task-notification>
+<task-id>ae360bf56fdd1c55d</task-id>
+<tool-use-id>toolu_01N9vVMWKiiQVJbtWminrBdJ</tool-use-id>
+<output-file>/private/tmp/claude-501/-Users-djmaam-Projects-Marcos-portfolio-v3/33786be7-d54c-4daa-a55d-df6498965cc0/tasks/ae360bf56fdd1c55d.output</output-file>
+<status>completed</status>
+<summary>Agent "Scaffold Astro project" finished</summary>
+<note>A task-notification fires each time this agent stops with no live background children of its own. The user can send it another message and resume it, so the same task-id may notify more than once.</note>
+<result>Scaffold done on `feat/00-scaffold`, 5 atomic commits, nothing merged, no PR.
+
+## Versiones
+
+| Paquete | Versión |
+|---|---|
+| astro | 7.3.1 |
+| tailwindcss / @tailwindcss/vite | 4.3.3 |
+| typescript | 6.0.3 |
+| eslint / typescript-eslint / eslint-plugin-astro | 10.10.0 / 8.69.0 / 3.1.0 |
+| prettier / prettier-plugin-astro | 3.9.6 / 0.14.1 |
+
+## Salida final (corrida limpia, tras `rm -rf dist .astro`)
+
+```
+########## bun run lint
+$ eslint . &amp;&amp; prettier --check .
+Checking formatting...
+All matched files use Prettier code style!
+
+########## bun test
+bun test v1.4.0 (34cbb9a40)
+ 2 pass
+ 0 fail
+ 2 expect() calls
+Ran 2 tests across 1 file. [3.00ms]
+
+########## bun run build
+$ astro build
+[build] output: "static"
+[build] ✓ Completed in 188ms.
+[build] 1 page(s) built in 225ms
+[build] Complete!
+```
+
+Verificaciones extra:
+- `dist/_astro/index.tPYgzmVU.css` contiene `.text-3xl{font-size:var(--text-3xl);...}` — la clase de `index.astro` llega al CSS generado.
+- `git status --short` limpio; `git status --porcelain -- handoff docs README.md` vacío.
+- `.DS_Store` destrackeado y borrado del working tree.
+- `bun install --frozen-lockfile` pasa (lo que corre CI).
+
+## Decisiones no cubiertas por la spec
+
+1. **Astro 7, no 5.** El diseño §2 dice "Astro 5" pero la spec de scaffold manda `create-astro@latest`, que hoy resuelve a `astro@7.3.1`. Prioricé el comando explícito de la spec del issue. Si querés Astro 5, es un downgrade puntual de `package.json` — avisame.
+2. **TypeScript fijado a `^6.0.3`.** `@types/bun` arrastró `typescript@7.0.2` y `typescript-eslint@8.69.0` no soporta TS 7 (`eslint .` reventaba con "typescript-eslint does not support TS 7.0" + un `ERR_INTERNAL_ASSERTION` de Node). El peer de typescript-eslint es `&gt;=4.8.4 &lt;6.1.0`, así que 6.0.3 es el techo soportado. Revisar cuando typescript-eslint soporte TS 7 (issue 10940).
+3. **Scaffold hecho en un dir temporal y copiado selectivamente**, no `create-astro .` directo — así no había ninguna chance de pisar `README.md`. Descarté el `README.md`, `AGENTS.md`, el symlink `CLAUDE.md` y `.vscode/` que genera el template; copié solo `public/favicon.{svg,ico}` y los configs (reescritos según la spec).
+4. **`.prettierignore` incluye `handoff/` y `docs/`.** Sin eso, `prettier --check .` fallaba sobre archivos read-only (`handoff/reference/*.html`, `*.jsx`, y el design doc). `eslint.config.js` ignora `handoff/` por la misma razón.
+5. **`.prettierrc` con `singleQuote: false` para `*.css`**, para que `app.css` quede exactamente `@import "tailwindcss";` como pide la spec y no lo reescriba a comillas simples.
+6. **El test cubre 6 scripts, no 5.** La spec §6 dice "los cinco scripts" pero §4 lista seis (`dev`, `build`, `preview`, `lint`, `format`, `test`). El test asserta los seis exactos.
+7. **CI pinea `bun-version: 1.4.0`** para igualar el entorno local; la spec no especificaba versión.</result>
+<usage><subagent_tokens>52262</subagent_tokens><tool_uses>24</tool_uses><duration_ms>236805</duration_ms></usage>
+</task-notification>
