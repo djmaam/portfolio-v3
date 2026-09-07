@@ -1,0 +1,80 @@
+Review this change for security vulnerabilities.
+
+Changed files (you may Read these and any other file in the repo):
+  - scripts/check-tokens.ts
+  - tests/check-tokens.test.ts
+  - tests/tokens.test.ts
+
+Unified diff (only + lines are new):
+
+=== DIFF: scripts/check-tokens.ts ===
+@@ -1,5 +1,5 @@
+ #!/usr/bin/env bun
+-// No literal colours outside src/styles/app.css: components only consume tokens
++// No literal colors outside src/styles/app.css: components only consume tokens
+ // (`text-ink`, `bg-bg`, `var(--color-*)`). Runs from `bun run lint`.
+ 
+ import { Glob } from 'bun'
+@@ -23,7 +23,7 @@ for await (const file of new Glob('**/*.{astro,ts,tsx,js,jsx,css,svelte,vue}').s
+ }
+ 
+ if (findings.length > 0) {
+-  console.error(`Literal colours outside ${ALLOWED} (use @theme tokens):\n`)
++  console.error(`Literal colors outside ${ALLOWED} (use @theme tokens):\n`)
+   console.error(findings.join('\n'))
+   process.exit(1)
+ }
+
+
+=== DIFF: tests/check-tokens.test.ts ===
+@@ -28,7 +28,7 @@ test('passes on a file that only uses tokens', async () => {
+   expect(exitCode).toBe(0)
+ })
+ 
+-test('fails on a hex literal and reports file, line and colour', async () => {
++test('fails on a hex literal and reports file, line and color', async () => {
+   const { exitCode, output } = await check({
+     'components/Card.astro': 'ok\n<div style="color: #3EE7FF">hola</div>\n',
+   })
+@@ -46,7 +46,7 @@ test.each(['#abc', '#0B0D12', '#3EE7FF80', 'rgb(1,2,3)', 'rgba(1,2,3,.5)', 'hsl(
+   },
+ )
+ 
+-test('app.css is the one file allowed to hold literal colours', async () => {
++test('app.css is the one file allowed to hold literal colors', async () => {
+   const { exitCode } = await check({
+     'styles/app.css': '@theme { --color-ink: light-dark(#0B0D12, #F3F5F9); }\n',
+   })
+
+
+=== DIFF: tests/tokens.test.ts ===
+@@ -2,7 +2,7 @@ import { expect, test } from 'bun:test'
+ 
+ const css = await Bun.file(new URL('../src/styles/app.css', import.meta.url)).text()
+ 
+-/** Every `--name: value;` declaration in app.css, whitespace-normalised. */
++/** Every `--name: value;` declaration in app.css, whitespace-normalized. */
+ const declarations = new Map(
+   [...css.matchAll(/(--[\w-]+)\s*:\s*([^;}]+)[;}]/g)].map(([, name, value]) => [
+     name!,
+@@ -33,7 +33,7 @@ const STEP_COLORS: Record<string, string> = {
+   '--color-step-5': '#3DDC84',
+ }
+ 
+-/** `rgba(0,0,0,.08)` and `rgba(0, 0, 0, 0.08)` are the same colour. */
++/** `rgba(0,0,0,.08)` and `rgba(0, 0, 0, 0.08)` are the same color. */
+ const canonical = (value: string) =>
+   value
+     .toLowerCase()
+@@ -68,7 +68,7 @@ test.each(Object.entries(STEP_COLORS))('%s is a theme-independent literal', (tok
+ })
+ 
+ test('the alpha variants used more than once are their own tokens', () => {
+-  // Tailwind v4 cannot recompute alpha on a light-dark() colour, so `bg-accent/8`
++  // Tailwind v4 cannot recompute alpha on a light-dark() color, so `bg-accent/8`
+   // is impossible: every repeated alpha variant needs a token of its own.
+   for (const token of ['--color-accent-soft', '--color-line', '--color-surface']) {
+     expect(declarations.has(token)).toBe(true)
+
+
+Investigate per the method in your instructions, then return the findings list.
