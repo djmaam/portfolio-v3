@@ -1,0 +1,314 @@
+Review this change for security vulnerabilities.
+
+Changed files (you may Read these and any other file in the repo):
+  - src/lib/motion/scroll.ts
+  - tests/scroll.test.ts
+  - src/lib/motion/math.ts
+  - src/lib/motion/reduced.ts
+  - tests/math.test.ts
+
+Unified diff (only + lines are new):
+
+=== DIFF: src/lib/motion/scroll.ts ===
+@@ -0,0 +1,59 @@
++import { docProgress } from './math'
++import { prefersReducedMotion } from './reduced'
++
++export type ScrollState = { scrollY: number; vh: number; progress: number }
++
++type Subscriber = (state: ScrollState) => void
++
++/**
++ * The site's only scroll listener. Everything that reacts to scroll subscribes here:
++ * one event listener, one rAF, one layout read per frame, shared by every subscriber
++ * (`MOTION_SPEC` §13). Adding a second `scroll` listener anywhere else is a bug.
++ */
++const subscribers = new Set<Subscriber>()
++let frame = 0
++
++function tick() {
++  frame = 0
++  const { scrollY, innerHeight: vh } = window
++  // Read once, hand the same object to everyone: no subscriber needs to measure again.
++  const state: ScrollState = {
++    scrollY,
++    vh,
++    progress: docProgress(scrollY, document.documentElement.scrollHeight, vh),
++  }
++  for (const fn of subscribers) fn(state)
++}
++
++/** The event only raises a flag; the frame does the work, so a burst collapses into one. */
++function schedule() {
++  if (frame === 0) frame = window.requestAnimationFrame(tick)
++}
++
++/**
++ * Registers a subscriber and returns its unsubscribe. The listener attaches with the
++ * first subscription and detaches with the last one. With `prefers-reduced-motion:
++ * reduce` nothing is attached and the subscriber never runs — scroll-driven motion is
++ * decoration, so the page simply keeps its resting state.
++ */
++export function onScroll(fn: Subscriber): () => void {
++  if (prefersReducedMotion()) return () => {}
++
++  if (subscribers.size === 0) {
++    window.addEventListener('scroll', schedule, { passive: true })
++    window.addEventListener('resize', schedule, { passive: true })
++  }
++  subscribers.add(fn)
++  schedule() // First frame: subscribers start from the real scroll position, not from 0.
++
++  return () => {
++    subscribers.delete(fn)
++    if (subscribers.size > 0) return
++    window.removeEventListener('scroll', schedule)
++    window.removeEventListener('resize', schedule)
++    if (frame !== 0) {
++      window.cancelAnimationFrame(frame)
++      frame = 0
++    }
++  }
++}
+
+
+=== DIFF: tests/scroll.test.ts ===
+@@ -0,0 +1,134 @@
++import { afterEach, expect, test } from 'bun:test'
++
++import { onScroll } from '../src/lib/motion/scroll'
++
++type Listener = () => void
++
++/**
++ * The site's scroll engine is pure DOM plumbing, so the test stubs the three globals it
++ * touches: `window` (listeners + rAF + metrics), `document` (scrollHeight) and
++ * `matchMedia` (reduced motion). Frames are drained by hand, which is what lets the test
++ * fire a burst of events against a single tick.
++ */
++const stub = (reduceMotion = false) => {
++  const listeners = new Map<string, Set<Listener>>()
++  const frames: Listener[] = []
++
++  const win = {
++    scrollY: 0,
++    innerHeight: 800,
++    addEventListener(type: string, fn: Listener) {
++      const set = listeners.get(type) ?? new Set<Listener>()
++      set.add(fn)
++      listeners.set(type, set)
++    },
++    removeEventListener(type: string, fn: Listener) {
++      listeners.get(type)?.delete(fn)
++    },
++    requestAnimationFrame(fn: Listener) {
++      frames.push(fn)
++      return frames.length
++    },
++    cancelAnimationFrame() {},
++  }
++
++  Object.assign(globalThis, {
++    window: win,
++    document: { documentElement: { scrollHeight: 5000 } },
++    matchMedia: (query: string) => ({ matches: reduceMotion && query.includes('reduce') }),
++  })
++
++  return {
++    win,
++    count: (type: string) => listeners.get(type)?.size ?? 0,
++    fire: (type: string) => listeners.get(type)?.forEach((fn) => fn()),
++    /** Runs every frame queued so far, the way the browser would on the next tick. */
++    flush: () => frames.splice(0).forEach((fn) => fn()),
++  }
++}
++
++afterEach(() => {
++  for (const key of ['window', 'document', 'matchMedia']) {
++    delete (globalThis as Record<string, unknown>)[key]
++  }
++})
++
++test('subscribers run once per frame, not once per event', () => {
++  const dom = stub()
++  const calls: number[] = []
++  const stop = onScroll((state) => calls.push(state.scrollY))
++
++  dom.win.scrollY = 2100
++  for (let i = 0; i < 5; i++) dom.fire('scroll')
++  dom.flush()
++
++  expect(calls).toEqual([2100])
++  stop()
++})
++
++test('every subscriber gets the same state, computed once per frame', () => {
++  const dom = stub()
++  const seen: unknown[] = []
++  const stopA = onScroll((state) => seen.push(state))
++  const stopB = onScroll((state) => seen.push(state))
++
++  dom.win.scrollY = 4200
++  dom.fire('scroll')
++  dom.flush()
++
++  expect(seen).toHaveLength(2)
++  expect(seen[0]).toBe(seen[1])
++  expect(seen[0]).toEqual({ scrollY: 4200, vh: 800, progress: 1 })
++  stopA()
++  stopB()
++})
++
++test('a resize refreshes the viewport height', () => {
++  const dom = stub()
++  const seen: number[] = []
++  const stop = onScroll((state) => seen.push(state.vh))
++
++  dom.win.innerHeight = 600
++  dom.fire('resize')
++  dom.flush()
++
++  expect(seen.at(-1)).toBe(600)
++  stop()
++})
++
++test('the listener attaches on the first subscription and detaches with the last one', () => {
++  const dom = stub()
++  expect(dom.count('scroll')).toBe(0)
++
++  const stopA = onScroll(() => {})
++  const stopB = onScroll(() => {})
++  expect(dom.count('scroll')).toBe(1)
++  expect(dom.count('resize')).toBe(1)
++
++  stopA()
++  expect(dom.count('scroll')).toBe(1)
++
++  stopB()
++  expect(dom.count('scroll')).toBe(0)
++  expect(dom.count('resize')).toBe(0)
++
++  onScroll(() => {})()
++  expect(dom.count('scroll')).toBe(0)
++  const stopC = onScroll(() => {})
++  expect(dom.count('scroll')).toBe(1)
++  stopC()
++})
++
++test('with prefers-reduced-motion: reduce it never attaches a listener', () => {
++  const dom = stub(true)
++  const calls: unknown[] = []
++  const stop = onScroll((state) => calls.push(state))
++
++  expect(dom.count('scroll')).toBe(0)
++  expect(dom.count('resize')).toBe(0)
++  dom.fire('scroll')
++  dom.flush()
++  expect(calls).toHaveLength(0)
++
++  expect(() => stop()).not.toThrow()
++})
+
+
+=== DIFF: src/lib/motion/math.ts ===
+@@ -0,0 +1,32 @@
++// Every motion issue drops its math here: pure functions, no DOM, covered by `bun test`.
++// The modules that own the plumbing (scroll.ts, reveal.ts, …) stay dumb on purpose.
++
++/** Trims float noise so the style strings stay short and stable. */
++const round = (value: number, decimals = 2) => {
++  const factor = 10 ** decimals
++  return Math.round(value * factor) / factor
++}
++
++/**
++ * Document progress of `MOTION_SPEC` §4: `scrollY / (scrollHeight - vh)`, clamped to
++ * [0, 1]. A document that does not scroll has no progress, so it reports 0 instead of
++ * dividing by zero.
++ */
++export function docProgress(scrollY: number, scrollHeight: number, vh: number): number {
++  const max = scrollHeight - vh
++  if (max <= 0) return 0
++  return Math.min(1, Math.max(0, scrollY / max))
++}
++
++/**
++ * Aurora state at a given document progress (`MOTION_SPEC` §4): the hue sweeps cyan →
++ * violet → magenta → amber, the opacity ramps .45 → 1 over the first 40% of the
++ * document, and the whole layer drifts up 12vh.
++ */
++export function auroraStyle(p: number): { filter: string; opacity: number; translateY: string } {
++  return {
++    filter: `hue-rotate(${Math.round(p * 260)}deg) saturate(${round(1 + 0.4 * p, 3)})`,
++    opacity: 0.45 + 0.55 * Math.min(1, p * 2.5),
++    translateY: `${round(-12 * p)}vh`,
++  }
++}
+
+
+=== DIFF: src/lib/motion/reduced.ts ===
+@@ -0,0 +1,8 @@
++/**
++ * The JS half of the `prefers-reduced-motion` guard; the CSS half is the
++ * `@media (prefers-reduced-motion: no-preference)` blocks in `app.css`. Every motion
++ * module checks this before it animates anything.
++ */
++export function prefersReducedMotion(): boolean {
++  return matchMedia('(prefers-reduced-motion: reduce)').matches
++}
+
+
+=== DIFF: tests/math.test.ts ===
+@@ -0,0 +1,49 @@
++import { expect, test } from 'bun:test'
++
++import { auroraStyle, docProgress } from '../src/lib/motion/math'
++
++test('docProgress is 0 at the top of the document and 1 at the bottom', () => {
++  expect(docProgress(0, 5000, 800)).toBe(0)
++  expect(docProgress(4200, 5000, 800)).toBe(1)
++  expect(docProgress(2100, 5000, 800)).toBeCloseTo(0.5, 10)
++})
++
++test('docProgress clamps beyond both ends', () => {
++  expect(docProgress(-400, 5000, 800)).toBe(0)
++  expect(docProgress(99999, 5000, 800)).toBe(1)
++})
++
++test('docProgress returns 0 when the document does not scroll', () => {
++  expect(docProgress(0, 800, 800)).toBe(0)
++  expect(docProgress(120, 800, 800)).toBe(0)
++  // A shorter document than the viewport is the same non-scrolling case.
++  expect(docProgress(120, 600, 800)).toBe(0)
++})
++
++test('auroraStyle at p=0 is the resting state of MOTION_SPEC §4', () => {
++  const s = auroraStyle(0)
++  expect(s.filter).toBe('hue-rotate(0deg) saturate(1)')
++  expect(s.opacity).toBeCloseTo(0.45, 10)
++  expect(s.translateY).toBe('0vh')
++})
++
++test('auroraStyle at p=.2 is halfway up the opacity ramp', () => {
++  const s = auroraStyle(0.2)
++  expect(s.filter).toBe('hue-rotate(52deg) saturate(1.08)')
++  expect(s.opacity).toBeCloseTo(0.725, 10)
++  expect(s.translateY).toBe('-2.4vh')
++})
++
++test('auroraStyle reaches opacity 1 at p=.4 and stays there', () => {
++  expect(auroraStyle(0.4).opacity).toBeCloseTo(1, 10)
++  expect(auroraStyle(0.4).filter).toBe('hue-rotate(104deg) saturate(1.16)')
++  expect(auroraStyle(0.4).translateY).toBe('-4.8vh')
++  for (const p of [0.5, 0.75, 1]) expect(auroraStyle(p).opacity).toBeCloseTo(1, 10)
++})
++
++test('auroraStyle at p=1 is the full hue rotation of MOTION_SPEC §4', () => {
++  const s = auroraStyle(1)
++  expect(s.filter).toBe('hue-rotate(260deg) saturate(1.4)')
++  expect(s.opacity).toBeCloseTo(1, 10)
++  expect(s.translateY).toBe('-12vh')
++})
+
+
+Investigate per the method in your instructions, then return the findings list.
