@@ -1,0 +1,623 @@
+Review this change for security vulnerabilities.
+
+Changed files (you may Read these and any other file in the repo):
+  - src/lib/motion/math.ts
+  - tests/math.test.ts
+
+Unified diff (only + lines are new):
+
+=== DIFF: src/lib/motion/math.ts ===
+@@ -104,3 +104,288 @@ export function logWindow(tick: number, length: number, max: number): number[] {
+   const from = Math.max(0, tick - max)
+   return Array.from({ length: tick - from }, (_, i) => (from + i) % length)
+ }
++
++// ── Node network (`MOTION_SPEC` §3) ──────────────────────────────────────────
++// The whole of the hero canvas' arithmetic. `network.ts` owns the canvas, the node
++// array and the rAF loop; every formula it needs is here, where `bun test` reaches it.
++
++export type Point = { x: number; y: number }
++export type Point3 = Point & { z: number }
++/** Radii of the ellipsoid the nodes orbit on. */
++export type Radii = { rx: number; ry: number; rz: number }
++/** A card measured in canvas coordinates — offsets, so no transform ever pollutes it. */
++export type Rect = { left: number; top: number; width: number; height: number }
++
++/** Distance at which two nodes stop being connected (`MOTION_SPEC` §3). */
++export const CONNECT_DIST = 150
++/** Reach of the cursor's attraction, of its violet lines, and of the card's anchors. */
++export const CURSOR_DIST = 200
++export const CURSOR_LINK_DIST = 170
++export const ANCHOR_DIST = 280
++
++const clamp01 = (value: number) => Math.min(1, Math.max(0, value))
++
++/** Linear fade of a distance over a radius: 1 at the center, 0 at the edge and beyond. */
++export function fade(dist: number, radius: number): number {
++  return clamp01(1 - dist / radius)
++}
++
++/** The ease-in-out cubic of the base curve, used by the ✳ formation. */
++function easeInOut(t: number): number {
++  return t < 0.5 ? 4 * t ** 3 : 1 - (-2 * t + 2) ** 3 / 2
++}
++
++/**
++ * The ellipsoid the cloud sits on (`MOTION_SPEC` §3): a fraction of the viewport on each
++ * axis, shrunk by the scroll collapse down to 15% of its size.
++ */
++export function ellipsoidRadii(w: number, h: number, collapse: number): Radii {
++  const k = 1 - 0.85 * collapse
++  return { rx: w * 0.56 * k, ry: h * 0.48 * k, rz: Math.min(w, h) * 0.5 * k }
++}
++
++/**
++ * A point on the surface of that ellipsoid, at longitude `theta` and latitude `phi`.
++ * `(x/rx)² + (y/ry)² + (z/rz)²` is 1 for every pair of angles, which is what the test
++ * asserts and what keeps the cloud from bulging.
++ */
++export function ellipsoidPoint(theta: number, phi: number, r: Radii): Point3 {
++  const cp = Math.cos(phi)
++  return {
++    x: Math.cos(theta) * cp * r.rx,
++    y: Math.sin(phi) * r.ry,
++    z: Math.sin(theta) * cp * r.rz,
++  }
++}
++
++/** Rotates a point about the X axis: the camera tilt the cursor drives. */
++export function rotateX(p: Point3, angle: number): Point3 {
++  const c = Math.cos(angle)
++  const s = Math.sin(angle)
++  return { x: p.x, y: p.y * c - p.z * s, z: p.y * s + p.z * c }
++}
++
++/**
++ * Perspective projection (`MOTION_SPEC` §3): `sc = f / (f + z)`, so a node shrinks as it
++ * moves away. `depth` remaps that scale into [.3, 1] and drives both size and alpha, and
++ * `x`/`y` land around the center of the camera — the caller shifts them onto the console.
++ */
++export function projectNode(
++  p: Point3,
++  cam: { f: number; w: number; h: number },
++): {
++  x: number
++  y: number
++  sc: number
++  depth: number
++} {
++  const sc = cam.f / (cam.f + p.z)
++  return {
++    x: cam.w / 2 + p.x * sc,
++    y: cam.h / 2 + p.y * sc,
++    sc,
++    depth: 0.3 + 0.7 * clamp01((sc - 0.6) / 0.7),
++  }
++}
++
++/** The perspective distance of `MOTION_SPEC` §3, from the size of the canvas. */
++export function focalLength(w: number, h: number): number {
++  return Math.max(w, h) * 0.9
++}
++
++/**
++ * Where node `i` of `total` sits on the six-armed ✳ it converges into, relative to the
++ * center (`MOTION_SPEC` §3). Consecutive nodes go to consecutive arms and each full turn
++ * of six steps one ring further out, so the arms fill evenly and the figure stays
++ * balanced about the center.
++ */
++export function asteriskTarget(i: number, total: number, radius: number): Point {
++  const arms = 6
++  const rings = Math.max(1, Math.ceil(total / arms))
++  const angle = (i % arms) * (Math.PI / 3) + Math.PI / 2
++  const r = (0.12 + (Math.floor(i / arms) / rings) * 0.88) * radius
++  return { x: Math.cos(angle) * r, y: Math.sin(angle) * r }
++}
++
++/**
++ * The ✳ formation timeline of `MOTION_SPEC` §3, `p` being how far the nodes are pulled
++ * toward their target: converge 300 → 1200ms on an ease-in-out cubic, hold to 1900, then
++ * dissolve to 2800 as the console arrives. Outside that window the cloud is on its own.
++ */
++export function formationPhase(t: number): {
++  mode: 'idle' | 'forming' | 'holding' | 'dissolving'
++  p: number
++} {
++  if (t < 300) return { mode: 'idle', p: 0 }
++  if (t < 1200) return { mode: 'forming', p: easeInOut((t - 300) / 900) }
++  if (t < 1900) return { mode: 'holding', p: 1 }
++  if (t < 2800) return { mode: 'dissolving', p: 1 - easeInOut((t - 1900) / 900) }
++  return { mode: 'idle', p: 0 }
++}
++
++/**
++ * Alpha of the line between two nodes `dist` apart (`MOTION_SPEC` §3): it fades to
++ * nothing at 150px, and the light theme needs more of it to read against a pale
++ * background. `minDepth` is the depth of the further of the two, so a line sinks with
++ * the node that is deepest in.
++ */
++export function connectionAlpha(dist: number, minDepth: number, dark: boolean): number {
++  return fade(dist, CONNECT_DIST) * (dark ? 0.22 : 0.28) * minDepth
++}
++
++/** How far the network has collapsed under the scroll: 0 at the top, 1 at .75 viewports. */
++export function collapseFactor(scrollY: number, vh: number): number {
++  if (vh <= 0) return 0
++  return clamp01(scrollY / (vh * 0.75))
++}
++
++/** Head start of hop `n` of a command, in units of the pulse's own progress. */
++export function commandHopDelay(hop: number): number {
++  return -(hop + 1) * 0.55
++}
++
++/** 84 nodes on the desktop, 48 under 720px (`MOTION_SPEC` §3). */
++export function nodeCountFor(width: number): number {
++  return width < 720 ? 48 : 84
++}
++
++/**
++ * Index of the point closest to `(x, y)` within `maxDist`, or -1. `eligible` is what
++ * lets the caller skip the nodes hidden behind the console card or too far back to read.
++ */
++export function nearestPoint(
++  points: readonly Point[],
++  x: number,
++  y: number,
++  maxDist: number,
++  eligible?: (index: number) => boolean,
++): number {
++  let best = -1
++  let bestDist = maxDist
++  for (let i = 0; i < points.length; i++) {
++    const p = points[i] as Point
++    if (eligible && !eligible(i)) continue
++    const d = Math.hypot(p.x - x, p.y - y)
++    if (d < bestDist) {
++      bestDist = d
++      best = i
++    }
++  }
++  return best
++}
++
++export type Pulse = { from: number; to: number; delay: number }
++
++/**
++ * The command of `MOTION_SPEC` §3: a breadth-first walk of at most `hops` levels through
++ * the connection graph, one pulse per edge it discovers, each level delayed by
++ * `commandHopDelay`. A node is pulsed once — `seen` is what keeps a dense cluster from
++ * ringing forever — and the walk stops early when the frontier empties, which is what
++ * makes it terminate on a disconnected graph. `limit` caps a very dense frame.
++ */
++export function commandPulses(
++  points: readonly Point[],
++  start: number,
++  maxDist: number = CONNECT_DIST,
++  hops = 3,
++  limit = 40,
++): Pulse[] {
++  const pulses: Pulse[] = []
++  if (start < 0 || start >= points.length) return pulses
++
++  const seen = new Set([start])
++  let frontier = [start]
++
++  for (let hop = 0; hop < hops && frontier.length > 0; hop++) {
++    const next: number[] = []
++    for (const a of frontier) {
++      const pa = points[a] as Point
++      for (let b = 0; b < points.length; b++) {
++        if (seen.has(b)) continue
++        const pb = points[b] as Point
++        if (Math.hypot(pa.x - pb.x, pa.y - pb.y) >= maxDist) continue
++        seen.add(b)
++        next.push(b)
++        pulses.push({ from: a, to: b, delay: commandHopDelay(hop) })
++        if (pulses.length >= limit) return pulses
++      }
++    }
++    frontier = next
++  }
++  return pulses
++}
++
++/**
++ * The four anchors on the edges of the console card (`MOTION_SPEC` §3): left at 25% and
++ * 62%, bottom at 50%, top at 30%. The 62% one is where every command starts.
++ */
++export function consoleAnchors(rect: Rect): Point[] {
++  const { left, top, width: w, height: h } = rect
++  return [
++    { x: left, y: top + h * 0.25 },
++    { x: left, y: top + h * 0.62 },
++    { x: left + w * 0.5, y: top + h },
++    { x: left + w * 0.3, y: top },
++  ]
++}
++
++/** Whether a point falls on the console card, which is what occludes a node from it. */
++export function insideCard(x: number, y: number, rect: Rect | null, pad = 10): boolean {
++  if (!rect) return false
++  return (
++    x > rect.left - pad &&
++    x < rect.left + rect.width + pad &&
++    y > rect.top - pad &&
++    y < rect.top + rect.height + pad
++  )
++}
++
++/**
++ * Where the cloud is centered: on the console, but pulled only 35% of the way there from
++ * the middle of the canvas, so the ellipsoid still covers the text column. Before the
++ * card has been measured it falls back to the resting position of the design.
++ */
++export function cloudCenter(rect: Rect | null, w: number, h: number): Point {
++  if (!rect) return { x: w * 0.64, y: h * 0.45 }
++  const cx = rect.left + rect.width / 2
++  // Ten pixels above the middle of the card: the log, not the metrics, is the center.
++  return { x: w * 0.5 + (cx - w * 0.5) * 0.35, y: rect.top + rect.height / 2 - 10 }
++}
++
++/**
++ * How much a node is pulled toward a cursor `(dx, dy)` away (`MOTION_SPEC` §3): force
++ * `(1 - d/200) · 1.4` along the line to the cursor, nothing past 200px. A cursor right
++ * on top of a node pulls nothing, which is what stops it from being flung.
++ */
++export function cursorPull(dx: number, dy: number): Point {
++  const d = Math.hypot(dx, dy)
++  if (d <= 1 || d >= CURSOR_DIST) return { x: 0, y: 0 }
++  const f = fade(d, CURSOR_DIST) * 1.4
++  return { x: (dx / d) * f, y: (dy / d) * f }
++}
++
++/**
++ * Camera angles for a cursor at `(mx, my)` in [0, 1] of the canvas: tilt ±.25 rad,
++ * rotation ±.15 (`MOTION_SPEC` §3). The center of the canvas is the resting camera.
++ */
++export function cameraAngles(mx: number, my: number): { tilt: number; rot: number } {
++  return { tilt: (my - 0.5) * -0.5, rot: (mx - 0.5) * 0.3 }
++}
++
++/**
++ * Global rotation per rendered frame: `.00003 rad/frame` at 60fps, so 24ms worth of it
++ * per throttled frame, sped up to six times that as the network collapses.
++ */
++export function rotationStep(collapse: number): number {
++  return 0.00003 * 24 * (1 + 5 * collapse)
++}
++
++/** Median of a sample. The degradation check needs it, and an outlier must not win. */
++export function median(values: readonly number[]): number {
++  if (values.length === 0) return 0
++  const sorted = [...values].sort((a, b) => a - b)
++  const mid = sorted.length >> 1
++  return sorted.length % 2 === 1
++    ? (sorted[mid] as number)
++    : ((sorted[mid - 1] as number) + (sorted[mid] as number)) / 2
++}
+
+
+=== DIFF: tests/math.test.ts ===
+@@ -2,11 +2,29 @@ import { expect, test } from 'bun:test'
+ 
+ import {
+   anchorOffset,
++  asteriskTarget,
+   auroraStyle,
+   bootDelay,
++  cameraAngles,
++  cloudCenter,
++  collapseFactor,
++  commandHopDelay,
++  commandPulses,
++  connectionAlpha,
++  consoleAnchors,
++  cursorPull,
+   docProgress,
++  ellipsoidPoint,
++  ellipsoidRadii,
++  formationPhase,
++  insideCard,
+   logWindow,
++  median,
+   metricsAt,
++  nearestPoint,
++  nodeCountFor,
++  projectNode,
++  rotationStep,
+   scrambleFrame,
+   typedLength,
+ } from '../src/lib/motion/math'
+@@ -177,3 +195,288 @@ test('logWindow never shows more than six lines, and fills up before it drops an
+     for (const index of window) expect(index).toBeLessThan(11)
+   }
+ })
++
++// ── Node network (`MOTION_SPEC` §3) ──────────────────────────────────────────
++
++test('ellipsoidPoint puts every point on the surface of the ellipsoid', () => {
++  const r = { rx: 560, ry: 384, rz: 400 }
++  for (let theta = 0; theta < 6.28; theta += 0.31) {
++    for (let phi = -1.4; phi <= 1.4; phi += 0.2) {
++      const { x, y, z } = ellipsoidPoint(theta, phi, r)
++      expect((x / r.rx) ** 2 + (y / r.ry) ** 2 + (z / r.rz) ** 2).toBeCloseTo(1, 10)
++    }
++  }
++})
++
++test('ellipsoidRadii are the fractions of the viewport of MOTION_SPEC §3', () => {
++  expect(ellipsoidRadii(1000, 800, 0)).toEqual({ rx: 560, ry: 384, rz: 400 })
++  // Collapse shrinks all three by the same factor, down to 15% of the radius.
++  const collapsed = ellipsoidRadii(1000, 800, 1)
++  expect(collapsed.rx).toBeCloseTo(84, 10)
++  expect(collapsed.ry).toBeCloseTo(57.6, 10)
++  expect(collapsed.rz).toBeCloseTo(60, 10)
++})
++
++test('projectNode shrinks the scale as z grows, front to back', () => {
++  const cam = { f: 900, w: 1000, h: 800 }
++  const front = projectNode({ x: 100, y: 50, z: -450 }, cam)
++  const middle = projectNode({ x: 100, y: 50, z: 0 }, cam)
++  const back = projectNode({ x: 100, y: 50, z: 450 }, cam)
++
++  expect(front.sc).toBeCloseTo(2, 10)
++  expect(middle.sc).toBeCloseTo(1, 10)
++  expect(back.sc).toBeCloseTo(2 / 3, 10)
++  expect(front.sc).toBeGreaterThan(middle.sc)
++  expect(middle.sc).toBeGreaterThan(back.sc)
++})
++
++test('projectNode places the projection around the center of the camera', () => {
++  const cam = { f: 900, w: 1000, h: 800 }
++  expect(projectNode({ x: 0, y: 0, z: 0 }, cam)).toMatchObject({ x: 500, y: 400 })
++  // At the front the same offset projects further out; at the back, closer in.
++  expect(projectNode({ x: 100, y: 50, z: -450 }, cam).x).toBeCloseTo(700, 10)
++  expect(projectNode({ x: 100, y: 50, z: 450 }, cam).x).toBeCloseTo(500 + 200 / 3, 10)
++})
++
++test('projectNode keeps depth inside [.3, 1] and orders it front to back', () => {
++  const cam = { f: 900, w: 1000, h: 800 }
++  const depths = [-450, -100, 0, 300, 450, 4000].map(
++    (z) => projectNode({ x: 0, y: 0, z }, cam).depth,
++  )
++  for (const depth of depths) {
++    expect(depth).toBeGreaterThanOrEqual(0.3)
++    expect(depth).toBeLessThanOrEqual(1)
++  }
++  expect(depths[0]).toBe(1)
++  expect(depths.at(-1)).toBe(0.3)
++  for (let i = 1; i < depths.length; i++) {
++    expect(depths[i]!).toBeLessThanOrEqual(depths[i - 1]!)
++  }
++})
++
++test('asteriskTarget spreads the nodes over exactly six arms', () => {
++  const angles = new Set<number>()
++  for (let i = 0; i < 84; i++) {
++    const { x, y } = asteriskTarget(i, 84, 200)
++    angles.add(Math.round(Math.atan2(y, x) * 1000))
++  }
++  expect(angles.size).toBe(6)
++})
++
++test('asteriskTarget keeps every node inside the radius', () => {
++  for (let i = 0; i < 84; i++) {
++    const { x, y } = asteriskTarget(i, 84, 200)
++    expect(Math.hypot(x, y)).toBeLessThanOrEqual(200)
++    expect(Math.hypot(x, y)).toBeGreaterThan(0)
++  }
++})
++
++test('asteriskTarget is symmetric about the center', () => {
++  // Opposite arms are three spokes apart, at the same distance from the center: the
++  // pairing only holds inside a ring of six, which is why it stops at the third spoke.
++  for (let i = 0; i < 84 - 3; i++) {
++    if (i % 6 >= 3) continue
++    const a = asteriskTarget(i, 84, 200)
++    const b = asteriskTarget(i + 3, 84, 200)
++    expect(a.x + b.x).toBeCloseTo(0, 10)
++    expect(a.y + b.y).toBeCloseTo(0, 10)
++  }
++  // And the whole figure balances: the center of mass sits at the origin.
++  let sx = 0
++  let sy = 0
++  for (let i = 0; i < 84; i++) {
++    const { x, y } = asteriskTarget(i, 84, 200)
++    sx += x
++    sy += y
++  }
++  expect(sx).toBeCloseTo(0, 8)
++  expect(sy).toBeCloseTo(0, 8)
++})
++
++test('formationPhase walks idle → forming → holding → dissolving → idle', () => {
++  expect(formationPhase(0)).toEqual({ mode: 'idle', p: 0 })
++  expect(formationPhase(299)).toEqual({ mode: 'idle', p: 0 })
++  expect(formationPhase(300)).toEqual({ mode: 'forming', p: 0 })
++  expect(formationPhase(750).mode).toBe('forming')
++  expect(formationPhase(750).p).toBeCloseTo(0.5, 10)
++  expect(formationPhase(1200)).toEqual({ mode: 'holding', p: 1 })
++  expect(formationPhase(1899)).toEqual({ mode: 'holding', p: 1 })
++  expect(formationPhase(1900)).toEqual({ mode: 'dissolving', p: 1 })
++  expect(formationPhase(2350).mode).toBe('dissolving')
++  expect(formationPhase(2350).p).toBeCloseTo(0.5, 10)
++  expect(formationPhase(2800)).toEqual({ mode: 'idle', p: 0 })
++  expect(formationPhase(99999)).toEqual({ mode: 'idle', p: 0 })
++})
++
++test('formationPhase progress never leaves [0, 1] and eases at both ends', () => {
++  for (let t = 0; t <= 3200; t += 7) {
++    const { p } = formationPhase(t)
++    expect(p).toBeGreaterThanOrEqual(0)
++    expect(p).toBeLessThanOrEqual(1)
++  }
++  // Ease-in-out cubic: slow off the start, so the first quarter covers less than a
++  // quarter of the distance.
++  expect(formationPhase(300 + 225).p).toBeLessThan(0.25)
++})
++
++test('connectionAlpha fades to nothing at 150px and peaks at zero distance', () => {
++  expect(connectionAlpha(150, 1, true)).toBe(0)
++  expect(connectionAlpha(400, 1, true)).toBe(0)
++  expect(connectionAlpha(0, 1, true)).toBeCloseTo(0.22, 10)
++  expect(connectionAlpha(75, 1, true)).toBeCloseTo(0.11, 10)
++})
++
++test('connectionAlpha is stronger in light than in dark, and scales with depth', () => {
++  for (const dist of [0, 40, 100, 149]) {
++    expect(connectionAlpha(dist, 1, false)).toBeGreaterThan(connectionAlpha(dist, 1, true))
++  }
++  expect(connectionAlpha(0, 0.5, true)).toBeCloseTo(0.11, 10)
++})
++
++test('collapseFactor is 0 at the top, 1 at three quarters of a viewport, clamped', () => {
++  expect(collapseFactor(0, 800)).toBe(0)
++  expect(collapseFactor(600, 800)).toBe(1)
++  expect(collapseFactor(300, 800)).toBeCloseTo(0.5, 10)
++  expect(collapseFactor(4000, 800)).toBe(1)
++  expect(collapseFactor(-200, 800)).toBe(0)
++  // A viewport of zero height cannot be scrolled through: no collapse, no division.
++  expect(collapseFactor(120, 0)).toBe(0)
++})
++
++test('commandHopDelay staggers each hop by .55', () => {
++  expect(commandHopDelay(0)).toBeCloseTo(-0.55, 10)
++  expect(commandHopDelay(1)).toBeCloseTo(-1.1, 10)
++  expect(commandHopDelay(2)).toBeCloseTo(-1.65, 10)
++  for (let hop = 0; hop < 8; hop++) {
++    expect(commandHopDelay(hop)).toBeCloseTo(-(hop + 1) * 0.55, 10)
++  }
++})
++
++test('nodeCountFor drops to the mobile count under 720px', () => {
++  expect(nodeCountFor(1440)).toBe(84)
++  expect(nodeCountFor(720)).toBe(84)
++  expect(nodeCountFor(719)).toBe(48)
++  expect(nodeCountFor(600)).toBe(48)
++})
++
++/** A row of points 100px apart: every node is within 150px of its neighbors only. */
++const chain = (count: number, gap = 100) =>
++  Array.from({ length: count }, (_, i) => ({ x: i * gap, y: 0 }))
++
++test('commandPulses walks at most three hops out from the start', () => {
++  const pulses = commandPulses(chain(20), 0)
++  expect(pulses).toHaveLength(3)
++  expect(pulses.map((pulse) => pulse.to)).toEqual([1, 2, 3])
++  expect(pulses.map((pulse) => pulse.delay)).toEqual([
++    commandHopDelay(0),
++    commandHopDelay(1),
++    commandHopDelay(2),
++  ])
++})
++
++test('commandPulses never visits a node twice', () => {
++  // A dense cluster: everything is within reach of everything else.
++  const points = Array.from({ length: 12 }, (_, i) => ({
++    x: (i % 4) * 20,
++    y: Math.floor(i / 4) * 20,
++  }))
++  const pulses = commandPulses(points, 5)
++  const visited = pulses.map((pulse) => pulse.to)
++  expect(new Set(visited).size).toBe(visited.length)
++  expect(visited).not.toContain(5)
++})
++
++test('commandPulses terminates on a disconnected graph', () => {
++  expect(
++    commandPulses(
++      [
++        { x: 0, y: 0 },
++        { x: 900, y: 900 },
++      ],
++      0,
++    ),
++  ).toEqual([])
++  expect(commandPulses([{ x: 0, y: 0 }], 0)).toEqual([])
++  expect(commandPulses([], 0)).toEqual([])
++})
++
++test('commandPulses stops at the pulse budget', () => {
++  const grid = Array.from({ length: 200 }, (_, i) => ({
++    x: (i % 20) * 10,
++    y: Math.floor(i / 20) * 10,
++  }))
++  expect(commandPulses(grid, 0).length).toBeLessThanOrEqual(40)
++})
++
++test('nearestPoint finds the closest point inside the radius, or nothing', () => {
++  const points = [
++    { x: 0, y: 0 },
++    { x: 40, y: 0 },
++    { x: 90, y: 0 },
++  ]
++  expect(nearestPoint(points, 100, 0, 280)).toBe(2)
++  expect(nearestPoint(points, 100, 0, 5)).toBe(-1)
++  expect(nearestPoint([], 0, 0, 280)).toBe(-1)
++  // The filter skips candidates the caller cannot use — occluded or too far back.
++  expect(nearestPoint(points, 100, 0, 280, (i) => i !== 2)).toBe(1)
++})
++
++test('consoleAnchors sits on the four edges of the card of MOTION_SPEC §3', () => {
++  expect(consoleAnchors({ left: 100, top: 200, width: 400, height: 300 })).toEqual([
++    { x: 100, y: 275 },
++    { x: 100, y: 386 },
++    { x: 300, y: 500 },
++    { x: 220, y: 200 },
++  ])
++})
++
++test('insideCard covers the card plus its 10px margin', () => {
++  const rect = { left: 100, top: 200, width: 400, height: 300 }
++  expect(insideCard(300, 350, rect)).toBe(true)
++  expect(insideCard(95, 350, rect)).toBe(true)
++  expect(insideCard(85, 350, rect)).toBe(false)
++  expect(insideCard(300, 511, rect)).toBe(false)
++  expect(insideCard(300, 350, null)).toBe(false)
++})
++
++test('cloudCenter pulls the cloud a third of the way toward the console', () => {
++  const rect = { left: 600, top: 100, width: 400, height: 300 }
++  const center = cloudCenter(rect, 1000, 800)
++  expect(center.x).toBeCloseTo(500 + (800 - 500) * 0.35, 10)
++  expect(center.y).toBeCloseTo(240, 10)
++  // No console — before the first measure — keeps the cloud where the design puts it.
++  expect(cloudCenter(null, 1000, 800)).toEqual({ x: 640, y: 360 })
++})
++
++test('cursorPull attracts toward the cursor and dies at 200px', () => {
++  expect(cursorPull(0, 0)).toEqual({ x: 0, y: 0 })
++  expect(cursorPull(200, 0)).toEqual({ x: 0, y: 0 })
++  expect(cursorPull(100, 0).x).toBeCloseTo(0.7, 10)
++  expect(cursorPull(100, 0).y).toBe(0)
++  // Direction only depends on the sign, magnitude only on the distance.
++  expect(cursorPull(-100, 0).x).toBeCloseTo(-0.7, 10)
++  const diagonal = cursorPull(60, 80)
++  expect(Math.hypot(diagonal.x, diagonal.y)).toBeCloseTo(0.7, 10)
++})
++
++test('cameraAngles stay inside the ±.25 tilt and ±.15 rotation of MOTION_SPEC §3', () => {
++  expect(cameraAngles(0.5, 0.5).tilt).toBeCloseTo(0, 10)
++  expect(cameraAngles(0.5, 0.5).rot).toBeCloseTo(0, 10)
++  expect(cameraAngles(0, 0).tilt).toBeCloseTo(0.25, 10)
++  expect(cameraAngles(1, 1).tilt).toBeCloseTo(-0.25, 10)
++  expect(cameraAngles(0, 0).rot).toBeCloseTo(-0.15, 10)
++  expect(cameraAngles(1, 1).rot).toBeCloseTo(0.15, 10)
++})
++
++test('rotationStep speeds the rotation up as the network collapses', () => {
++  expect(rotationStep(0)).toBeCloseTo(0.00003 * 24, 12)
++  expect(rotationStep(1)).toBeCloseTo(0.00003 * 24 * 6, 12)
++  expect(rotationStep(0.5)).toBeGreaterThan(rotationStep(0))
++})
++
++test('median is the middle sample of the degradation window', () => {
++  expect(median([5])).toBe(5)
++  expect(median([9, 1, 5])).toBe(5)
++  expect(median([4, 1, 3, 2])).toBe(2.5)
++  expect(median([])).toBe(0)
++})
+
+
+Investigate per the method in your instructions, then return the findings list.
