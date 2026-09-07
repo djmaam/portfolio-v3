@@ -1,3 +1,4 @@
+import { Glob } from 'bun'
 import { expect, test } from 'bun:test'
 
 import {
@@ -187,4 +188,40 @@ test('the global spin is monotonic and slow', () => {
   expect(markSpin(1000)).toBeGreaterThan(markSpin(0))
   // A full turn takes about 22 seconds: peripheral, never a distraction.
   expect((Math.PI * 2) / markSpin(1)).toBeGreaterThan(20_000)
+})
+
+const src = new URL('../src/', import.meta.url)
+const sources = await Array.fromAsync(
+  (async function* () {
+    for await (const name of new Glob('**/*.{astro,ts,css}').scan(src.pathname)) {
+      yield { name, text: await Bun.file(new URL(name, src)).text() }
+    }
+  })(),
+)
+
+test('the asterisk is gone from the source', () => {
+  const holdouts = sources.filter(
+    (file) => file.name !== 'styles/app.css' && file.text.includes('✳'),
+  )
+  expect(holdouts.map((file) => file.name)).toEqual([])
+})
+
+test('the think keyframes are gone with it', () => {
+  expect(sources.filter((file) => /@keyframes\s+think/.test(file.text))).toHaveLength(0)
+  expect(sources.filter((file) => /animation:\s*think/.test(file.text))).toHaveLength(0)
+})
+
+test('the nav and the footer both mount the mark, at their own sizes', () => {
+  const nav = sources.find((file) => file.name === 'components/Nav.astro')!.text
+  const footer = sources.find((file) => file.name === 'components/Footer.astro')!.text
+  expect(nav).toMatch(/<CubeMark size=\{20\} \/>/)
+  expect(footer).toMatch(/<CubeMark size=\{16\} \/>/)
+})
+
+test('the mark is decoration, and ships in the markup rather than from a script', () => {
+  const mark = sources.find((file) => file.name === 'components/CubeMark.astro')!.text
+  expect(mark).toMatch(/aria-hidden="true"/)
+  // The `<svg>` is emitted by the frontmatter: no JavaScript, no `has-js` gate, nothing
+  // to wait for. Whatever script arrives later can only ever replace it.
+  expect(mark).toMatch(/<svg[\s\S]*data-mark-svg/)
 })

@@ -218,6 +218,10 @@ test.each(components)(
       .filter(({ body }) => /(^|[;{\s])color:\s*var\(--color-accent\)/.test(body))
       .filter(({ selector, body }) => {
         if (clearsThreshold(body)) return false
+        // `.mark` (`CubeMark.astro`, spec 30) paints SVG graphics through `currentColor`,
+        // never text: its guarantee is the 3:1 non-text "accent on bg" ratio asserted
+        // above, not the large-text exception this loop otherwise enforces.
+        if (ownClasses(selector).includes('mark')) return false
         // The size or the weight may sit on the element's own class instead — a `:hover`
         // that only changes the color must not also change the weight, or the text reflows.
         const classes = ownClasses(selector)

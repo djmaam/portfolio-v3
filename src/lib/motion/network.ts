@@ -83,7 +83,7 @@ function makeNodes(count: number, rand: () => number): NetNode[] {
 
 /**
  * The hero's node network (`MOTION_SPEC` §3): 84 nodes on a rotating ellipsoid centered
- * on the console, converging into the ✳ on load, wired to the console's log, reacting to
+ * on the console, converging into the asterisk on load, wired to the console's log, reacting to
  * the cursor and collapsing on scroll.
  *
  * Plumbing only — canvas, node array and rAF loop. Every formula it draws with lives in
@@ -299,7 +299,7 @@ class NodeNetwork {
     const dx = center.x - w / 2
     const dy = center.y - h / 2
     const armRadius = asteriskRadius(w, h)
-    // The ✳ is centered on the console itself (`MOTION_SPEC` §3), not on the damped
+    // The asterisk is centered on the console itself (`MOTION_SPEC` §3), not on the damped
     // center the cloud orbits — that is 210px to its left, over the H1.
     const formCenter = this.form > 0 ? cloudCenter(this.card, w, h, 1) : center
     this.rot += rotationStep(this.collapse)
@@ -388,7 +388,7 @@ class NodeNetwork {
     }
 
     // The console's four anchors, each wired to the nearest node it can see. Hidden
-    // while the ✳ holds: the card has not arrived yet, so there is nothing to wire.
+    // while the asterisk holds: the card has not arrived yet, so there is nothing to wire.
     if (this.form === 0) {
       for (const anchor of this.anchors) {
         const near = nearestPoint(points, anchor.x, anchor.y, ANCHOR_DIST, (i) => this.visible(i))

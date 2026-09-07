@@ -192,10 +192,14 @@ test.each(Object.keys(pages))('%s keeps the decorative glyphs out of the tree', 
   const html = pages[route as keyof typeof pages]
   // The canvas and the marquee clones are covered by `network.test.ts` and
   // `stack.test.ts`; these are the glyphs, which are spread over four components.
-  for (const glyph of ['✳', '↗']) {
+  for (const glyph of ['↗']) {
     for (const match of html.matchAll(new RegExp(`<[^>]*>[^<]*${glyph}`, 'g'))) {
       expect(match[0]).toContain('aria-hidden')
     }
+  }
+  // The mark replaced the ✳ in the nav and the footer (spec 30); it is decoration too.
+  for (const match of html.matchAll(/<span class="mark"[^>]*>/g)) {
+    expect(match[0]).toContain('aria-hidden="true"')
   }
   expect(html).toContain('role="log"')
   expect(html).toContain('aria-live="off"')

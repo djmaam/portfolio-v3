@@ -95,7 +95,7 @@ test('the year comes from the build date, not from a literal', () => {
 })
 
 test('the decoration is hidden from assistive technology', () => {
-  expect(markup).toMatch(/aria-hidden="true"[^>]*>✳/)
+  expect(markup).toMatch(/<CubeMark size=\{16\} \/>/)
   // One `aria-hidden` on the wrapper covers the live face and the fifteen sizers alike.
   expect(markup).toMatch(/<span class="moji" aria-hidden="true">/)
 })
