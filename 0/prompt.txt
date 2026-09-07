@@ -1,0 +1,1 @@
+antes que nada se subio al repositorio el .DS_Store eso es un archivo local de la mac, no deberia estar en el repositorio. ademas deberiamos tener el gitignore para que esto no vuelva a suceder
