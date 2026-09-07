@@ -1,0 +1,23 @@
+Review this change for security vulnerabilities.
+
+Changed files (you may Read these and any other file in the repo):
+  - eslint.config.js
+
+Unified diff (only + lines are new):
+
+=== DIFF: eslint.config.js ===
+@@ -7,7 +7,10 @@ import ts from 'typescript-eslint'
+ // typescript-eslint and rely on `astro check` + TS strict alone.
+ 
+ export default [
+-  { ignores: ['dist/', '.astro/', 'node_modules/', 'handoff/'] },
++  // `.claude/worktrees/*` holds throwaway agent worktrees, each with its own
++  // tsconfig.json. Left visible, typescript-eslint sees several candidate roots and
++  // refuses to parse anything.
++  { ignores: ['dist/', '.astro/', 'node_modules/', 'handoff/', '.claude/'] },
+   js.configs.recommended,
+   ...ts.configs.recommended,
+   ...astro.configs.recommended,
+
+
+Investigate per the method in your instructions, then return the findings list.
