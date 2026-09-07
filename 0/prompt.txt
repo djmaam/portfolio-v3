@@ -1,0 +1,58 @@
+<task-notification>
+<task-id>a4ad51f7c95ff0006</task-id>
+<tool-use-id>toolu_01A4u4kWDGSKFPoCWKrXVQ5n</tool-use-id>
+<output-file>/private/tmp/claude-501/-Users-djmaam-Projects-Marcos-portfolio-v3/ff79cbca-912c-4905-8a2c-c8e457538a3d/tasks/a4ad51f7c95ff0006.output</output-file>
+<status>completed</status>
+<summary>Agent "Hero fidelity vs the mock" finished</summary>
+<note>A task-notification fires each time this agent stops with no live background children of its own. The user can send it another message and resume it, so the same task-id may notify more than once.</note>
+<result>Clean tree, and every changed file is one I own — no sibling files touched.
+
+## Summary
+
+**Branch:** `feat/27-hero` · **PR:** https://github.com/djmaam/portfolio-v3/pull/23
+
+### Measurement table (Chromium 1512×950, dark)
+
+| | Mock | Before 19 | After 19 (before PR) | After PR |
+|---|---|---|---|---|
+| Hero height | 909 | 994 | **918** (+1.0%) | 918 |
+| H1 | 564×296 | 516×380 | **564×304** | 564×304 |
+| Stats row bottom | 862 | cut by fold | **872** (clears by 78) | 872 |
+| Console card | 564×366 @350 | 509 wide | 564×332 @372 | unchanged |
+| Canvas box | 0..950 (1512×950) | — | 64..982 (1512×918) | **0..950 (1512×950)** |
+| Mask fade starts | y=523 | — | y=569 | **y=523** |
+| ✳ center x | 1072 | — | 862 | **1066** |
+| ✳ span | 803..1278 | — | 671..1062 | **792..1275** |
+| ✳ overlaps H1 | no | yes | yes | **no** |
+| Cloud center − console | +80 (−5..+145) | — | +68 (−29..+114) | +14 (−69..+76) |
+
+### Gaps that had already closed with issue 19
+- **Hero height and the fold.** Both fixed by 19. The padding/gap the brief pointed at were already identical to the mock — it writes the same clamps in `cqw` against a 1512px container, so 140/110/72/28 resolve the same on both sides. Not touched.
+- **The "low" node cloud was sampling noise.** 84 random nodes put the brightness-weighted center anywhere in a ±140px band. Six loads each: mock mean +80 (−5..+145), ours +68 (−29..+114). Statistically identical. The brief's numbers came from a single run.
+- **The mask was never broken.** `mask-image` is honored on a `&lt;canvas&gt;`; at y=861 masked ink reads 0.033 vs 0.369 unmasked, ~90% removed below the cut. Now asserted.
+
+### What I changed
+- **`math.ts`** — `cloudCenter` takes the pull fraction; the ✳ asks for `1`. `MOTION_SPEC` §3 centers it "en la consola" and the mock does it literally (cloud `cx*.35`, ✳ `cx`); we reused the damped center for both, forming the star 210px left of the console, across the H1.
+- **`app.css` (`.hero-net` only)** — canvas becomes the `100vw × 100vh` viewport box via the existing `--nav-h`, instead of the hero's box. `ry`, the ✳ radius and the 55% mask cut all divide by that height, so tying it to a re-flowing section was the drift channel.
+- **`network.ts`** — card read into canvas coordinates; re-measured on `fonts.ready`.
+- `Hero.astro` needed no change.
+
+### Formation-timing call
+Timing stays. Ours is byte-for-byte the mock's 300/1200/1900/2800. The bad 2.5s frame was the wrong *place*, not the wrong time — the mock has the same timing and its ✳ spans 803..1278 against an H1 ending at 720, never touching it. Fixing the center made ours clear the H1 by 72px.
+
+### Not done (reported, not built)
+The console card is 332 tall vs the mock's 366 and starts 22px lower — real, but `Console.astro` is outside this issue's files.
+
+### Gates
+- `bun test` — **307 pass, 0 fail** across 23 files (305 before, +2 new)
+- `bun run lint` — **exit 0** (eslint, prettier, tsc, check-tokens)
+- `bun run build` — **exit 0**
+- `PORT=4405 bun run test:e2e` — **19 passed**; hero suite `--repeat-each=4` → 20/20, no flake
+- Lighthouse not run locally, per the brief.
+
+Every new assertion was watched failing first (canvas box at top=64, ✳ at x=865.9 vs 1074, `cloudCenter(...,1)` at x=605 vs 800). One test surfaced a genuine 11.28px artifact — the boot `scale(.96)` transform — which the test now waits out.
+
+result: PV3-32 shipped as PR #23 — the ✳ now forms centered on the console (x=1066 vs mock 1072) instead of across the H1, and the hero canvas is the mock's exact 1512×950 viewport box; hero height and the stats-row fold had already closed with issue 19 and the "low cloud" was sampling noise; 307 unit + 19 e2e tests, lint and build all green.</result>
+<usage><subagent_tokens>171989</subagent_tokens><tool_uses>97</tool_uses><duration_ms>1457140</duration_ms></usage>
+<worktree><worktreePath>/Users/djmaam/Projects/Marcos/portfolio-v3/.claude/worktrees/agent-a4ad51f7c95ff0006</worktreePath><worktreeBranch>worktree-agent-a4ad51f7c95ff0006</worktreeBranch></worktree>
+</task-notification>
