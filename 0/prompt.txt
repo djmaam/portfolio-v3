@@ -1,0 +1,67 @@
+Review this change for security vulnerabilities.
+
+Changed files (you may Read these and any other file in the repo):
+  - eslint.config.js
+  - scripts/check-tokens.ts
+  - src/lib/theme.ts
+
+Unified diff (only + lines are new):
+
+=== DIFF: eslint.config.js ===
+@@ -2,9 +2,9 @@ import js from '@eslint/js'
+ import astro from 'eslint-plugin-astro'
+ import ts from 'typescript-eslint'
+ 
+-// ponytail: typescript queda pineado en ^6.0.3 en package.json porque typescript-eslint
+-// todavía no soporta TS 7 (peer: >=4.8.4 <6.1.0). Subir a TS 7 cuando lo soporte,
+-// o quitar typescript-eslint y apoyarse solo en `astro check` + TS strict.
++// ponytail: typescript is pinned to ^6.0.3 in package.json because typescript-eslint
++// does not support TS 7 yet (peer: >=4.8.4 <6.1.0). Move to TS 7 once it does, or drop
++// typescript-eslint and rely on `astro check` + TS strict alone.
+ 
+ export default [
+   { ignores: ['dist/', '.astro/', 'node_modules/', 'handoff/'] },
+
+
+=== DIFF: scripts/check-tokens.ts ===
+@@ -1,6 +1,6 @@
+ #!/usr/bin/env bun
+-// Ningún color literal fuera de src/styles/app.css: los componentes solo consumen
+-// tokens (`text-ink`, `bg-bg`, `var(--color-*)`). Corre desde `bun run lint`.
++// No literal colours outside src/styles/app.css: components only consume tokens
++// (`text-ink`, `bg-bg`, `var(--color-*)`). Runs from `bun run lint`.
+ 
+ import { Glob } from 'bun'
+ import { relative, resolve } from 'node:path'
+@@ -23,7 +23,7 @@ for await (const file of new Glob('**/*.{astro,ts,tsx,js,jsx,css,svelte,vue}').s
+ }
+ 
+ if (findings.length > 0) {
+-  console.error(`Colores literales fuera de ${ALLOWED} (usá tokens de @theme):\n`)
++  console.error(`Literal colours outside ${ALLOWED} (use @theme tokens):\n`)
+   console.error(findings.join('\n'))
+   process.exit(1)
+ }
+
+
+=== DIFF: src/lib/theme.ts ===
+@@ -4,14 +4,14 @@ const STORAGE_KEY = 'theme'
+ 
+ const isTheme = (value: unknown): value is Theme => value === 'light' || value === 'dark'
+ 
+-/** El tema elegido en localStorage; si no hay uno válido, el del sistema. */
++/** The theme stored in localStorage; falls back to the system one. */
+ export function getTheme(): Theme {
+   const stored = localStorage.getItem(STORAGE_KEY)
+   if (isTheme(stored)) return stored
+   return matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+ }
+ 
+-/** Persiste el tema y lo aplica al <html>, igual que el script inline del <head>. */
++/** Persists the theme and applies it to <html>, like the inline script in <head>. */
+ export function setTheme(theme: Theme): void {
+   localStorage.setItem(STORAGE_KEY, theme)
+   const root = document.documentElement
+
+
+Investigate per the method in your instructions, then return the findings list.
