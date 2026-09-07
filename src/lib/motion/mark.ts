@@ -328,8 +328,19 @@ function bilinear(quad: readonly Point[], u: number, v: number): Point {
  * The mark at time `t`, drawn into a `box`×`box` square, sorted back to front. `settle`
  * is 0 while the pieces are still turning into place and 1 at rest; `spinY` is the turn
  * of the whole cluster, which the entry choreography drives on its own.
+ *
+ * `expand` scales the lattice positions and nothing else (spec 31): at 0.08 the pieces
+ * overlap into the seed the entry opens on, at 1 they sit on the lattice. `markScale`
+ * still frames the settled cluster, so the pieces fly *out of* the seed instead of the
+ * box zooming in. Their sizes and turns are untouched — `settle` owns the rotation.
  */
-export function markPolygons(box: number, settle: number, t: number, spinY: number): MarkPoly[] {
+export function markPolygons(
+  box: number,
+  settle: number,
+  t: number,
+  spinY: number,
+  expand = 1,
+): MarkPoly[] {
   const pieces = markPieces(box)
   const s = markScale(box, pieces)
   const cam: MarkCamera = { world: { x: ISO_TILT, y: spinY, z: 0 }, f: MARK_FOCAL }
@@ -343,8 +354,8 @@ export function markPolygons(box: number, settle: number, t: number, spinY: numb
 
   for (const piece of pieces) {
     const rot = add(pieceRotation(piece, settle), idleWobble(piece, t, settle))
-    const world = (v: Point3) =>
-      rotate3(add(rotate3(scale3(v, piece.size), rot), piece.pos), cam.world)
+    const pos = expand === 1 ? piece.pos : scale3(piece.pos, expand)
+    const world = (v: Point3) => rotate3(add(rotate3(scale3(v, piece.size), rot), pos), cam.world)
 
     if (piece.kind === 'tick') {
       const a = world({ x: -0.6, y: 0, z: 0 })
@@ -378,7 +389,7 @@ export function markPolygons(box: number, settle: number, t: number, spinY: numb
       continue
     }
 
-    for (const face of visibleFaces(piece.pos, rot, piece.size, cam)) {
+    for (const face of visibleFaces(pos, rot, piece.size, cam)) {
       const corners = CUBE_FACES[face]!.map((i) => world(CUBE_VERTS[i]!))
       const n = rotate3(rotate3(CUBE_NORMALS[face]!, rot), cam.world)
       const lit = -(n.x * LIGHT.x + n.y * LIGHT.y + n.z * LIGHT.z)
