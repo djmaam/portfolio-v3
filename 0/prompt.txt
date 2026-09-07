@@ -1,0 +1,429 @@
+Review this change for security vulnerabilities.
+
+Changed files (you may Read these and any other file in the repo):
+  - package.json
+  - scripts/check-tokens.ts
+  - tests/check-tokens.test.ts
+  - src/lib/theme.ts
+  - tests/theme.test.ts
+  - tests/tokens.test.ts
+
+Unified diff (only + lines are new):
+
+=== DIFF: package.json ===
+@@ -7,7 +7,7 @@
+     "dev": "astro dev",
+     "build": "astro build",
+     "preview": "astro preview",
+-    "lint": "eslint . && prettier --check .",
++    "lint": "eslint . && prettier --check . && bun scripts/check-tokens.ts",
+     "format": "prettier --write .",
+     "test": "bun test"
+   },
+
+
+=== DIFF: scripts/check-tokens.ts ===
+@@ -0,0 +1,29 @@
++#!/usr/bin/env bun
++// Ningún color literal fuera de src/styles/app.css: los componentes solo consumen
++// tokens (`text-ink`, `bg-bg`, `var(--color-*)`). Corre desde `bun run lint`.
++
++import { Glob } from 'bun'
++import { relative, resolve } from 'node:path'
++
++const LITERAL_COLOR = /#(?:[\da-f]{3,4}|[\da-f]{6}|[\da-f]{8})\b|\b(?:rgba?|hsla?)\(/gi
++const ALLOWED = 'src/styles/app.css'
++
++const root = resolve(process.argv[2] ?? 'src')
++const findings: string[] = []
++
++for await (const file of new Glob('**/*.{astro,ts,tsx,js,jsx,css,svelte,vue}').scan(root)) {
++  if (file.endsWith('styles/app.css')) continue
++  const path = resolve(root, file)
++  const lines = (await Bun.file(path).text()).split('\n')
++  lines.forEach((line, index) => {
++    for (const [color] of line.matchAll(LITERAL_COLOR)) {
++      findings.push(`${relative(process.cwd(), path)}:${index + 1}  ${color}`)
++    }
++  })
++}
++
++if (findings.length > 0) {
++  console.error(`Colores literales fuera de ${ALLOWED} (usá tokens de @theme):\n`)
++  console.error(findings.join('\n'))
++  process.exit(1)
++}
+
+
+=== DIFF: tests/check-tokens.test.ts ===
+@@ -0,0 +1,65 @@
++import { expect, test } from 'bun:test'
++import { mkdtemp, mkdir, writeFile } from 'node:fs/promises'
++import { tmpdir } from 'node:os'
++import { join } from 'node:path'
++
++const script = new URL('../scripts/check-tokens.ts', import.meta.url).pathname
++
++/** Writes `files` into a throwaway directory and runs the checker over it. */
++const check = async (files: Record<string, string>) => {
++  const dir = await mkdtemp(join(tmpdir(), 'check-tokens-'))
++  for (const [name, content] of Object.entries(files)) {
++    await mkdir(join(dir, name, '..'), { recursive: true })
++    await writeFile(join(dir, name), content)
++  }
++  const proc = Bun.spawn(['bun', script, dir], { stdout: 'pipe', stderr: 'pipe' })
++  const [stdout, stderr, exitCode] = await Promise.all([
++    new Response(proc.stdout).text(),
++    new Response(proc.stderr).text(),
++    proc.exited,
++  ])
++  return { exitCode, output: stdout + stderr }
++}
++
++test('passes on a file that only uses tokens', async () => {
++  const { exitCode } = await check({
++    'components/Card.astro': '<div style="color: var(--color-ink)">hola</div>\n',
++  })
++  expect(exitCode).toBe(0)
++})
++
++test('fails on a hex literal and reports file, line and colour', async () => {
++  const { exitCode, output } = await check({
++    'components/Card.astro': 'ok\n<div style="color: #3EE7FF">hola</div>\n',
++  })
++  expect(exitCode).not.toBe(0)
++  expect(output).toContain('components/Card.astro')
++  expect(output).toContain(':2')
++  expect(output).toContain('#3EE7FF')
++})
++
++test.each(['#abc', '#0B0D12', '#3EE7FF80', 'rgb(1,2,3)', 'rgba(1,2,3,.5)', 'hsl(1 2% 3%)'])(
++  'rejects %s',
++  async (color) => {
++    const { exitCode } = await check({ 'lib/x.ts': `export const c = '${color}'\n` })
++    expect(exitCode).not.toBe(0)
++  },
++)
++
++test('app.css is the one file allowed to hold literal colours', async () => {
++  const { exitCode } = await check({
++    'styles/app.css': '@theme { --color-ink: light-dark(#0B0D12, #F3F5F9); }\n',
++  })
++  expect(exitCode).toBe(0)
++})
++
++test('the real src/ tree is clean', async () => {
++  const proc = Bun.spawn(['bun', script], {
++    cwd: new URL('../', import.meta.url).pathname,
++    stdout: 'pipe',
++    stderr: 'pipe',
++  })
++  const [output, exitCode] = await Promise.all([new Response(proc.stdout).text(), proc.exited])
++  expect(output).toBe('')
++  expect(exitCode).toBe(0)
++})
+
+
+=== DIFF: src/lib/theme.ts ===
+@@ -0,0 +1,26 @@
++export type Theme = 'light' | 'dark'
++
++const STORAGE_KEY = 'theme'
++
++const isTheme = (value: unknown): value is Theme => value === 'light' || value === 'dark'
++
++/** El tema elegido en localStorage; si no hay uno válido, el del sistema. */
++export function getTheme(): Theme {
++  const stored = localStorage.getItem(STORAGE_KEY)
++  if (isTheme(stored)) return stored
++  return matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
++}
++
++/** Persiste el tema y lo aplica al <html>, igual que el script inline del <head>. */
++export function setTheme(theme: Theme): void {
++  localStorage.setItem(STORAGE_KEY, theme)
++  const root = document.documentElement
++  root.style.colorScheme = theme
++  root.dataset.theme = theme
++}
++
++export function toggleTheme(): Theme {
++  const next: Theme = getTheme() === 'dark' ? 'light' : 'dark'
++  setTheme(next)
++  return next
++}
+
+
+=== DIFF: tests/theme.test.ts ===
+@@ -0,0 +1,65 @@
++import { afterEach, beforeEach, expect, test } from 'bun:test'
++
++import { getTheme, setTheme, toggleTheme } from '../src/lib/theme'
++
++const stub = (stored: string | null, prefersDark: boolean) => {
++  const store = new Map<string, string>(stored === null ? [] : [['theme', stored]])
++  const root = { style: { colorScheme: '' }, dataset: {} as Record<string, string> }
++  Object.assign(globalThis, {
++    localStorage: {
++      getItem: (key: string) => store.get(key) ?? null,
++      setItem: (key: string, value: string) => void store.set(key, value),
++    },
++    matchMedia: (query: string) => ({ matches: prefersDark && query.includes('dark') }),
++    document: { documentElement: root },
++  })
++  return { store, root }
++}
++
++beforeEach(() => stub(null, false))
++afterEach(() => {
++  for (const key of ['localStorage', 'matchMedia', 'document']) {
++    delete (globalThis as Record<string, unknown>)[key]
++  }
++})
++
++test('getTheme returns the stored theme when it is valid', () => {
++  stub('dark', false)
++  expect(getTheme()).toBe('dark')
++  stub('light', true)
++  expect(getTheme()).toBe('light')
++})
++
++test('getTheme falls back to prefers-color-scheme when nothing is stored', () => {
++  stub(null, true)
++  expect(getTheme()).toBe('dark')
++  stub(null, false)
++  expect(getTheme()).toBe('light')
++})
++
++test('getTheme falls back to prefers-color-scheme when the stored value is junk', () => {
++  stub('DARK', true)
++  expect(getTheme()).toBe('dark')
++  stub('purple', false)
++  expect(getTheme()).toBe('light')
++})
++
++test('setTheme persists and applies the theme to the document element', () => {
++  const { store, root } = stub(null, false)
++  setTheme('dark')
++  expect(store.get('theme')).toBe('dark')
++  expect(root.style.colorScheme).toBe('dark')
++  expect(root.dataset.theme).toBe('dark')
++})
++
++test('toggleTheme flips the current theme and returns it', () => {
++  const { root } = stub('light', false)
++  expect(toggleTheme()).toBe('dark')
++  expect(root.dataset.theme).toBe('dark')
++  expect(toggleTheme()).toBe('light')
++})
++
++test('toggleTheme flips away from the system preference when nothing is stored', () => {
++  stub(null, true)
++  expect(toggleTheme()).toBe('light')
++})
+
+
+=== DIFF: tests/tokens.test.ts ===
+@@ -0,0 +1,199 @@
++import { expect, test } from 'bun:test'
++
++const css = await Bun.file(new URL('../src/styles/app.css', import.meta.url)).text()
++
++/** Every `--name: value;` declaration in app.css, whitespace-normalised. */
++const declarations = new Map(
++  [...css.matchAll(/(--[\w-]+)\s*:\s*([^;}]+)[;}]/g)].map(([, name, value]) => [
++    name!,
++    value!.replace(/\s+/g, ' ').trim(),
++  ]),
++)
++
++const COLOR_TOKENS: Record<string, [light: string, dark: string]> = {
++  '--color-bg': ['#F4F5F7', '#08090C'],
++  '--color-ink': ['#0B0D12', '#F3F5F9'],
++  '--color-dim': ['#5E6675', '#8B94A7'],
++  '--color-line': ['rgba(0, 0, 0, 0.08)', 'rgba(255, 255, 255, 0.08)'],
++  '--color-surface': ['rgba(255, 255, 255, 0.7)', 'rgba(255, 255, 255, 0.035)'],
++  '--color-glass': ['rgba(244, 245, 247, 0.72)', 'rgba(8, 9, 12, 0.6)'],
++  '--color-accent': ['#0A8FAF', '#3EE7FF'],
++  '--color-accent-soft': ['rgba(10, 143, 175, 0.08)', 'rgba(62, 231, 255, 0.08)'],
++  '--color-violet': ['rgb(120, 90, 255)', 'rgb(170, 120, 255)'],
++  '--color-console-bg': ['rgba(255, 255, 255, 0.75)', 'rgba(14, 16, 22, 0.85)'],
++  '--color-contact-card': ['#0B0D12', '#F3F5F9'],
++  '--color-contact-ink': ['#F3F5F9', '#0B0D12'],
++}
++
++const STEP_COLORS: Record<string, string> = {
++  '--color-step-1': '#FF5C5C',
++  '--color-step-2': '#FF9F43',
++  '--color-step-3': '#FFD64D',
++  '--color-step-4': '#9BE15D',
++  '--color-step-5': '#3DDC84',
++}
++
++/** `rgba(0,0,0,.08)` and `rgba(0, 0, 0, 0.08)` are the same colour. */
++const canonical = (value: string) =>
++  value
++    .toLowerCase()
++    .replace(/\s+/g, '')
++    .replace(/(^|[(,])\./g, '$10.')
++
++/** Splits `a, rgba(1, 2, 3, .4)` on commas that are not inside parentheses. */
++const splitArguments = (value: string) => {
++  const parts: string[] = ['']
++  let depth = 0
++  for (const char of value) {
++    if (char === '(') depth++
++    else if (char === ')') depth--
++    if (char === ',' && depth === 0) parts.push('')
++    else parts[parts.length - 1] += char
++  }
++  return parts
++}
++
++test.each(Object.entries(COLOR_TOKENS))(
++  '%s uses light-dark() with both theme values',
++  (token, [light, dark]) => {
++    const value = canonical(declarations.get(token) ?? '')
++    const inner = /^light-dark\((.+)\)$/.exec(value)
++    expect(inner).not.toBeNull()
++    expect(splitArguments(inner![1]!)).toEqual([canonical(light), canonical(dark)])
++  },
++)
++
++test.each(Object.entries(STEP_COLORS))('%s is a theme-independent literal', (token, expected) => {
++  expect(canonical(declarations.get(token) ?? '')).toBe(canonical(expected))
++})
++
++test('the alpha variants used more than once are their own tokens', () => {
++  // Tailwind v4 cannot recompute alpha on a light-dark() colour, so `bg-accent/8`
++  // is impossible: every repeated alpha variant needs a token of its own.
++  for (const token of ['--color-accent-soft', '--color-line', '--color-surface']) {
++    expect(declarations.has(token)).toBe(true)
++  }
++})
++
++const TEXT_TOKENS: Record<string, string> = {
++  '--text-h1': 'clamp(36px, 5.5vw, 76px)',
++  '--text-h2': 'clamp(32px, 4.5vw, 56px)',
++  '--text-h2-stack': 'clamp(32px, 4.5vw, 48px)',
++  '--text-h2-contact': 'clamp(34px, 5vw, 64px)',
++  '--text-lead': 'clamp(26px, 3.4vw, 40px)',
++  '--text-hero-sub': 'clamp(16px, 1.5vw, 19px)',
++  '--text-body': '17px',
++  '--text-card-title': 'clamp(19px, 1.8vw, 22px)',
++  '--text-label': '12px',
++  '--text-label-sm': 'clamp(10px, 1vw, 11px)',
++}
++
++test.each(Object.entries(TEXT_TOKENS))(
++  '%s has the size from the design spec',
++  (token, expected) => {
++    expect(canonical(declarations.get(token) ?? '')).toBe(canonical(expected))
++  },
++)
++
++const LEADING: Record<string, string> = {
++  '--leading-h1': '1',
++  '--leading-h2': '1.02',
++  '--leading-h2-stack': '1.05',
++  '--leading-h2-contact': '1',
++  '--leading-lead': '1.2',
++  '--leading-hero-sub': '1.55',
++  '--leading-body': '1.5',
++  '--leading-card-title': '1.15',
++}
++
++const TRACKING: Record<string, string> = {
++  '--tracking-h1': '-0.04em',
++  '--tracking-h2': '-0.035em',
++  '--tracking-h2-stack': '-0.035em',
++  '--tracking-h2-contact': '-0.04em',
++  '--tracking-lead': '-0.025em',
++  '--tracking-card-title': '-0.02em',
++  '--tracking-label': '0.14em',
++  '--tracking-label-sm': '0.1em',
++}
++
++test.each([...Object.entries(LEADING), ...Object.entries(TRACKING)])(
++  '%s accompanies its role',
++  (token, expected) => {
++    expect(canonical(declarations.get(token) ?? '')).toBe(canonical(expected))
++  },
++)
++
++test('every --text-* role carries its line-height and letter-spacing', () => {
++  for (const role of Object.keys(TEXT_TOKENS)) {
++    if (`--leading-${role.slice('--text-'.length)}` in LEADING) {
++      expect(declarations.has(`${role}--line-height`)).toBe(true)
++    }
++    if (`--tracking-${role.slice('--text-'.length)}` in TRACKING) {
++      expect(declarations.has(`${role}--letter-spacing`)).toBe(true)
++    }
++  }
++})
++
++test('font tokens name the self-hosted families plus fallbacks', () => {
++  expect(declarations.get('--font-sans')).toMatch(/^Manrope,/)
++  expect(declarations.get('--font-sans')).toMatch(/-apple-system/)
++  expect(declarations.get('--font-sans')).toMatch(/sans-serif$/)
++  expect(declarations.get('--font-mono')).toMatch(/^"IBM Plex Mono",/)
++  expect(declarations.get('--font-mono')).toMatch(/ui-monospace/)
++  expect(declarations.get('--font-mono')).toMatch(/monospace$/)
++})
++
++test('the three faces are self-hosted from /fonts with font-display: swap', () => {
++  const faces = [...css.matchAll(/@font-face\s*{([^}]*)}/g)].map(([, body]) => body!)
++  expect(faces).toHaveLength(3)
++  for (const face of faces) expect(face).toMatch(/font-display:\s*swap/)
++
++  const sources = faces.map((face) => /url\(([^)]+)\)/.exec(face)?.[1]?.replace(/["']/g, ''))
++  expect(sources.sort()).toEqual([
++    '/fonts/ibm-plex-mono-400.woff2',
++    '/fonts/ibm-plex-mono-500.woff2',
++    '/fonts/manrope-var.woff2',
++  ])
++
++  const manrope = faces.find((face) => face.includes('manrope-var'))!
++  expect(manrope).toMatch(/font-weight:\s*200 800/)
++  expect(css).not.toMatch(/fonts\.(googleapis|gstatic)\.com/)
++})
++
++test('the root declares color-scheme so light-dark() can resolve', () => {
++  expect(css).toMatch(/color-scheme:\s*light dark/)
++})
++
++const KEYFRAMES = [
++  'blink',
++  'pulse',
++  'aur1',
++  'aur2',
++  'rise',
++  'think',
++  'sweep',
++  'spin',
++  'gridflow',
++  'shimmer',
++  'marquee',
++]
++
++test.each(KEYFRAMES)('@keyframes %s is declared', (name) => {
++  expect(css).toMatch(new RegExp(`@keyframes\\s+${name}\\s*{`))
++})
++
++test('the keyframes live outside @theme', () => {
++  const theme = /@theme[^{]*{/.exec(css)
++  expect(theme).not.toBeNull()
++  let depth = 0
++  let end = theme!.index + theme![0].length
++  for (; end < css.length; end++) {
++    if (css[end] === '{') depth++
++    else if (css[end] === '}') {
++      if (depth === 0) break
++      depth--
++    }
++  }
++  expect(css.slice(theme!.index, end)).not.toMatch(/@keyframes/)
++})
+
+
+Investigate per the method in your instructions, then return the findings list.
