@@ -217,3 +217,7 @@ None.
 ---
 
 2 pushea y crea un pr contra main
+
+---
+
+si quieres pasa el prototype a ingles, y hagamos el spec del 31 para mandarlo a hacer desde otra sesion
