@@ -1,0 +1,1 @@
+dale ignoremos docs/architecture y subamos todo en una rama nueva y limpiemos, y con respecto al telemetry de entire apaguemoslo para subir los archivos y lo volvemos a prender
