@@ -1,0 +1,26 @@
+{
+  "cli_version": "0.10.5",
+  "checkpoint_id": "01M1WZP9XSMQ3TY19XZZVMWZ2S",
+  "strategy": "manual-commit",
+  "branch": "feat/26-aurora",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "e2e/layout.spec.ts"
+  ],
+  "sessions": [
+    {
+      "metadata": "/0/metadata.json",
+      "transcript": "/0/full.jsonl",
+      "compact_transcript": "/0/transcript.jsonl",
+      "content_hash": "/0/content_hash.txt",
+      "prompt": "/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 1006,
+    "cache_creation_tokens": 3325932,
+    "cache_read_tokens": 143189441,
+    "output_tokens": 366494,
+    "api_call_count": 508
+  }
+}
