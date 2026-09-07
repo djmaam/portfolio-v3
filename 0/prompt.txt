@@ -1,0 +1,39 @@
+<task-notification>
+<task-id>aa323e6c16899660c</task-id>
+<tool-use-id>REDACTED</tool-use-id>
+<output-file>/private/tmp/claude-501/-Users-djmaam-Projects-Marcos-portfolio-v3/ff79cbca-912c-4905-8a2c-c8e457538a3d/tasks/aa323e6c16899660c.output</output-file>
+<status>completed</status>
+<summary>Agent "Experience: dot + also-list" finished</summary>
+<note>A task-notification fires each time this agent stops with no live background children of its own. The user can send it another message and resume it, so the same task-id may notify more than once.</note>
+<result>PR is open, working tree is clean.
+
+**Summary**
+
+- Branch: `feat/23-experience`
+- PR: https://github.com/djmaam/portfolio-v3/pull/20 (closes PV3-28)
+- Spec: `docs/superpowers/specs/23-experience.md`, committed on its own before any code (`docs: spec for 23 experience`)
+
+**Defect 1 — dot alignment**, measured before/after (1512×950, dark, `/`, all 5 jobs identical):
+- Dot center: 34px → **49px**
+- Logo center: 49px → 49px (unchanged)
+- Fix: moved `.card`'s padding/border-width and `.logo`'s size into shared custom properties (`--card-pad`, `--card-border`, `--logo-size`) defined on `.job`, and made `.dot`'s `margin-top` a `calc()` of those tokens instead of the hardcoded `28px`. This is a pure-CSS derivation — no JS reads rendered geometry — so it automatically stays correct if issue 15 changes the logo size or the card padding changes.
+
+**Defect 2 — also-with row**, measured before/after:
+- `.also-list` display: `block` → **`flex`**
+- Height for 4 items: 96px → **24px** (one row)
+- Fix: `.also-list { display: flex; flex-wrap: wrap; gap: 14px 28px; }`, same gap family as `.also` and the same pattern already used by `.chips`.
+
+**TDD**: wrote `e2e/experience.spec.ts` and two new assertions in `tests/experience.test.ts` first, watched all of them fail against the pre-fix code (measured 15px difference, `display: block`), then applied the fix and watched them pass.
+
+**Gates — all green:**
+- `bun test`: 307 pass, 0 fail (was 305, +2 new)
+- `bun run lint`: eslint + prettier + tsc + check-tokens, exit 0, no findings
+- `bun run build`: succeeded
+- `PORT=4403 bun run test:e2e`: 20 passed (6 new experience tests, plus the 14 pre-existing layout/smoke tests, confirming no regression to files I don't own)
+
+Only `src/components/Experience.astro`, `tests/experience.test.ts`, `e2e/experience.spec.ts` (new), and the spec doc were touched — nothing outside the assigned file list.
+
+result: PV3-28 fixed and shipped in PR https://github.com/djmaam/portfolio-v3/pull/20 (branch `feat/23-experience`) — rail dot now centers exactly on the logo (34px→49px, derived via CSS calc() from shared tokens, not hardcoded) and the "TAMBIÉN CON"/"ALSO WITH" list now renders as a wrapping flex row (block/96px→flex/24px); all gates green (307 unit tests, lint, build, 20/20 e2e).</result>
+<usage><subagent_tokens>121081</subagent_tokens><tool_uses>60</tool_uses><duration_ms>594723</duration_ms></usage>
+<worktree><worktreePath>/Users/djmaam/Projects/Marcos/portfolio-v3/.claude/worktrees/agent-aa323e6c16899660c</worktreePath><worktreeBranch>worktree-agent-aa323e6c16899660c</worktreeBranch></worktree>
+</task-notification>
