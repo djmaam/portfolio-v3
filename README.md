@@ -27,7 +27,7 @@ bun run lint     # ESLint + Prettier + token checks
 ## Working with Claude Code
 
 When continuing development or kicking off a new block:
+
 1. Read `CLAUDE.md` and consult [`docs/README.md`](./docs/README.md) for existing specifications and component lineage.
 2. Use `codegraph_explore` (MCP) first to inspect relevant symbols, call paths, and blast radius before touching code.
 3. Follow the project workflow: write and commit the spec under `docs/superpowers/specs/NN-<block>.md` before implementing the code.
-
