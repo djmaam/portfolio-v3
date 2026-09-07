@@ -19,14 +19,31 @@ export function docProgress(scrollY: number, scrollHeight: number, vh: number): 
 }
 
 /**
- * Aurora state at a given document progress (`MOTION_SPEC` §4): the hue sweeps cyan →
- * violet → magenta → amber, the opacity ramps .45 → 1 over the first 40% of the
- * document, and the whole layer drifts up 12vh.
+ * How far the hue sweeps end to end, and where the layer starts calming down. Both
+ * deviate from `MOTION_SPEC` §4 on purpose: spec 26 has the measurements and the reason.
+ * §4's 260° takes the accent (~188°) round to yellow-green, and its ramp to full opacity
+ * at p = .4 leaves the whole second half of the page at the layer's loudest frame.
+ */
+const AURORA_HUE_SWEEP = 50
+const AURORA_CALM_FROM = 0.7
+
+/**
+ * Aurora state at a given document progress (`MOTION_SPEC` §4, retuned by spec 26): the
+ * hue sweeps 50° inside the cyan → violet → magenta arc the palette owns, the opacity
+ * ramps .45 → .8 over the first 40% of the document and eases back to .55 over the last
+ * 30% so the contact card and the footer sit on a calm background, and the whole layer
+ * drifts up 12vh.
+ *
+ * The two opacity ramps are independent terms rather than a piecewise function: they
+ * overlap nowhere, and a sum of clamped ramps is easier to test at a point.
  */
 export function auroraStyle(p: number): { filter: string; opacity: number; translateY: string } {
   return {
-    filter: `hue-rotate(${Math.round(p * 260)}deg) saturate(${round(1 + 0.4 * p, 3)})`,
-    opacity: 0.45 + 0.55 * Math.min(1, p * 2.5),
+    filter: `hue-rotate(${Math.round(p * AURORA_HUE_SWEEP)}deg) saturate(${round(1 + 0.4 * p, 3)})`,
+    opacity: round(
+      0.45 + 0.35 * Math.min(1, p * 2.5) - 0.25 * Math.max(0, (p - AURORA_CALM_FROM) / 0.3),
+      3,
+    ),
     translateY: `${round(-12 * p)}vh`,
   }
 }
