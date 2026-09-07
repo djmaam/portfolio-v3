@@ -1,0 +1,218 @@
+<task-notification>
+<task-id>a4c35bc7dcbff858a</task-id>
+<tool-use-id>REDACTED</tool-use-id>
+<output-file>/private/tmp/claude-501/-Users-djmaam-Projects-Marcos-portfolio-v3/ff79cbca-912c-4905-8a2c-c8e457538a3d/tasks/a4c35bc7dcbff858a.output</output-file>
+<status>completed</status>
+<summary>Agent "Implement Task 2: rotation and culling" finished</summary>
+<note>A task-notification fires each time this agent stops with no live background children of its own. The user can send it another message and resume it, so the same task-id may notify more than once.</note>
+<result>---
+
+**Status:** DONE
+
+**Commit:** `6f30f4f feat(mark): per-piece rotation and analytic back-face culling (PV3-35)`
+
+**Test Summary:** All 13 tests passing (6 new tests + 7 inherited from Task 1); linter clean.
+
+**Concerns:** None. Implementation complete, appended correctly, all tests verify behavior rather than implementation, and the critical analytic-normals approach avoids the vertex-winding bug that would render open-topped cubes.
+
+**Report:** `/Users/djmaam/Projects/Marcos/portfolio-v3/.superpowers/sdd/2026-09-07-cube-mark/task-2-report.md`</result>
+<usage><subagent_tokens>48821</subagent_tokens><tool_uses>15</tool_uses><duration_ms>104356</duration_ms></usage>
+</task-notification>
+
+---
+
+<task-notification>
+<task-id>a475236268bc25a76</task-id>
+<tool-use-id>REDACTED</tool-use-id>
+<output-file>/private/tmp/claude-501/-Users-djmaam-Projects-Marcos-portfolio-v3/ff79cbca-912c-4905-8a2c-c8e457538a3d/tasks/a475236268bc25a76.output</output-file>
+<status>completed</status>
+<summary>Agent "Review Task 2 (spec + quality)" finished</summary>
+<note>A task-notification fires each time this agent stops with no live background children of its own. The user can send it another message and resume it, so the same task-id may notify more than once.</note>
+<result>### Spec Compliance
+✅ Spec compliant. The implementation is a verbatim, correctly-transcribed match of the brief's Step 3 code and Step 1 tests. All required exports present: `MARK_FOCAL`, `MarkCamera`, `CUBE_VERTS`, `CUBE_FACES`, `CUBE_NORMALS`, `rotate3`, `pieceRotation`, `idleWobble`, `visibleFaces` (`src/lib/motion/mark.ts:158-...`, appended after the existing `markPieces` function). Task 1's exports (`buildMark`, `markPieces`, `DETAIL_MIN`, `ISO_TILT`) are untouched — diff only appends after `markPieces`. The test file's import line was widened (single→multi-line, all 10 names), not duplicated (`tests/mark.test.ts:1-13` in diff).
+
+**Critical requirement verified by independent computation** — back-face culling uses `CUBE_NORMALS[i]!` (analytic table), not a cross product of face vertices (diff `src/lib/motion/mark.ts` visibleFaces body, line `const n = rotate3(rotate3(CUBE_NORMALS[i]!, rot), cam.world)`). I recomputed each `CUBE_NORMALS` entry from the actual `CUBE_VERTS`/`CUBE_FACES` geometry by hand:
+- Face 0 `[0,1,2,3]` → all verts z=-1 → normal (0,0,-1) ✓ matches table index 0
+- Face 1 `[4,5,6,7]` → z=+1 → (0,0,1) ✓
+- Face 2 `[0,1,5,4]` → y=-1 → (0,-1,0) ✓
+- Face 3 `[2,3,7,6]` → y=+1 → (0,1,0) ✓
+- Face 4 `[1,2,6,5]` → x=+1 → (1,0,0) ✓
+- Face 5 `[0,3,7,4]` → x=-1 → (-1,0,0) ✓
+
+All six entries are correct, independent of `CUBE_FACES`' inconsistent winding. This is the exact bug the task exists to avoid, and it's genuinely avoided, not just commented as avoided.
+
+I also hand-verified `visibleFaces` against the "seen head on" test case (`cam.world` identity, `f=900`): face 0 dot = -899 (visible), face 1 dot = +901 (culled), face 2 (y=-1, grazing) dot = +1 (culled) — consistent with the expected `[0]` result. The math is sound, not just brief-copied and untested.
+
+**Test count claim checked directly against the report file** (`.superpowers/sdd/2026-09-07-cube-mark/task-2-report.md:44-56`): the report lists all 13 tests by name, numbered 1-13, with items 1-6 being Task 1's pre-existing tests and 7-13 being this task's 7 new ones. I did not find the "6 new + 7 inherited" phrasing the review brief flagged — the report's actual breakdown (7 new, 6 inherited, 13 total) matches the diff exactly (7 new `test(...)` blocks added in `tests/mark.test.ts`, confirmed by counting each block in the diff). No discrepancy found here.
+
+**Concrete risk checked:** `Point3` is used throughout the new code but not defined in this diff. Read `src/lib/motion/mark.ts:1` directly — `import type { Point3 } from './math'` is already present, so this compiles fine; not a risk.
+
+### Strengths
+- Faithful, careful transcription of the brief with no scope creep — no extra features, no speculative abstraction.
+- The analytic-normal table is not just present but verifiably correct (checked above), which is the one thing this task existed to get right.
+- `pieceRotation`/`idleWobble`/`visibleFaces` stay pure — no `document`/`window`/canvas — consistent with the task's DOM-plumbing-comes-later constraint.
+- Import line was widened per instruction, not duplicated; Task 1 exports and code are untouched.
+- Tests exercise real geometric behavior (length preservation, exact face counts under isometric vs. head-on cameras) rather than just type-checking the API surface.
+
+### Issues
+
+#### Critical (Must Fix)
+None.
+
+#### Important (Should Fix)
+None.
+
+#### Minor (Nice to Have)
+- `tests/mark.test.ts:212-220` ("every face index a cull returns is a real face") is structurally tautological: `visibleFaces` can only ever push `i` from `CUBE_FACES.forEach`, so this test cannot fail without breaking the loop bounds itself — it doesn't independently verify anything beyond what TypeScript already guarantees. This is copied verbatim from the brief (plan-mandated), not an implementer choice, so it's not a fault of this task, but worth flagging since it adds test count without adding coverage.
+- The report's pasted lint output (`task-2-report.md:59-63`) only shows the Prettier formatting line, not the eslint/tsc/check-tokens output, despite the summary claiming all four passed. Minor evidence-completeness gap, not a correctness concern.
+
+### Assessment
+**Task quality:** Approved
+**Reasoning:** The implementation matches the brief exactly, and the one property that mattered most — analytic normals correctly indexed against `CUBE_FACES`, avoiding the winding-derived open-topped-cube bug — checks out under independent hand computation, not just by trusting the comments. No missing, extra, or misunderstood requirements found in the diff.</result>
+<usage><subagent_tokens>59231</subagent_tokens><tool_uses>4</tool_uses><duration_ms>127815</duration_ms></usage>
+</task-notification>
+
+---
+
+<task-notification>
+<task-id>a1cac775520575413</task-id>
+<tool-use-id>toolu_013fu19g9k3dw8LZ7PUEZwjp</tool-use-id>
+<output-file>/private/tmp/claude-501/-Users-djmaam-Projects-Marcos-portfolio-v3/ff79cbca-912c-4905-8a2c-c8e457538a3d/tasks/a1cac775520575413.output</output-file>
+<status>completed</status>
+<summary>Agent "Implement Task 3: projection to polygons" finished</summary>
+<note>A task-notification fires each time this agent stops with no live background children of its own. The user can send it another message and resume it, so the same task-id may notify more than once.</note>
+<result>**Status:** DONE
+Commit: `67ea976` — feat(mark): project the lattice into depth-sorted polygons (PV3-35)
+Test summary: 21/21 in `tests/mark.test.ts`, 360/360 full suite, lint clean (eslint + prettier + tsc + check-tokens)
+Concerns: none — matched the brief verbatim except two cosmetic Prettier auto-formats (redundant parens, single-line signature), no load-bearing values touched
+Report: `/Users/djmaam/Projects/Marcos/portfolio-v3/.superpowers/sdd/2026-09-07-cube-mark/task-3-report.md`</result>
+<usage><subagent_tokens>72888</subagent_tokens><tool_uses>22</tool_uses><duration_ms>263759</duration_ms></usage>
+</task-notification>
+
+---
+
+<task-notification>
+<task-id>a4a2a9885c1b481d7</task-id>
+<tool-use-id>REDACTED</tool-use-id>
+<output-file>/private/tmp/claude-501/-Users-djmaam-Projects-Marcos-portfolio-v3/ff79cbca-912c-4905-8a2c-c8e457538a3d/tasks/a4a2a9885c1b481d7.output</output-file>
+<status>completed</status>
+<summary>Agent "Review Task 3 (spec + quality)" finished</summary>
+<note>A task-notification fires each time this agent stops with no live background children of its own. The user can send it another message and resume it, so the same task-id may notify more than once.</note>
+<result>### Spec Compliance
+- ✅ Spec compliant, with one Important finding (plan-mandated duplication, see below).
+
+Verified line-by-line against the brief's arithmetic requirements:
+- `markScale` (mark.ts diff L75-82 / final file ~L138-142): extent = `Math.hypot(pos.x,pos.y,pos.z) + size*Math.sqrt(3)`, the Euclidean norm plus the half space-diagonal — matches spec exactly.
+- Sort (diff L162, `return polys.sort((a, b) =&gt; b.depth - a.depth)`): confirmed descending. Traced the camera convention from the unmodified `visibleFaces` culling test (`n.x*cx+n.y*cy+n.z*(cz+cam.f)&lt;0`) and the projection `sc = f/(f+z)`: the camera sits at `z=-f` looking toward `+z`, so larger `z` = farther from camera. Descending sort by `depth` (=z) therefore puts the farthest polygon first. Correct.
+- Rule depth nudge (diff L143, `depth: depth - 1e-3`): rule gets a *smaller* depth (nearer) than its panel, so in the descending sort the panel (larger depth) is always emitted before its rules. Matches "can never sort behind their own panel."
+- `polyAlpha` light-theme branch (diff L171-189): every non-zero branch is `cap(value * k)` with `k = light ? 1.35 : 1`, `cap = min(1, ·)`; `solid`'s light fill is hardcoded to `1` (the ceiling itself). Verified algebraically that dark values (all constants &lt; 1 at `k=1`) are always ≤ their light counterparts and light values never exceed 1.
+- Projection (diff L107-110): `sc = cam.f / (cam.f + w.z)`, point offset from box center via `half + w.x*sc*s` — matches spec exactly.
+
+Confirmed the two "cosmetic" Prettier reformats the report claims:
+- `(box / 2 / extent) * 0.94` vs brief's `((box / 2) / extent) * 0.94` — division is left-associative, mathematically identical.
+- `markPolygons` signature collapsed to one line — same params, same order, same types.
+Neither touches a load-bearing constant (light vector, alpha table, `0.94` margin, `1e-3` nudge all verbatim).
+
+Exports check: `MarkKind`, `MarkRule`, `MarkPiece`, `ISO_TILT`, `DETAIL_MIN`, `MARK_FOCAL`, `MarkCamera`, `buildMark`, `markPieces`, `CUBE_VERTS`, `CUBE_FACES`, `CUBE_NORMALS`, `rotate3`, `pieceRotation`, `idleWobble`, `visibleFaces` are untouched (diff only touches the import line and appends after `visibleFaces`). Import widened in place to `import type { Point, Point3 } from './math'`, no duplicate import statement (mark.ts:1). No literal colors introduced (`polyAlpha` returns bare numbers only). No `document`/`window`/canvas reference — module stays pure.
+
+### Strengths
+- Arithmetic matches the brief's demanding geometric/photometric requirements exactly; no transposed sign or swapped argument found.
+- New tests exercise real behavior — sort order is checked against a freshly-sorted expected array, not a tautology; panel-before-rule ordering, point-count-by-kind, alpha monotonicity, and framing-by-extent are all genuine behavioral assertions.
+- Clean seam: only the six required symbols are exported; all helpers (`add`, `scale3`, `lerp`, `bilinear`, `PANEL_QUAD`, `LIGHT`) stay module-private.
+- New code lives in its own clearly headed section (`// ── Projection to polygons (spec 35) ──`) and doesn't touch a line of Task 1/2 code.
+
+### Issues
+
+#### Important (Should Fix)
+- **Plan-mandated duplication of `lerp`.** `src/lib/motion/mark.ts` (diff L68, new local `const lerp = (a, b, t) =&gt; a + (b - a) * t`) is byte-for-byte identical to the already-exported `lerp` at `src/lib/motion/math.ts:417` (`export function lerp(a: number, b: number, t: number): number { return a + (b - a) * t }`). The file already imports from `./math` on line 1, so this is a same-module, zero-cost import away. Verified the brief itself hardcodes this local definition verbatim (`task-3-brief.md:128`) and only widens the import to `import type { Point, Point3 }`, not a value import of `lerp` — so this is inherited from the brief, not introduced by the implementer, but the rubric still counts verbatim duplication of a logic block as Important regardless of who authored it. Fix: `import { lerp } from './math'` (as a value import, alongside the existing type import) and delete the local definition.
+
+#### Minor (Nice to Have)
+- **`markScale` on an empty piece list returns `-0`, not a guarded value.** `Math.max(...[].map(...))` is `Math.max()` = `-Infinity`; `(box/2)/(-Infinity) = -0`. `markScale` is exported and part of the public interface list in the brief, so it's callable directly with an arbitrary `pieces` array. Not reachable through the real call graph — checked `markPieces` (mark.ts:140-144): it always returns at least the 7 unconditionally-pushed pieces (`core` + 6 axis pieces from `AXES.forEach`), which are never filtered by the `box &lt; DETAIL_MIN` branch, so `markPolygons` never calls `markScale` with an empty list. Purely a latent foot-gun for a future caller of the exported function, not a live bug.
+
+### Checks performed on named risks
+- **Risk: "nothing is drawn outside its box" test only exercises the resting pose (`settle=1` fixed across all box/spin combinations).** Traced `pieceRotation` (mark.ts:208-215) and `idleWobble` (mark.ts:217-221): both only change the *rotation angle* fed into `rotate3` (mark.ts:189-201), which composes three axis-angle rotation matrices — each length-preserving for any angle. The corner/endpoint magnitude bound used by `markScale` (`|pos| + size·√3`, via triangle inequality) is therefore invariant to `settle` and to `t` (wobble phase); `idleWobble`'s amplitude is `*settle`, so `settle=1` is actually the *maximum*-wobble case, making it the correct stress value, not a gap. This test-design choice is also present verbatim in the brief (`task-3-brief.md:46-59`). Conclusion: not a real coverage gap despite the surface appearance — no finding.
+- **Risk: duplicate/near-duplicate vector helpers (`add`, `scale3`) already existing in `math.ts`.** Grepped `src/lib/motion/math.ts` for a Point3 add/scale equivalent — none exists; only `lerp` is duplicated (see Important above).
+
+### Assessment
+**Task quality:** Approved (with the `lerp` duplication fix recommended before/alongside merge).
+**Reasoning:** The arithmetic — the part most likely to hide a subtle sign or argument-order bug — is verified correct against every spec bullet, tests exercise real behavior rather than restating the implementation, and the two admitted formatting deviations are genuinely cosmetic. The only substantive issue is a one-line, plan-mandated duplication of an already-exported `lerp`, which is a trivial fix and does not affect correctness.</result>
+<usage><subagent_tokens>70927</subagent_tokens><tool_uses>12</tool_uses><duration_ms>210311</duration_ms></usage>
+</task-notification>
+
+---
+
+<task-notification>
+<task-id>a1cac775520575413</task-id>
+<tool-use-id>toolu_016UgNePQUfbpoB25JS59gcP</tool-use-id>
+<output-file>/private/tmp/claude-501/-Users-djmaam-Projects-Marcos-portfolio-v3/ff79cbca-912c-4905-8a2c-c8e457538a3d/tasks/a1cac775520575413.output</output-file>
+<status>completed</status>
+<summary>Agent "Implement Task 3: projection to polygons" finished</summary>
+<note>A task-notification fires each time this agent stops with no live background children of its own. The user can send it another message and resume it, so the same task-id may notify more than once.</note>
+<result>**Status:** DONE
+Commits: `67ea976` feat(mark): project the lattice into depth-sorted polygons (PV3-35); `f80247f` fix(mark): reuse math.ts's lerp instead of a local duplicate (PV3-35)
+Test summary: 21/21 in `tests/mark.test.ts` (360/360 full suite), lint clean (eslint + prettier + tsc + check-tokens, exit 0)
+Concerns: none
+Report: `/Users/djmaam/Projects/Marcos/portfolio-v3/.superpowers/sdd/2026-09-07-cube-mark/task-3-report.md`</result>
+<usage><subagent_tokens>79191</subagent_tokens><tool_uses>14</tool_uses><duration_ms>66183</duration_ms></usage>
+</task-notification>
+
+---
+
+<task-notification>
+<task-id>a0144b3cbb521fb85</task-id>
+<tool-use-id>REDACTED</tool-use-id>
+<output-file>/private/tmp/claude-501/-Users-djmaam-Projects-Marcos-portfolio-v3/ff79cbca-912c-4905-8a2c-c8e457538a3d/tasks/a0144b3cbb521fb85.output</output-file>
+<status>completed</status>
+<summary>Agent "Re-review Task 3 fix round 1" finished</summary>
+<note>A task-notification fires each time this agent stops with no live background children of its own. The user can send it another message and resume it, so the same task-id may notify more than once.</note>
+<result>**Plan-mandated verbatim duplication of `lerp`.** — ADDRESSED, src/lib/motion/mark.ts line 1 and line 274 (original).
+
+The diff shows:
+- `import { lerp } from './math'` added as a new line 1, before the existing type-only import
+- Local `const lerp = (a: number, b: number, t: number) =&gt; a + (b - a) * t` deleted from the helpers section (after `scale3`, before `markScale`)
+- `bilinear()` remains untouched; all three calls to `lerp` are now satisfied by the import
+- Net diff: +1/-1 ✓
+
+**Covering test results:**
+- `bun test tests/mark.test.ts`: 21 pass (exercises `bilinear` via "ticks and rules are two-point strokes", "a panel is drawn before its own rules", "nothing is drawn outside its box")
+- Full suite `bun test`: 360 pass
+- `bun run lint`: clean (all four checks pass)
+
+**New Breakage in the Fix Diff**
+
+None. The change is surgical: value import added, local duplicate removed, call site signature identical, tests passing.
+
+**Out-of-Scope Observations**
+
+None.
+
+**Verdict**
+
+**Fix round:** All findings addressed, no new Critical/Important breakage.</result>
+<usage><subagent_tokens>36627</subagent_tokens><tool_uses>3</tool_uses><duration_ms>30389</duration_ms></usage>
+</task-notification>
+
+---
+
+<task-notification>
+<task-id>ae6af3bfcdd2e184c</task-id>
+<tool-use-id>REDACTED</tool-use-id>
+<output-file>/private/tmp/claude-501/-Users-djmaam-Projects-Marcos-portfolio-v3/ff79cbca-912c-4905-8a2c-c8e457538a3d/tasks/ae6af3bfcdd2e184c.output</output-file>
+<status>completed</status>
+<summary>Agent "Implement Task 4: component and glyph removal" finished</summary>
+<note>A task-notification fires each time this agent stops with no live background children of its own. The user can send it another message and resume it, so the same task-id may notify more than once.</note>
+<result>**Status:** DONE_WITH_CONCERNS
+
+Commit: `c4097c9` — feat(mark): the cube replaces the ✳ in the nav and the footer (PV3-35)
+
+Test summary: `bun test` 364 pass / 0 fail; `bun run lint` (eslint+prettier+tsc+check-tokens) exit 0; `bun run build` exit 0, and confirmed the built HTML server-renders both marks (`data-mark="20"`, `data-mark="16"`) with zero `✳` in output.
+
+Concerns:
+- Two files outside the brief's scope needed comment-only rewording (`src/lib/motion/math.ts`, `src/lib/motion/network.ts` — both used the same ✳ character in unrelated MOTION_SPEC §3 comments, which the brief's own Step-1 test would otherwise flag).
+- One narrow, documented exemption added to the pre-existing `tests/contrast.test.ts` accessibility guard, since `.mark` paints SVG graphics via `currentColor` rather than text and the brief's exact CubeMark CSS would otherwise trip that guard's text-contrast heuristic.
+
+Both are explained in detail with rationale in the report. Dev-server visual check done via Playwright screenshots (Chromium already installed in the project) — cube mark renders correctly at 20px/16px in both themes, following `--color-accent`.
+
+Report: `/Users/djmaam/Projects/Marcos/portfolio-v3/.superpowers/sdd/2026-09-07-cube-mark/task-4-report.md`</result>
+<usage><subagent_tokens>113085</subagent_tokens><tool_uses>65</tool_uses><duration_ms>378921</duration_ms></usage>
+</task-notification>
