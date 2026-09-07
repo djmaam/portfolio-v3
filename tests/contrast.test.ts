@@ -220,8 +220,10 @@ test.each(components)(
         if (clearsThreshold(body)) return false
         // `.mark` (`CubeMark.astro`, spec 30) paints SVG graphics through `currentColor`,
         // never text: its guarantee is the 3:1 non-text "accent on bg" ratio asserted
-        // above, not the large-text exception this loop otherwise enforces.
-        if (ownClasses(selector).includes('mark')) return false
+        // above, not the large-text exception this loop otherwise enforces. Keyed to the
+        // file as well as the class, so a future component reusing the name `.mark` for
+        // real text does not inherit the carve-out.
+        if (file.endsWith('/CubeMark.astro') && ownClasses(selector).includes('mark')) return false
         // The size or the weight may sit on the element's own class instead — a `:hover`
         // that only changes the color must not also change the weight, or the text reflows.
         const classes = ownClasses(selector)
