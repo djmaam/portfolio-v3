@@ -288,9 +288,14 @@ export function mountEntry(card: HTMLElement): () => void {
   // The site's one scroll listener, not a second one: `tests/network.test.ts` asserts
   // `scroll.ts` is the only module that attaches one. It calls back on subscription, so
   // the skip waits for the position to actually change.
+  //
+  // That channel also republishes on `resize`, which is the only warning this module gets
+  // that its canvas and its nav target have both gone stale. Rather than re-measure and
+  // re-scale mid-flight, a resize ends the sequence the same way a click does: it is a
+  // rare thing to do in the first four seconds of a page, and the end state is never wrong.
   const startY = window.scrollY
-  const stopScroll = onScroll(({ scrollY }) => {
-    if (scrollY !== startY) skip()
+  const stopScroll = onScroll(({ scrollY, vh }) => {
+    if (scrollY !== startY || vh !== h || window.innerWidth !== w) skip()
   })
   window.addEventListener('click', skip)
 
