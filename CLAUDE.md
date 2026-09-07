@@ -27,7 +27,7 @@ Spanish and English (that is product content, not code).
 ## Exploration & AST Graph
 
 - **CodeGraph is enabled (`.codegraph/`)**: Call `codegraph_explore` FIRST for inspecting symbols, callers, and blast radius before modifying any code. It replaces multi-turn grep/read loops with a single call.
-- **Graphify / Architecture Knowledge Graph**: Lives in `docs/architecture/` (and `graphify-out/graph.html`). Re-run `graphify ./src --obsidian --obsidian-dir ./docs/architecture` after adding new components or major architectural changes.
+- **Graphify / Architecture Knowledge Graph**: `docs/architecture/` (and `graphify-out/graph.html`). **Generated and git-ignored** — it is a cache of the import graph, not a source of truth, and a fresh clone will not have it. Rebuild with `graphify ./src --obsidian --obsidian-dir ./docs/architecture` after adding components or changing the architecture. The sources of truth stay the two named above: `handoff/` and the specs.
 
 ## Conventions
 

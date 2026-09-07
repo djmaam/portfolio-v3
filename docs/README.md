@@ -21,7 +21,7 @@ flowchart TD
 1. **Design Source of Truth**: [`handoff/`](../handoff/README.md) — Visual tokens, copy (`content.json`), animation timelines, and interactive reference mocks. In Spanish. Never edit.
 2. **Master Technical Design**: [`2026-09-05-portfolio-v3-design.md`](./superpowers/specs/2026-09-05-portfolio-v3-design.md) — Core architecture, Astro 7 + Bun stack decisions, layout structure, and font choices (Manrope + IBM Plex Mono).
 3. **Execution Specs**: [`docs/superpowers/specs/NN-<block>.md`](./superpowers/specs/) — One spec per Linear issue (`PV3-XX`), written and approved before implementation code.
-4. **Architecture Knowledge Graph (Obsidian)**: [`docs/architecture/`](./architecture/) — Full AST-extracted knowledge graph (175 notes, 365 edges, 12 communities) and visual canvas ([`graph.canvas`](./architecture/graph.canvas)).
+4. **Architecture Knowledge Graph (Obsidian)**: `docs/architecture/` — the AST-extracted import graph and its visual canvas. **Generated and git-ignored**, so it is absent from a fresh clone; rebuild it with `graphify ./src --obsidian --obsidian-dir ./docs/architecture`. It is a view of the code, never a source of truth: when it disagrees with `src/`, the code is right.
 
 ---
 

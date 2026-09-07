@@ -12,3 +12,7 @@ playwright-report/
 .obsidian/
 graphify-out/
 .codegraph/
+# The Obsidian vault graphify writes. Derived from `src/`, so versioning it would
+# version a cache: it goes stale the first time an import changes and nobody re-runs
+# graphify, and then the repo asserts something false. `CLAUDE.md` names the command.
+docs/architecture/
