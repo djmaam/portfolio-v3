@@ -1,0 +1,23 @@
+Review this change for security vulnerabilities.
+
+Changed files (you may Read these and any other file in the repo):
+  - src/lib/ui.ts
+
+Unified diff (only + lines are new):
+
+=== DIFF: src/lib/ui.ts ===
+@@ -0,0 +1,11 @@
++import type { Lang } from './content'
++
++/**
++ * Labels for interface chrome that has no visible text: `handoff/content.json` is
++ * read-only and holds page copy only, so accessible names for controls live here. Same
++ * rationale as `site` in `content.ts` — this is UI, not content.
++ */
++export const ui: Record<Lang, { themeToggle: string }> = {
++  es: { themeToggle: 'Cambiar el tema' },
++  en: { themeToggle: 'Toggle the theme' },
++}
+
+
+Investigate per the method in your instructions, then return the findings list.
