@@ -1,0 +1,133 @@
+Review this change for security vulnerabilities.
+
+Changed files (you may Read these and any other file in the repo):
+  - .github/workflows/ci.yml
+  - tests/scaffold.test.ts
+  - eslint.config.js
+  - astro.config.mjs
+  - package.json
+  - tsconfig.json
+
+Unified diff (only + lines are new):
+
+=== DIFF: .github/workflows/ci.yml ===
+@@ -0,0 +1,19 @@
++name: CI
++
++on:
++  push:
++    branches: [main]
++  pull_request:
++
++jobs:
++  check:
++    runs-on: ubuntu-latest
++    steps:
++      - uses: actions/checkout@v4
++      - uses: oven-sh/setup-bun@v2
++        with:
++          bun-version: 1.4.0
++      - run: bun install --frozen-lockfile
++      - run: bun run lint
++      - run: bun test
++      - run: bun run build
+
+
+=== DIFF: tests/scaffold.test.ts ===
+@@ -0,0 +1,14 @@
++import { expect, test } from 'bun:test'
++
++const root = new URL('../', import.meta.url)
++const astroConfig = await Bun.file(new URL('astro.config.mjs', root)).text()
++const pkg = await Bun.file(new URL('package.json', root)).json()
++
++test('astro.config.mjs declares static output', () => {
++  expect(astroConfig).toMatch(/output:\s*['"]static['"]/)
++})
++
++test('package.json exposes every script the workflow depends on', () => {
++  const scripts = ['dev', 'build', 'preview', 'lint', 'format', 'test']
++  expect(Object.keys(pkg.scripts as Record<string, string>).sort()).toEqual(scripts.sort())
++})
+
+
+=== DIFF: eslint.config.js ===
+@@ -0,0 +1,10 @@
++import js from '@eslint/js'
++import astro from 'eslint-plugin-astro'
++import ts from 'typescript-eslint'
++
++export default [
++  { ignores: ['dist/', '.astro/', 'node_modules/', 'handoff/'] },
++  js.configs.recommended,
++  ...ts.configs.recommended,
++  ...astro.configs.recommended,
++]
+
+
+=== DIFF: astro.config.mjs ===
+@@ -0,0 +1,10 @@
++// @ts-check
++import { defineConfig } from 'astro/config'
++import tailwindcss from '@tailwindcss/vite'
++
++// https://astro.build/config
++export default defineConfig({
++  output: 'static',
++  site: 'https://marcosarrieta.dev',
++  vite: { plugins: [tailwindcss()] },
++})
+
+
+=== DIFF: package.json ===
+@@ -0,0 +1,32 @@
++{
++  "name": "portfolio-v3",
++  "type": "module",
++  "version": "0.0.1",
++  "private": true,
++  "scripts": {
++    "dev": "astro dev",
++    "build": "astro build",
++    "preview": "astro preview",
++    "lint": "eslint . && prettier --check .",
++    "format": "prettier --write .",
++    "test": "bun test"
++  },
++  "dependencies": {
++    "astro": "^7.3.1"
++  },
++  "devDependencies": {
++    "@eslint/js": "^10.0.1",
++    "@tailwindcss/vite": "^4.3.3",
++    "@types/bun": "^1.4.1",
++    "eslint": "^10.10.0",
++    "eslint-plugin-astro": "^3.1.0",
++    "prettier": "^3.9.6",
++    "prettier-plugin-astro": "^0.14.1",
++    "tailwindcss": "^4.3.3",
++    "typescript": "^6.0.3",
++    "typescript-eslint": "^8.69.0"
++  },
++  "allowScripts": {
++    "esbuild": true
++  }
++}
+
+
+=== DIFF: tsconfig.json ===
+@@ -0,0 +1,11 @@
++{
++  "extends": "astro/tsconfigs/strict",
++  "include": [".astro/types.d.ts", "**/*"],
++  "exclude": ["dist"],
++  "compilerOptions": {
++    "baseUrl": ".",
++    "paths": {
++      "@/*": ["src/*"]
++    }
++  }
++}
+
+
+Investigate per the method in your instructions, then return the findings list.
