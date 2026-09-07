@@ -1,0 +1,1 @@
+haria falta meter react para que funcione mejor? o con astro se resuelve todo? con respecto a el math me parece bien para que playwright no pese tanto en el CI/CD
