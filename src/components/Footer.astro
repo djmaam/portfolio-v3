@@ -18,15 +18,18 @@ const year = new Date().getFullYear()
 ---
 
 <footer class="footer container-page section-divider font-mono text-label-sm">
-  <span>
-    {/* One expression: Astro drops the whitespace between two of them on separate lines. */}
-    {`© ${year} ${site.name} · `}
-    <a class="handle" href={links.github} target="_blank" rel="noopener">{site.handle}</a>
+  {
+    /* The mark leads the name here the way it does in the nav, so the two brand lockups
+     read the same at both ends of the page. */
+  }
+  <span class="brand">
+    <CubeMark size={16} />
+    {`© ${year} ${site.name}`}
   </span>
 
   <span class="sig">
-    <CubeMark size={16} />
     {t.footerSig}
+    <a class="handle" href={links.github} target="_blank" rel="noopener">{site.handle}</a>
     {
       /* Decoration: it reads as garbage to a screen reader. The first face ships in the
         markup, so the footer is complete before — and without — JavaScript. The other
@@ -61,6 +64,8 @@ const year = new Date().getFullYear()
     color: var(--color-accent);
   }
 
+  /* Both ends are the same lockup: an icon or a run of text, spaced by the same gap. */
+  .brand,
   .sig {
     display: flex;
     align-items: center;

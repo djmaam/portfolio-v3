@@ -95,6 +95,7 @@ These specs addressed pixel-perfect visual alignment, container overflow bugs, a
 | :--- | :--- | :--- | :--- | :--- |
 | [`30-cube-mark.md`](./superpowers/specs/30-cube-mark.md) | Cube Mark | PV3-35 | `Nav.astro`, `Footer.astro` | Isometric cube cluster replaces the ✳ glyph. Build-time SVG upgraded to a canvas with per-piece rotation. Documented deviation from `MOTION_SPEC` §1. |
 | [`31-entry-choreography.md`](./superpowers/specs/31-entry-choreography.md) | Entry Choreography | PV3-36 | `entry.ts`, `boot.ts`, `network.ts` | Six overlapping phases in 4.2s: the mark expands, docks in the nav, and seeds the node network. Skippable by click or scroll, once per session. Replaces the ✳ formation of `MOTION_SPEC` §3. Depends on [`30-cube-mark.md`](./superpowers/specs/30-cube-mark.md). |
+| [`32-copy-positioning.md`](./superpowers/specs/32-copy-positioning.md) | Copy & Positioning | PV3-37 | `content.json`, `Hero.astro`, `Footer.astro`, `Base.astro` | Positions as an engineer who ships, not an orchestrator: `AI Engineer` title, outcome-led hero, `statProducts`, seven-year arithmetic that closes, footer signature lockup, and `Person` JSON-LD. First spec to edit `handoff/content.json`. |
 
 ---
 

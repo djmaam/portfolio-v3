@@ -5,18 +5,18 @@
       "navWork": "Experiencia",
       "navProjects": "Proyectos",
       "navContact": "Contacto",
-      "eyebrow": "Software Engineer & AI Orchestrator · Argentina",
+      "eyebrow": "AI Engineer · Argentina",
       "h1a": "Pienso el producto.",
-      "h1b": "Orquesto cómo se construye.",
-      "heroSub": "Ocho años llevando apps a producción en agro, streaming y salud. Hoy dirijo equipos de agentes de IA con especificaciones claras y arquitectura sólida, para que cada idea llegue más lejos, más rápido.",
+      "h1b": "Lo llevo a producción.",
+      "heroSub": "Siete años como ingeniero de software llevando productos a producción en agro, streaming y salud: 12.000 productores, 500.000 hectáreas, seis plataformas. Hoy construyo con equipos de agentes de IA, sobre specs claras y arquitectura que aguanta.",
       "ctaWork": "Ver trayectoria",
       "ctaContact": "Hablemos",
       "statYears": "años construyendo",
-      "statCompanies": "empresas principales",
+      "statProducts": "productos en producción",
       "statPlatforms": "plataformas (web · mobile · TV)",
       "secAbout": "SOBRE MÍ",
       "aboutLead": "Me interesa menos qué tecnología usar y más qué problema resolver, para quién, y con qué arquitectura.",
-      "aboutBody": "Empecé en mobile y backend, construyendo productos desde cero para startups y empresas. Con el tiempo entendí dónde aporto más valor: decidir qué construir, cómo estructurarlo y verificar que funcione. Hoy trabajo con Spec-Driven Development, coordinando agentes de IA que ejecutan mientras yo diseño, reviso y decido.",
+      "aboutBody": "Empecé en 2019 con proyectos freelance y en 2020 entré a mi primer equipo, construyendo mobile y backend desde cero para startups y empresas. Con el tiempo entendí dónde aporto más valor: decidir qué construir, cómo estructurarlo y verificar que funcione. Hoy trabajo con Spec-Driven Development, coordinando agentes de IA que ejecutan mientras yo diseño, reviso y decido.",
       "principles": [
         {
           "n": "PRINCIPIO 01",
@@ -78,15 +78,15 @@
         }
       ],
       "secWork": "EXPERIENCIA",
-      "workTitle": "Ocho años, cinco empresas, seis plataformas.",
+      "workTitle": "Siete años, cinco empresas, seis plataformas.",
       "alsoWith": "TAMBIÉN CON",
       "jobs": [
         {
           "abbr": "NR",
           "company": "Nera",
           "period": "abr. 2023 — hoy",
-          "role": "Software Engineer & AI Orchestrator",
-          "note": "Fintech que digitaliza pagos y financiamiento para el agro. Uno de los ingenieros con más recorrido en el equipo: estuve en cada etapa del producto, de la primera versión a la plataforma actual, construida hoy principalmente con IA.",
+          "role": "AI Engineer",
+          "note": "Fintech que digitaliza pagos y financiamiento para el agro. Uno de los ingenieros con más recorrido en el equipo: estuve en cada etapa del producto, de la primera versión a la plataforma actual. Hoy la construyo con agentes de IA, con la misma vara de review, tests y arquitectura de siempre.",
           "stack": [
             "Mobile",
             "Web",
@@ -160,7 +160,7 @@
       ],
       "secProjects": "PROYECTOS",
       "projectsTitle": "Productos que salieron a producción.",
-      "projectsSub": "Con usuarios reales y equipos reales. Las capturas se reemplazan en la implementación.",
+      "projectsSub": "Con usuarios reales y equipos reales.",
       "projects": [
         {
           "name": "Nera",
@@ -213,25 +213,25 @@
       "secContact": "CONTACTO",
       "contactTitle": "Si tenés algo que construir, hablemos.",
       "contactSub": "Productos nuevos, equipos que quieren trabajar con agentes de IA, o una charla sobre arquitectura.",
-      "footerSig": "Diseñado con criterio, construido con agentes."
+      "footerSig": "Creado con ❤️ by"
     },
     "en": {
       "navAbout": "About",
       "navWork": "Experience",
       "navProjects": "Projects",
       "navContact": "Contact",
-      "eyebrow": "Software Engineer & AI Orchestrator · Argentina",
+      "eyebrow": "AI Engineer · Argentina",
       "h1a": "I think the product.",
-      "h1b": "I orchestrate how it gets built.",
-      "heroSub": "Eight years shipping apps in agtech, streaming and health. Today I lead teams of AI agents with clear specs and solid architecture, so every idea goes further, faster.",
+      "h1b": "I ship it to production.",
+      "heroSub": "Seven years as a software engineer shipping products to production in agtech, streaming and health: 12,000 farmers, 500,000 hectares, six platforms. Today I build with teams of AI agents, on clear specs and architecture that holds.",
       "ctaWork": "See the track record",
       "ctaContact": "Let's talk",
       "statYears": "years building",
-      "statCompanies": "core companies",
+      "statProducts": "products in production",
       "statPlatforms": "platforms (web · mobile · TV)",
       "secAbout": "ABOUT",
       "aboutLead": "I care less about which technology to use and more about which problem to solve, for whom, and with what architecture.",
-      "aboutBody": "I started in mobile and backend, building products from scratch for startups and companies. Over time I learned where I add the most value: deciding what to build, how to structure it, and verifying it works. Today I work with Spec-Driven Development, coordinating AI agents that execute while I design, review and decide.",
+      "aboutBody": "I started in 2019 with freelance projects and joined my first team in 2020, building mobile and backend from scratch for startups and companies. Over time I learned where I add the most value: deciding what to build, how to structure it, and verifying it works. Today I work with Spec-Driven Development, coordinating AI agents that execute while I design, review and decide.",
       "principles": [
         {
           "n": "PRINCIPLE 01",
@@ -293,15 +293,15 @@
         }
       ],
       "secWork": "EXPERIENCE",
-      "workTitle": "Eight years, five companies, six platforms.",
+      "workTitle": "Seven years, five companies, six platforms.",
       "alsoWith": "ALSO WITH",
       "jobs": [
         {
           "abbr": "NR",
           "company": "Nera",
           "period": "Apr 2023 — now",
-          "role": "Software Engineer & AI Orchestrator",
-          "note": "Fintech digitizing payments and financing for agriculture. One of the longest-tenured engineers on the team: I have been in every stage of the product, from first version to today's platform, now built primarily with AI.",
+          "role": "AI Engineer",
+          "note": "Fintech digitizing payments and financing for agriculture. One of the longest-tenured engineers on the team: I have been in every stage of the product, from first version to today's platform. I build it with AI agents now, held to the same bar of review, tests and architecture as always.",
           "stack": [
             "Mobile",
             "Web",
@@ -375,7 +375,7 @@
       ],
       "secProjects": "PROJECTS",
       "projectsTitle": "Products that shipped.",
-      "projectsSub": "With real users and real teams. Screenshots get replaced at implementation.",
+      "projectsSub": "With real users and real teams.",
       "projects": [
         {
           "name": "Nera",
@@ -428,7 +428,7 @@
       "secContact": "CONTACT",
       "contactTitle": "If you have something to build, let's talk.",
       "contactSub": "New products, teams that want to work with AI agents, or a conversation about architecture.",
-      "footerSig": "Designed with judgment, built with agents."
+      "footerSig": "Created with ❤️ by"
     }
   },
   "stack": {
@@ -442,7 +442,6 @@
       "Tailwind",
       "Node.js",
       "NestJS",
-      "Spring",
       "Claude Code",
       "Spec-Driven Development",
       "Agent orchestration",
