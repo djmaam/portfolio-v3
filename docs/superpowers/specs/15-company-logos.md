@@ -175,11 +175,11 @@ what it cannot reach is the enclosed shape.
 
 ### 5 — A missing logo is not a failure
 
-A job whose `abbr` has no file renders exactly what it renders today. `.has-mark` is the
+A job whose `abbr` has no file renders exactly what it renders today. `.marked` is the
 class that switches the stripes off:
 
 ```astro
-<span class:list={['logo', 'font-mono', src && 'has-mark']} aria-hidden="true"
+<span class:list={['logo', 'font-mono', src && 'marked']} aria-hidden="true"
       style={src && `--logo-src: url("${src}")`}>
   {src ? null : job.abbr}
 </span>
@@ -249,7 +249,7 @@ pipeline to produce a working site.
 
 ### `src/components/Experience.astro`
 
-The glob, the per-job lookup, the `.has-mark` class and `--logo-src` style hook, and the
+The glob, the per-job lookup, the `.marked` class and `--logo-src` style hook, and the
 `::before` rule with its hover. `.logo`'s frame, radius, size and the `--logo-size`
 custom property `.dot` derives from are all untouched — that is why the dot stays
 centered without a second thought (`23-experience.md` §1).
@@ -270,7 +270,7 @@ fallback of decision 5, not an error.
 
 ### `e2e/experience.spec.ts` (existing)
 
-The rendered half, which no source test can reach: the number of `.logo.has-mark`
+The rendered half, which no source test can reach: the number of `.logo.marked`
 elements equals the number of files in `src/assets/logos/`, and the computed
 `mask-image` of the first of them is not `none` — proving the URL survived the build and
 the mask actually applied, rather than the class landing on an empty rule.
