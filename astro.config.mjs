@@ -23,6 +23,11 @@ export default defineConfig({
       styleDirective: { resources: ["'self'", "'unsafe-inline'"] },
     },
   },
+  // `/en` and not `/en/`. The default writes `en/index.html`, which Cloudflare Pages
+  // serves at `/en/` and reaches from `/en` with a 308 — so the canonical, both hreflang
+  // alternates and the sitemap, all of which say `/en`, pointed at a redirect. `file`
+  // emits `en.html`, which Pages serves at `/en` directly.
+  build: { format: 'file' },
   site: 'https://marcosarrieta.dev',
   // `json.stringify: false` keeps content.json tree-shakeable: stringified, it compiles
   // to one `JSON.parse` of the whole file, so a client script that imports a single key

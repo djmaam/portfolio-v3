@@ -73,6 +73,36 @@ here, because a blocked resource is a console error and nothing else.
 `frame-ancestors` is the directive a `<meta>` policy is not allowed to express. Cloudflare
 carries `X-Frame-Options: DENY` in `_headers` instead, which covers the same need.
 
+### Cloudflare Web Analytics is off, and the policy is why
+
+Pages offers to inject Web Analytics into every HTML response. It injects two things: a
+921-byte inline loader and `https://static.cloudflareinsights.com/beacon.min.js`. The
+policy blocks both, and Lighthouse against production reported it as two console errors
+that cost Best Practices seven points.
+
+Allowing them is not a matter of adding a host to `script-src`. The external script is
+easy; the inline loader is Cloudflare's, edge-injected, and can only be permitted with
+`'unsafe-inline'` — which, exactly as with the style attributes above, is inert while the
+policy carries script hashes. Keeping analytics therefore means dropping the script
+hashes altogether, which is the whole point of the policy. The toggle goes off instead.
+
+This is the one failure mode the test suite structurally cannot catch: the beacon is
+injected at Cloudflare's edge, so `e2e/deploy.spec.ts` running against `astro preview`
+sees a clean console no matter what production does. It has to be checked against the
+live URL, which is what the production Lighthouse run in the acceptance criteria is for.
+
+### `/en`, not `/en/`
+
+`build.format: 'file'` writes `en.html` beside `index.html` instead of `en/index.html`.
+The default layout makes Cloudflare Pages serve the page at `/en/` and answer `/en` with
+a 308 — while the canonical, both `hreflang` alternates and the sitemap all say `/en`.
+Every English visit paid a redirect to reach the URL the page itself claims to live at.
+
+The format has one consequence worth knowing: `Astro.url.pathname` becomes the built
+file, `/index.html` and `/en/en.html`, and `Base.astro` and `Nav.astro` both derive the
+canonical and the language toggle from it. `siblingPath` recovers the route from the file
+name, which fixes both callers at once because both already route through it.
+
 ### `public/_headers`
 
 Only what a meta tag cannot carry:
@@ -135,6 +165,10 @@ Not code. Recorded here because a dashboard has no diff.
 - [ ] `https://marcosarrieta.dev/robots.txt` and `/sitemap.xml` resolve, and the sitemap
       lists both routes.
 - [ ] `https://marcosarrieta.dev/og.png` resolves as `image/png`.
+- [ ] `https://marcosarrieta.dev/en` answers 200 and not a 308, and `www` 301s to the apex
+      preserving the path.
+- [ ] Production loads with an empty console — no blocked beacon, no blocked inline
+      script.
 - [ ] Lighthouse ≥ 90 in all four categories measured **against production**, not only
       against `dist/`.
 - [ ] `bun test`, `bun run test:e2e` and `bun run test:lh` stay green.
