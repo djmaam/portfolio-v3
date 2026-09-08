@@ -126,8 +126,11 @@ export function mountEntry(card: HTMLElement): () => void {
 
   html.dataset.entry = 'run'
 
-  const w = window.innerWidth
-  const h = window.innerHeight
+  // The box a `position: fixed` element resolves against: the viewport minus the
+  // scrollbars, which is what `inset: 0` gives the canvas. `innerWidth` counts the
+  // scrollbar, and a canvas drawn in one space and sized in the other is off by its width.
+  const w = document.documentElement.clientWidth
+  const h = document.documentElement.clientHeight
   const dpr = Math.min(2, window.devicePixelRatio || 1)
   canvas.id = 'entry'
   canvas.setAttribute('aria-hidden', 'true')
@@ -304,8 +307,9 @@ export function mountEntry(card: HTMLElement): () => void {
   // re-scale mid-flight, a resize ends the sequence the same way a click does: it is a
   // rare thing to do in the first four seconds of a page, and the end state is never wrong.
   const startY = window.scrollY
-  const stopScroll = onScroll(({ scrollY, vh }) => {
-    if (scrollY !== startY || vh !== h || window.innerWidth !== w) skip()
+  const stopScroll = onScroll(({ scrollY }) => {
+    const root = document.documentElement
+    if (scrollY !== startY || root.clientWidth !== w || root.clientHeight !== h) skip()
   })
   window.addEventListener('click', skip)
 

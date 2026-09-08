@@ -197,6 +197,61 @@ test('the mark lands on the nav slot and the overlay is destroyed', async ({ pag
   await expect(page.locator('[data-brand-text]')).toHaveText('Marcos Arrieta')
 })
 
+test('the overlay is the viewport, not the viewport times the pixel ratio', async ({ browser }) => {
+  // A canvas is a replaced element: with `width: auto`, `inset: 0` loses to its intrinsic
+  // width, which is the backing store — the viewport times the device pixel ratio. On a 2×
+  // display that painted the whole entry at twice the scale, off the side of the screen,
+  // and landed the mark at twice the nav's coordinates. Only reproducible above 1×.
+  const context = await browser.newContext({ viewport: VIEWPORT, deviceScaleFactor: 2 })
+  const page = await context.newPage()
+  await page.goto('/')
+  await page.waitForSelector('#entry', { state: 'attached', timeout: 2000 })
+
+  const box = await page.evaluate(() => {
+    const canvas = document.querySelector<HTMLCanvasElement>('#entry')!
+    const rect = canvas.getBoundingClientRect()
+    return {
+      width: rect.width,
+      height: rect.height,
+      // The box a fixed element resolves against, scrollbars excluded.
+      clientWidth: document.documentElement.clientWidth,
+      clientHeight: document.documentElement.clientHeight,
+      buffer: canvas.width,
+    }
+  })
+
+  expect(box.width).toBe(box.clientWidth)
+  expect(box.height).toBe(box.clientHeight)
+  // And the backing store is still at 2×, which is the point of reading it back.
+  expect(box.buffer).toBe(box.clientWidth * 2)
+
+  // The mark is drawn where the viewport's center is, not off to the side of it.
+  const centroid = await page.evaluate(() => {
+    const canvas = document.querySelector<HTMLCanvasElement>('#entry')!
+    const ctx = canvas.getContext('2d')!
+    const scale = canvas.getBoundingClientRect().width / canvas.width
+    const px = ctx.getImageData(0, 0, canvas.width, canvas.height).data
+    let sum = 0
+    let wx = 0
+    let wy = 0
+    for (let y = 0; y < canvas.height; y += 2)
+      for (let x = 0; x < canvas.width; x += 2) {
+        const a = px[(y * canvas.width + x) * 4 + 3] as number
+        if (a < 30) continue
+        sum += a
+        wx += a * x
+        wy += a * y
+      }
+    return sum ? { x: (wx / sum) * scale, y: (wy / sum) * scale } : null
+  })
+
+  expect(centroid).not.toBeNull()
+  expect(Math.abs(centroid!.x - box.clientWidth / 2)).toBeLessThan(20)
+  expect(Math.abs(centroid!.y - box.clientHeight * 0.43)).toBeLessThan(20)
+
+  await context.close()
+})
+
 test('a click during the entry destroys the overlay and lands on the end state', async ({
   page,
 }) => {
