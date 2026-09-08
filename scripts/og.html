@@ -1,0 +1,82 @@
+<!doctype html>
+<!-- The social card, rendered by `scripts/make-og.ts` and committed as `public/og.png`.
+     Standalone on purpose: the real page is 630px of hero alone, and cropping it would
+     cut the H1 in half. Colors are the dark-theme values of `src/styles/app.css` — this
+     file lives outside `src/`, which is what `scripts/check-tokens.ts` scans, because a
+     Chromium `file://` render has no `@theme` to read them from. -->
+<meta charset="utf-8" />
+<style>
+  @font-face {
+    font-family: Manrope;
+    src: url('../public/fonts/manrope-var.woff2') format('woff2');
+    font-weight: 200 800;
+  }
+  @font-face {
+    font-family: 'IBM Plex Mono';
+    src: url('../public/fonts/ibm-plex-mono-400.woff2') format('woff2');
+    font-weight: 400;
+  }
+  * {
+    margin: 0;
+    box-sizing: border-box;
+  }
+  body {
+    width: 1200px;
+    height: 630px;
+    padding: 96px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    background: #08090c;
+    color: #f3f5f9;
+    font-family: Manrope, sans-serif;
+    /* The same accent wash the aurora paints behind the hero. */
+    background-image: radial-gradient(
+      120% 90% at 82% 8%,
+      rgba(62, 231, 255, 0.16),
+      transparent 62%
+    );
+  }
+  .eyebrow {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 22px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: #3ee7ff;
+  }
+  h1 {
+    font-size: 82px;
+    font-weight: 600;
+    line-height: 1.06;
+    letter-spacing: -0.03em;
+  }
+  h1 span {
+    color: #8b93a3;
+  }
+  footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 24px;
+    color: #8b93a3;
+  }
+  footer strong {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    color: #f3f5f9;
+    font-weight: 400;
+  }
+  svg {
+    color: #3ee7ff;
+  }
+</style>
+<body>
+  <div class="eyebrow" data-og="eyebrow"></div>
+  <h1 data-og="h1"></h1>
+  <footer>
+    <strong data-og="name"></strong>
+    <span data-og="domain"></span>
+  </footer>
+</body>

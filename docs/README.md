@@ -99,6 +99,14 @@ These specs addressed pixel-perfect visual alignment, container overflow bugs, a
 
 ---
 
+### Phase 7: Deploy (18)
+
+| Spec | Title | Linear Issue | Target Area | Description |
+| :--- | :--- | :--- | :--- | :--- |
+| [`18-deploy.md`](./superpowers/specs/18-deploy.md) | Cloudflare Pages, Domain & Email Routing | PV3-23 | `astro.config.mjs`, `public/_headers`, `src/pages/` | Puts `marcosarrieta.dev` online: build-time hashed CSP in a `<meta>`, security and cache headers, `robots.txt` and `sitemap.xml` as endpoints, and the `og.png` `Base.astro` has pointed at since spec 03. |
+
+---
+
 ## 3. Note on Numbering Gaps
 
-The spec prefix numbers (`NN`) correspond to the chronological delivery order of features and polish iterations in the development cycle. Missing numbers (such as 18, 21, 25) were dedicated to Linear backlog tasks that did not require a standalone superpower spec (e.g., DNS configuration and direct dependency bumps).
+The spec prefix numbers (`NN`) correspond to the chronological delivery order of features and polish iterations in the development cycle. Missing numbers (such as 21 and 25) were dedicated to Linear backlog tasks that did not require a standalone superpower spec (e.g., direct dependency bumps). Spec 18 is out of order on purpose: the deploy issue sat in the backlog until the site was worth deploying.

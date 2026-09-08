@@ -5,6 +5,24 @@ import tailwindcss from '@tailwindcss/vite'
 // https://astro.build/config
 export default defineConfig({
   output: 'static',
+  // The inline theme script and the JSON-LD block are hashed by Astro at build time and
+  // written into a `<meta http-equiv>`, so the policy never drifts from the output the
+  // way a hand-maintained hash in `_headers` would. `frame-ancestors` is the one
+  // directive a meta policy cannot express — `X-Frame-Options` in `public/_headers`
+  // covers that need instead.
+  security: {
+    csp: {
+      directives: [
+        "default-src 'self'",
+        "img-src 'self' data:",
+        "font-src 'self'",
+        "object-src 'none'",
+        "base-uri 'self'",
+        "form-action 'none'",
+      ],
+      styleDirective: { resources: ["'self'", "'unsafe-inline'"] },
+    },
+  },
   site: 'https://marcosarrieta.dev',
   // `json.stringify: false` keeps content.json tree-shakeable: stringified, it compiles
   // to one `JSON.parse` of the whole file, so a client script that imports a single key
