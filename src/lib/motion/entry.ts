@@ -92,10 +92,11 @@ export function markTransform(
 
   // The pieces overshoot slightly and settle; the cluster's growth is a plain outCubic.
   const expand = pExpand >= 1 ? 1 : lerp(0.08, 1, outBack(pExpand))
-  // 19% of the shorter side, which on a portrait phone is the width — and 19% of 390px
-  // reads as a speck rather than as the mark. Below the site's own 720 breakpoint
-  // (`nodeCountFor`, the aurora's third blob) the expansion is sized off the width.
-  const big = (view.w < 720 ? view.w * 0.34 : Math.min(view.w, view.h) * 0.19) * 0.85
+  // 85% of the shorter side. The prototype's own number is `min(W, H) · 0.19`, but that
+  // is pixels *per lattice unit* — `markPolygons` takes the side of the box the whole
+  // cluster is fitted into, which is about 5.3 units across. Measured off the prototype
+  // at the end of EXPAND: the mark spans 86% of its stage's height, and it is meant to.
+  const big = Math.min(view.w, view.h) * 0.85
   const grown = big * lerp(0.25, 1, outCubic(pExpand))
 
   return {
