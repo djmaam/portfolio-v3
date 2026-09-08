@@ -1,0 +1,33 @@
+{
+  "cli_version": "0.10.5",
+  "checkpoint_id": "01M20SVW8EAEZ4TNCSKZN5TCKZ",
+  "strategy": "manual-commit",
+  "branch": "feat/15-company-logos",
+  "checkpoints_count": 7,
+  "files_touched": [
+    "docs/superpowers/specs/15-company-logos.md"
+  ],
+  "sessions": [
+    {
+      "metadata": "/0/metadata.json",
+      "transcript": "/0/full.jsonl",
+      "compact_transcript": "/0/transcript.jsonl",
+      "content_hash": "/0/content_hash.txt",
+      "prompt": "/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 126,
+    "cache_creation_tokens": 318995,
+    "cache_read_tokens": 9206203,
+    "output_tokens": 73831,
+    "api_call_count": 64,
+    "subagent_tokens": {
+      "input_tokens": 60,
+      "cache_creation_tokens": 343181,
+      "cache_read_tokens": 2410192,
+      "output_tokens": 5053,
+      "api_call_count": 31
+    }
+  }
+}
