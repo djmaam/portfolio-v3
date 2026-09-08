@@ -1,0 +1,28 @@
+{
+  "cli_version": "0.10.5",
+  "checkpoint_id": "01M1ZCZD3013TCKP4JRSDVTC8Y",
+  "strategy": "manual-commit",
+  "branch": "feat/31-entry-choreography",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "e2e/hero.spec.ts",
+    "src/lib/motion/entryDriver.ts",
+    "src/styles/app.css"
+  ],
+  "sessions": [
+    {
+      "metadata": "/0/metadata.json",
+      "transcript": "/0/full.jsonl",
+      "compact_transcript": "/0/transcript.jsonl",
+      "content_hash": "/0/content_hash.txt",
+      "prompt": "/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 26,
+    "cache_creation_tokens": 15229,
+    "cache_read_tokens": 3650455,
+    "output_tokens": 9315,
+    "api_call_count": 13
+  }
+}

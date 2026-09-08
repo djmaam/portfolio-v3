@@ -1,0 +1,1 @@
+vamos a cerrar el dev server que este prendido, y vamos a revisar porque veo en el navegador que la animacion no se ve en el centro de la web esta por fuera del view, etonces cuando hace que se va al nav queda descuadrado
