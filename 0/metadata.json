@@ -1,0 +1,56 @@
+{
+  "cli_version": "0.10.5",
+  "checkpoint_id": "01M20WM6HDF9JXBARMK0Y1THKQ",
+  "session_id": "417814eb-00f9-49cd-a871-09f194d0c439",
+  "strategy": "manual-commit",
+  "created_at": "2026-09-08T16:11:42.455823Z",
+  "branch": "feat/32-copy-positioning",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "CLAUDE.md",
+    "docs/README.md",
+    "docs/superpowers/specs/32-copy-positioning.md",
+    "handoff/content.json",
+    "src/components/Footer.astro",
+    "src/components/Hero.astro",
+    "src/layouts/Base.astro",
+    "src/lib/ui.ts",
+    "tests/stack.test.ts",
+    "tests/ui.test.ts"
+  ],
+  "agent": "Claude Code",
+  "model": "claude-opus-5",
+  "turn_id": "b8315f876c76",
+  "compact_transcript_start": 0,
+  "token_usage": {
+    "input_tokens": 70,
+    "cache_creation_tokens": 84584,
+    "cache_read_tokens": 3018173,
+    "output_tokens": 34816,
+    "api_call_count": 35
+  },
+  "session_metrics": {
+    "turn_count": 1
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-09-08T16:11:42.385303Z",
+    "agent_lines": 0,
+    "agent_removed": 0,
+    "human_added": 164,
+    "human_modified": 39,
+    "human_removed": 0,
+    "total_committed": 164,
+    "total_lines_changed": 203,
+    "agent_percentage": 0,
+    "metric_version": 2
+  },
+  "prompt_attributions": [
+    {
+      "checkpoint_number": 1,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 0,
+      "agent_lines_removed": 0
+    }
+  ]
+}

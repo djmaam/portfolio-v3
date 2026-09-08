@@ -1,0 +1,35 @@
+{
+  "cli_version": "0.10.5",
+  "checkpoint_id": "01M20WM6HDF9JXBARMK0Y1THKQ",
+  "strategy": "manual-commit",
+  "branch": "feat/32-copy-positioning",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "CLAUDE.md",
+    "docs/README.md",
+    "docs/superpowers/specs/32-copy-positioning.md",
+    "handoff/content.json",
+    "src/components/Footer.astro",
+    "src/components/Hero.astro",
+    "src/layouts/Base.astro",
+    "src/lib/ui.ts",
+    "tests/stack.test.ts",
+    "tests/ui.test.ts"
+  ],
+  "sessions": [
+    {
+      "metadata": "/0/metadata.json",
+      "transcript": "/0/full.jsonl",
+      "compact_transcript": "/0/transcript.jsonl",
+      "content_hash": "/0/content_hash.txt",
+      "prompt": "/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 70,
+    "cache_creation_tokens": 84584,
+    "cache_read_tokens": 3018173,
+    "output_tokens": 34816,
+    "api_call_count": 35
+  }
+}
