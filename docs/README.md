@@ -38,7 +38,7 @@ flowchart TD
 
 ---
 
-### Phase 2: Core Sections (04 – 14)
+### Phase 2: Core Sections (04 – 15)
 
 | Spec | Title | Linear Issue | Branch | Refined By / Status |
 | :--- | :--- | :--- | :--- | :--- |
@@ -53,6 +53,7 @@ flowchart TD
 | [`12-stack.md`](./superpowers/specs/12-stack.md) | Tech Stack | PV3-17 | `feat/12-stack` | Double marquee chips. Refined in [`22-stack.md`](./superpowers/specs/22-stack.md). |
 | [`13-contact.md`](./superpowers/specs/13-contact.md) | Contact Section | PV3-18 | `feat/13-contact` | Contact card, copy email button, and socials. |
 | [`14-footer.md`](./superpowers/specs/14-footer.md) | Footer | PV3-19 | `feat/14-footer` | Colophon, copyright, back-to-top behavior. |
+| [`15-company-logos.md`](./superpowers/specs/15-company-logos.md) | Company Logos | PV3-20 | `feat/15-company-logos` | Real company marks replace the striped placeholder, as monochrome CSS masks. Completes the deferred asset of [`10-experience.md`](./superpowers/specs/10-experience.md). |
 
 ---
 
@@ -99,4 +100,4 @@ These specs addressed pixel-perfect visual alignment, container overflow bugs, a
 
 ## 3. Note on Numbering Gaps
 
-The spec prefix numbers (`NN`) correspond to the chronological delivery order of features and polish iterations in the development cycle. Missing numbers (such as 15, 18, 21, 25, 26) were dedicated to Linear backlog tasks that did not require a standalone superpower spec (e.g., asset imports, DNS configuration, and direct dependency bumps).
+The spec prefix numbers (`NN`) correspond to the chronological delivery order of features and polish iterations in the development cycle. Missing numbers (such as 18, 21, 25) were dedicated to Linear backlog tasks that did not require a standalone superpower spec (e.g., DNS configuration and direct dependency bumps).
