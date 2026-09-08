@@ -109,9 +109,18 @@ export function mountEntry(card: HTMLElement): () => void {
   const canvas = document.createElement('canvas')
   const ctx = canvas.getContext('2d')
 
+  /** The card's end state, with the transform and blur it arrived under cleared: both are
+   *  no-ops at `t = D` that still cost the card a compositing layer for the rest of the
+   *  visit. Its opacity stays written — the resting rule in `app.css` is 0. */
+  const settleConsole = () => {
+    paintConsole(ENTRY_MS)
+    card.style.transform = ''
+    card.style.filter = ''
+  }
+
   if (!navHost || !ctx || played()) {
     html.dataset.entry = 'done'
-    paintConsole(ENTRY_MS)
+    settleConsole()
     return () => {}
   }
 
@@ -257,6 +266,7 @@ export function mountEntry(card: HTMLElement): () => void {
     window.removeEventListener('click', skip)
     themes.disconnect()
     canvas.remove()
+    settleConsole()
     // The nav canvas has been painting the same frame underneath all along, so revealing
     // it as the overlay goes is the whole handover.
     navHost.style.opacity = ''
