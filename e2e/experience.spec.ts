@@ -1,3 +1,5 @@
+import { readdirSync } from 'node:fs'
+
 import { expect, test } from '@playwright/test'
 
 /**
@@ -107,4 +109,54 @@ test('with reduced motion, company names stay resolved from the markup', async (
   const after = await names.allTextContents()
   expect(after).toEqual(before)
   for (const text of after) expect(text.length).toBeGreaterThan(0)
+})
+
+test('every company mask survives the build and actually applies', async ({ page }) => {
+  // Read from disk rather than hardcoded: the fallback is per company, so the count is
+  // whatever `src/assets/logos/` holds, and adding or deleting one asset is a supported
+  // change that must not break this.
+  const expected = readdirSync(new URL('../src/assets/logos', import.meta.url)).filter((name) =>
+    name.endsWith('.png'),
+  ).length
+
+  await page.goto('/')
+
+  const marks = await page.evaluate(() =>
+    [...document.querySelectorAll<HTMLElement>('.logo.marked')].map((logo) => {
+      const before = getComputedStyle(logo, '::before')
+      const frame = getComputedStyle(logo)
+      return {
+        maskImage: before.maskImage || before.webkitMaskImage,
+        maskSize: before.maskSize || before.webkitMaskSize,
+        // The frame has to survive: `mask` on `.logo` itself would have eaten it.
+        radius: frame.borderTopLeftRadius,
+        borderWidth: frame.borderTopWidth,
+      }
+    }),
+  )
+
+  expect(marks.length).toBe(expected)
+  for (const mark of marks) {
+    expect(mark.maskImage).not.toBe('none')
+    expect(mark.maskSize).toBe('contain')
+    expect(mark.radius).toBe('16px')
+    expect(mark.borderWidth).toBe('1px')
+  }
+})
+
+test('a job without a mask keeps the striped placeholder', async ({ page }) => {
+  await page.goto('/')
+
+  // Whatever is not masked must still be labeled, so no entry can render an empty box.
+  const plain = await page.evaluate(() =>
+    [...document.querySelectorAll<HTMLElement>('.logo:not(.marked)')].map((logo) => ({
+      text: logo.textContent?.trim() ?? '',
+      background: getComputedStyle(logo).backgroundImage,
+    })),
+  )
+
+  for (const logo of plain) {
+    expect(logo.text.length).toBeGreaterThan(0)
+    expect(logo.background).toContain('repeating-linear-gradient')
+  }
 })

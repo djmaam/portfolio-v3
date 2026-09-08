@@ -16,6 +16,19 @@ const t = content[lang]
 // a flag and never emitted. The one job whose `glow` is a real color is the current
 // role; its dot is drawn with `--color-accent`, every other one with `--color-line`.
 const isCurrent = (job: (typeof t.jobs)[number]) => job.glow !== 'transparent'
+
+// The company marks (spec 15). Each is an alpha mask named for the `abbr` of its job, so
+// there is no company-to-file table to keep in sync — the filename is the key. Globbing
+// `src/assets` rather than reading `public/` is what makes a renamed file a build error
+// instead of a silent 404, and what gets the URL content-hashed.
+const logoUrls = import.meta.glob<string>('../assets/logos/*.png', {
+  query: '?url',
+  import: 'default',
+  eager: true,
+})
+const logos = new Map(
+  Object.entries(logoUrls).map(([path, url]) => [path.split('/').pop()!.replace('.png', ''), url]),
+)
 ---
 
 <section id="work" class="section-y section-divider" aria-labelledby="work-title">
@@ -37,11 +50,18 @@ const isCurrent = (job: (typeof t.jobs)[number]) => job.glow !== 'transparent'
             the `<li>`: two transforms on one element fight (`MOTION_SPEC` §5). */}
             <article class="card">
               <div class="who">
-                {/* Placeholder: the real logos are issue 15 and still undecided, so
-                nothing is invented here. The company name follows it, which is why the
-                abbreviation is decoration to a screen reader. */}
-                <span class="logo font-mono" aria-hidden="true">
-                  {job.abbr}
+                {/* The company mark, or the striped abbreviation when there is no file
+                for it — deleting one asset is how a company reverts to the placeholder.
+                Either way the company name follows it, which is why both are decoration
+                to a screen reader. */}
+                <span
+                  class:list={['logo', 'font-mono', logos.has(job.abbr) && 'marked']}
+                  style={
+                    logos.has(job.abbr) ? `--logo-src: url("${logos.get(job.abbr)}")` : undefined
+                  }
+                  aria-hidden="true"
+                >
+                  {logos.has(job.abbr) ? null : job.abbr}
                 </span>
                 <div class="names">
                   <h3 class="company text-card-title" data-company>
@@ -98,8 +118,8 @@ const isCurrent = (job: (typeof t.jobs)[number]) => job.glow !== 'transparent'
     grid-template-columns: 44px minmax(0, 1fr);
     gap: clamp(12px, 3vw, 32px);
     /* What `.dot`'s position is derived from below, shared with `.card` and `.logo` so
-       the alignment survives a change to either — including the pending issue 15 swap
-       of the placeholder logo for a real one. */
+       the alignment survives a change to either — which is what let issue 15 swap the
+       placeholder for the real marks without touching the dot at all. */
     --card-pad: 20px;
     --card-border: 1px;
     --logo-size: 56px;
@@ -194,6 +214,7 @@ const isCurrent = (job: (typeof t.jobs)[number]) => job.glow !== 'transparent'
   }
 
   .logo {
+    position: relative;
     flex: none;
     display: grid;
     place-items: center;
@@ -204,11 +225,34 @@ const isCurrent = (job: (typeof t.jobs)[number]) => job.glow !== 'transparent'
     font-size: 11px;
     letter-spacing: 0.06em;
     color: var(--color-dim);
+  }
+
+  /* The frame is the same either way; only what fills it changes. */
+  .logo:not(.marked) {
     background: repeating-linear-gradient(
       135deg,
       color-mix(in srgb, var(--color-ink) 5%, transparent) 0 4px,
       transparent 4px 9px
     );
+  }
+
+  /* The mark is a mask over a token-colored surface, so one asset serves both themes and
+     no brand color enters the page. It lives on `::before` rather than on `.logo`
+     because `mask` clips the element it is set on, frame and radius included.
+     `contain` fits a square tile and a wide wordmark alike; the inset is what keeps the
+     mark from touching its own frame. */
+  .logo.marked::before {
+    content: '';
+    position: absolute;
+    inset: 12px;
+    background: var(--color-dim);
+    -webkit-mask: var(--logo-src) center / contain no-repeat;
+    mask: var(--logo-src) center / contain no-repeat;
+  }
+
+  /* The mark joins the card's existing hover instead of inventing a gesture of its own. */
+  .card:hover .logo.marked::before {
+    background: var(--color-ink);
   }
 
   .names {

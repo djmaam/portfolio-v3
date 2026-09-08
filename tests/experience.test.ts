@@ -1,4 +1,7 @@
+import { readdir } from 'node:fs/promises'
+
 import { expect, test } from 'bun:test'
+import sharp from 'sharp'
 
 import { content, LANGS } from '../src/lib/content'
 
@@ -167,4 +170,64 @@ test('both pages render the section at their experience marker', async () => {
     expect(page).not.toContain('section-import: experience')
     expect(page).not.toContain('{/* section: experience */}')
   }
+})
+
+/**
+ * The company marks (spec 15). They are alpha masks: the timeline paints them with
+ * `mask-image` over a token-colored surface, so only the shape in the alpha channel
+ * survives and no brand color reaches the page.
+ */
+const logoDir = new URL('../src/assets/logos/', import.meta.url)
+const logoFiles = (await readdir(logoDir)).filter((name) => name.endsWith('.png')).sort()
+
+test('every mask carries a shape rather than a solid plate', async () => {
+  expect(logoFiles.length).toBeGreaterThan(0)
+
+  for (const name of logoFiles) {
+    const { data, info } = await sharp(new URL(name, logoDir).pathname)
+      .ensureAlpha()
+      .raw()
+      .toBuffer({ resolveWithObject: true })
+
+    let opaque = 0
+    for (let i = 3; i < data.length; i += info.channels) if (data[i]! > 200) opaque++
+    const covered = opaque / (info.width * info.height)
+
+    // The failure this catches is silent: a mark knocked out of a colored tile masks to
+    // a featureless block, which renders as a solid rounded square and errors nowhere.
+    // A real mark leaves a gap; a swallowed one covers its whole box.
+    expect(covered).toBeGreaterThan(0.02)
+    expect(covered).toBeLessThan(0.95)
+  }
+})
+
+test('every mask is named for a job it can actually reach', () => {
+  // The reverse is not asserted: a job with no file falls back to the striped
+  // abbreviation on purpose, which is what makes deleting one asset a safe revert.
+  const abbrs = new Set(content.es.jobs.map((job) => job.abbr))
+  for (const name of logoFiles) {
+    expect(abbrs).toContain(name.replace('.png', ''))
+  }
+})
+
+test('the mark is masked on a pseudo-element, over a token color', () => {
+  // `mask` clips the element it is set on, so masking `.logo` itself would take its own
+  // 1px frame and 16px radius with it.
+  expect(styles).toMatch(/\.logo\.marked::before\s*\{/)
+  const markBlock = /\.logo\.marked::before\s*\{([\s\S]*?)\n {2}\}/.exec(styles)?.[1] ?? ''
+  expect(markBlock).toMatch(/background:\s*var\(--color-dim\)/)
+  expect(markBlock).toMatch(/mask:\s*var\(--logo-src\)/)
+  // Prefixed alongside the standard property: Safari below 15.4 only knows the former.
+  expect(markBlock).toMatch(/-webkit-mask:\s*var\(--logo-src\)/)
+  // `contain` rather than a percentage: two of the five marks are wordmarks, and a
+  // percentage size would crop or squash anything that is not roughly square.
+  expect(markBlock).toMatch(/contain/)
+
+  // The stripes belong to the fallback alone, and the mark inherits the card's hover.
+  expect(styles).toMatch(/\.logo:not\(\.marked\)\s*\{[^}]*repeating-linear-gradient/)
+  expect(styles).toMatch(/\.card:hover \.logo\.marked::before\s*\{[^}]*var\(--color-ink\)/)
+
+  // Discovered by glob, so a renamed asset is a build error rather than a silent 404.
+  expect(frontmatter).toMatch(/import\.meta\.glob<string>\('\.\.\/assets\/logos\/\*\.png'/)
+  expect(markup).toMatch(/aria-hidden="true"/)
 })
