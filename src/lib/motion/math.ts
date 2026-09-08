@@ -80,15 +80,6 @@ export function anchorOffset(top: number, navH: number): number {
 }
 
 /**
- * When the element with `data-boot="n"` is revealed (`MOTION_SPEC` §2): 500ms for the
- * page to settle, then 170ms per step. The console skips to `n = 10`, i.e. 2200ms, which
- * leaves room for more elements in the text column without moving it.
- */
-export function bootDelay(n: number): number {
-  return 500 + n * 170
-}
-
-/**
  * Characters of the typed eyebrow visible after `elapsed` ms at `perChar` ms each
  * (`MOTION_SPEC` §2). A negative `elapsed` — the wait before the first character — yields
  * 0, so the driver expresses its delay as an offset instead of a timer of its own.
@@ -149,11 +140,6 @@ export function fade(dist: number, radius: number): number {
   return clamp01(1 - dist / radius)
 }
 
-/** The ease-in-out cubic of the base curve, used by the ✳ formation. */
-function easeInOut(t: number): number {
-  return t < 0.5 ? 4 * t ** 3 : 1 - (-2 * t + 2) ** 3 / 2
-}
-
 /**
  * The ellipsoid the cloud sits on (`MOTION_SPEC` §3): a fraction of the viewport on each
  * axis, shrunk by the scroll collapse down to 15% of its size.
@@ -210,36 +196,6 @@ export function projectNode(
 /** The perspective distance of `MOTION_SPEC` §3, from the size of the canvas. */
 export function focalLength(w: number, h: number): number {
   return Math.max(w, h) * 0.9
-}
-
-/**
- * Where node `i` of `total` sits on the six-armed ✳ it converges into, relative to the
- * center (`MOTION_SPEC` §3). Consecutive nodes go to consecutive arms and each full turn
- * of six steps one ring further out, so the arms fill evenly and the figure stays
- * balanced about the center.
- */
-export function asteriskTarget(i: number, total: number, radius: number): Point {
-  const arms = 6
-  const rings = Math.max(1, Math.ceil(total / arms))
-  const angle = (i % arms) * (Math.PI / 3) + Math.PI / 2
-  const r = (0.12 + (Math.floor(i / arms) / rings) * 0.88) * radius
-  return { x: Math.cos(angle) * r, y: Math.sin(angle) * r }
-}
-
-/**
- * The ✳ formation timeline of `MOTION_SPEC` §3, `p` being how far the nodes are pulled
- * toward their target: converge 300 → 1200ms on an ease-in-out cubic, hold to 1900, then
- * dissolve to 2800 as the console arrives. Outside that window the cloud is on its own.
- */
-export function formationPhase(t: number): {
-  mode: 'idle' | 'forming' | 'holding' | 'dissolving'
-  p: number
-} {
-  if (t < 300) return { mode: 'idle', p: 0 }
-  if (t < 1200) return { mode: 'forming', p: easeInOut((t - 300) / 900) }
-  if (t < 1900) return { mode: 'holding', p: 1 }
-  if (t < 2800) return { mode: 'dissolving', p: 1 - easeInOut((t - 1900) / 900) }
-  return { mode: 'idle', p: 0 }
 }
 
 /**
@@ -364,12 +320,12 @@ export function insideCard(x: number, y: number, rect: Rect | null, pad = 10): b
  * the middle of the canvas, so the ellipsoid still covers the text column. Before the
  * card has been measured it falls back to the resting position of the design.
  *
- * `pull` is that fraction. The ✳ formation asks for 1, because `MOTION_SPEC` §3 centers
- * it "en la consola" — on the card itself, not on the damped center the cloud orbits.
- * At 0.35 it forms 210px to the left of the console and lands on the H1.
+ * The 35% was a parameter while the ✳ formation needed a full pull onto the card; with
+ * that gone (spec 31) it is the only value anything asks for, so it is a constant again.
  */
-export function cloudCenter(rect: Rect | null, w: number, h: number, pull = 0.35): Point {
+export function cloudCenter(rect: Rect | null, w: number, h: number): Point {
   if (!rect) return { x: w * 0.64, y: h * 0.45 }
+  const pull = 0.35
   const cx = rect.left + rect.width / 2
   // Ten pixels above the middle of the card: the log, not the metrics, is the center.
   return { x: w * 0.5 + (cx - w * 0.5) * pull, y: rect.top + rect.height / 2 - 10 }
@@ -413,14 +369,9 @@ export function median(values: readonly number[]): number {
     : ((sorted[mid - 1] as number) + (sorted[mid] as number)) / 2
 }
 
-/** Straight interpolation from `a` to `b`; the ✳ formation pulls each node along one. */
+/** Straight interpolation from `a` to `b`. Used by every motion module on the site. */
 export function lerp(a: number, b: number, t: number): number {
   return a + (b - a) * t
-}
-
-/** Radius of the ✳ the nodes converge into: 26% of the shorter side (`MOTION_SPEC` §3). */
-export function asteriskRadius(w: number, h: number): number {
-  return Math.min(w, h) * 0.26
 }
 
 /** The ±9px vertical bob every node rides, offset by its own phase. */

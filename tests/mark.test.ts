@@ -231,6 +231,33 @@ const sources = await Array.fromAsync(
   })(),
 )
 
+test('markPolygons collapses the pieces onto the center as expand falls', () => {
+  // The seed the entry opens on (spec 31): the same lattice, scaled down onto its own
+  // center. `expand` moves the positions and nothing else, so the default stays the frame
+  // every other caller has always drawn.
+  const spread = (polys: ReturnType<typeof markPolygons>) => {
+    const xs = polys.flatMap((poly) => poly.points.map((p) => p.x))
+    const ys = polys.flatMap((poly) => poly.points.map((p) => p.y))
+    return Math.max(Math.max(...xs) - Math.min(...xs), Math.max(...ys) - Math.min(...ys))
+  }
+
+  expect(markPolygons(120, 1, 0, 0, 1)).toEqual(markPolygons(120, 1, 0, 0))
+  expect(spread(markPolygons(120, 1, 0, 0, 0.08))).toBeLessThan(
+    spread(markPolygons(120, 1, 0, 0)) * 0.5,
+  )
+  // Never wider than the frame it was fitted to, at any point of the expansion.
+  for (const expand of [0.08, 0.3, 0.6, 1]) {
+    for (const poly of markPolygons(120, 1, 0, 0, expand)) {
+      for (const point of poly.points) {
+        expect(point.x).toBeGreaterThanOrEqual(0)
+        expect(point.x).toBeLessThanOrEqual(120)
+        expect(point.y).toBeGreaterThanOrEqual(0)
+        expect(point.y).toBeLessThanOrEqual(120)
+      }
+    }
+  }
+})
+
 test('the asterisk is gone from the components', () => {
   // Only the components. `math.ts` and `network.ts` still name the glyph in comments
   // about the node cloud's ✳ formation (`MOTION_SPEC` §3), which is a live feature spec

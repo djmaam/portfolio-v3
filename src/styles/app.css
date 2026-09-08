@@ -342,6 +342,32 @@
   }
 }
 
+/* ── Entry overlay ────────────────────────────────────────────────────────────
+   The canvas the entry choreography flies the mark across (spec 31). Created by
+   `motion/entryDriver.ts`, removed from the DOM when the sequence ends, and never
+   server-rendered — so, like `.hero-net`, its rule lives here and not in a component.
+
+   A child of `body` rather than of the `z-[1]` wrapper: the nav is sticky at
+   `z-index: 20` inside that wrapper, and the mark has to fly over it. */
+
+@layer components {
+  #entry {
+    position: fixed;
+    inset: 0;
+    z-index: 30;
+    /* Explicit, and not left to `inset: 0`. A canvas is a replaced element: with
+       `width: auto` the used width is its *intrinsic* width — the `width` attribute, which
+       is the viewport times the device pixel ratio — and `left: 0; right: 0` is then
+       over-constrained and ignored. On a 2× display that paints the whole choreography at
+       twice the scale, off the side of the screen, and lands the mark at twice the nav's
+       coordinates. */
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    color: var(--color-accent);
+  }
+}
+
 /* ── Node network ─────────────────────────────────────────────────────────────
    The hero's canvas (`MOTION_SPEC §3`). Created by `motion/network.ts` and never
    server-rendered, so it exists neither without JS nor with reduced motion —
@@ -358,8 +384,8 @@
     /* `MOTION_SPEC §3` asks for a `100vw × 100vh` canvas, and the mock anchors it to the
        top of the page. The nav is `--nav-h` tall and sits in flow above the hero, so this
        lifts the canvas out of the section and onto the viewport box. It is not cosmetic:
-       `ry = .48h`, the ✳ radius and the 55% cut of the mask below all divide by this
-       height, and tying them to a section that re-flows is how the cloud drifts. */
+       `ry = .48h` and the 55% cut of the mask below both divide by this height, and
+       tying them to a section that re-flows is how the cloud drifts. */
     top: calc(-1 * var(--nav-h));
     z-index: 0;
     width: 100%;
@@ -372,9 +398,10 @@
 }
 
 /* ── Boot ─────────────────────────────────────────────────────────────────────
-   Resting state of the boot sequence (`MOTION_SPEC §2`): hidden only when JS is
-   there to reveal it and motion is welcome, so the page reads without either.
-   `motion/boot.ts` clears the three properties at `bootDelay(n)`. */
+   Resting state of the content cascade, the last phase of the entry (spec 31): hidden
+   only when JS is there to reveal it and motion is welcome, so the page reads without
+   either. `motion/boot.ts` clears the three properties at `entryDelay(n, D)` and writes
+   the duration, which retimes with the sequence. */
 
 @layer components {
   @media (prefers-reduced-motion: no-preference) {
@@ -388,16 +415,12 @@
         filter 0.9s cubic-bezier(0.2, 0.8, 0.2, 1);
     }
 
-    /* The console arrives last and from further away (`MOTION_SPEC §2`): a card, not a
-       line of text, so it also scales up and takes 1100ms. It overrides the rule above,
-       which is why it lives next to it instead of in the component. */
-    .has-js [data-boot][data-console] {
-      transform: translateY(24px) scale(0.96);
-      filter: blur(10px);
-      transition:
-        opacity 1.1s cubic-bezier(0.2, 0.8, 0.2, 1),
-        transform 1.1s cubic-bezier(0.2, 0.8, 0.2, 1),
-        filter 1.1s cubic-bezier(0.2, 0.8, 0.2, 1);
+    /* The console is out of the cascade (spec 31): it arrives on the entry's CONSOLE
+       phase, ahead of the copy, and `entryDriver.ts` writes its opacity, transform, blur
+       and scan line every frame. No transition, deliberately — a transition would chase
+       each of those frames instead of landing on it. */
+    .has-js [data-console] {
+      opacity: 0;
     }
   }
 }
@@ -466,20 +489,6 @@
   from {
     opacity: 0;
     transform: translateY(6px);
-  }
-}
-
-@keyframes sweep {
-  from {
-    top: -8%;
-    opacity: 0;
-  }
-  15% {
-    opacity: 1;
-  }
-  to {
-    top: 108%;
-    opacity: 0;
   }
 }
 

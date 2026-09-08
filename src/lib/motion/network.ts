@@ -1,8 +1,7 @@
 import { onLogLine } from './consoleLog'
+import { cloudFade, ENTRY_MS } from './entry'
 import {
   ANCHOR_DIST,
-  asteriskRadius,
-  asteriskTarget,
   cameraAngles,
   cloudCenter,
   collapseFactor,
@@ -17,7 +16,6 @@ import {
   ellipsoidRadii,
   fade,
   focalLength,
-  formationPhase,
   insideCard,
   lerp,
   median,
@@ -83,8 +81,9 @@ function makeNodes(count: number, rand: () => number): NetNode[] {
 
 /**
  * The hero's node network (`MOTION_SPEC` §3): 84 nodes on a rotating ellipsoid centered
- * on the console, converging into the ✳ on load, wired to the console's log, reacting to
- * the cursor and collapsing on scroll.
+ * on the console, wired to the console's log, reacting to the cursor and collapsing on
+ * scroll. The ✳ formation it used to open with is gone: the entry choreography (spec 31)
+ * expands the real mark instead, and the cloud simply fades in behind it.
  *
  * Plumbing only — canvas, node array and rAF loop. Every formula it draws with lives in
  * `math.ts`, where `bun test` covers it without a DOM.
@@ -110,7 +109,6 @@ class NodeNetwork {
   private tilt = 0
   private camRot = 0
   private collapse = 0
-  private form = 0
 
   /** Cursor in canvas fractions: negative until a mouse has actually moved over it. */
   private mouse = { x: -1, y: -1, tx: -1, ty: -1 }
@@ -292,16 +290,11 @@ class NodeNetwork {
     const { ctx, nodes, points, w, h, dark } = this
     const count = nodes.length
 
-    this.form = formationPhase(now - this.born).p
     const center = cloudCenter(this.card, w, h)
     const radii = ellipsoidRadii(w, h, this.collapse)
     const cam = { f: focalLength(w, h), w, h }
     const dx = center.x - w / 2
     const dy = center.y - h / 2
-    const armRadius = asteriskRadius(w, h)
-    // The ✳ is centered on the console itself (`MOTION_SPEC` §3), not on the damped
-    // center the cloud orbits — that is 210px to its left, over the H1.
-    const formCenter = this.form > 0 ? cloudCenter(this.card, w, h, 1) : center
     this.rot += rotationStep(this.collapse)
 
     // The cursor eases toward its target, so the camera never snaps.
@@ -324,8 +317,13 @@ class NodeNetwork {
 
     ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0)
     ctx.clearRect(0, 0, w, h)
-    // The collapse fades the whole layer out; every alpha below multiplies into it.
-    const base = 1 - this.collapse
+    // The collapse fades the whole layer out; every alpha below multiplies into it. So
+    // does the entry's handover (spec 31): while the overlay is throwing particles into
+    // the hero the real cloud comes up under them, and it is at full strength by the time
+    // the particles land. Read per frame, not once: a skip flips the flag to `done`
+    // mid-ramp and the cloud has to come up with it.
+    const entry = document.documentElement.dataset.entry === 'run'
+    const base = (1 - this.collapse) * (entry ? cloudFade(now - this.born, ENTRY_MS) : 1)
     ctx.lineWidth = 1
 
     for (let i = 0; i < count; i++) {
@@ -346,12 +344,6 @@ class NodeNetwork {
       n.depth = projected.depth
       p.x = projected.x + dx + n.ox
       p.y = projected.y + dy + n.oy
-
-      if (this.form > 0) {
-        const target = asteriskTarget(i, count, armRadius)
-        p.x = lerp(p.x, formCenter.x + target.x, this.form)
-        p.y = lerp(p.y, formCenter.y + target.y, this.form)
-      }
 
       if (hasMouse) {
         const pull = cursorPull(mx - p.x, my - p.y)
@@ -387,25 +379,24 @@ class NodeNetwork {
       }
     }
 
-    // The console's four anchors, each wired to the nearest node it can see. Hidden
-    // while the ✳ holds: the card has not arrived yet, so there is nothing to wire.
-    if (this.form === 0) {
-      for (const anchor of this.anchors) {
-        const near = nearestPoint(points, anchor.x, anchor.y, ANCHOR_DIST, (i) => this.visible(i))
-        if (near < 0) continue
-        const p = points[near] as Point
-        ctx.globalAlpha =
-          base * (0.45 * fade(Math.hypot(p.x - anchor.x, p.y - anchor.y), ANCHOR_DIST) + 0.15)
-        ctx.beginPath()
-        ctx.moveTo(anchor.x, anchor.y)
-        ctx.lineTo(p.x, p.y)
-        ctx.stroke()
-        ctx.fillStyle = this.accent
-        ctx.globalAlpha = base * 0.9
-        ctx.beginPath()
-        ctx.arc(anchor.x, anchor.y, 2, 0, Math.PI * 2)
-        ctx.fill()
-      }
+    // The console's four anchors, each wired to the nearest node it can see. They no
+    // longer wait on a formation: `base` already holds them back until the entry's
+    // CONSOLE phase has brought the card in.
+    for (const anchor of this.anchors) {
+      const near = nearestPoint(points, anchor.x, anchor.y, ANCHOR_DIST, (i) => this.visible(i))
+      if (near < 0) continue
+      const p = points[near] as Point
+      ctx.globalAlpha =
+        base * (0.45 * fade(Math.hypot(p.x - anchor.x, p.y - anchor.y), ANCHOR_DIST) + 0.15)
+      ctx.beginPath()
+      ctx.moveTo(anchor.x, anchor.y)
+      ctx.lineTo(p.x, p.y)
+      ctx.stroke()
+      ctx.fillStyle = this.accent
+      ctx.globalAlpha = base * 0.9
+      ctx.beginPath()
+      ctx.arc(anchor.x, anchor.y, 2, 0, Math.PI * 2)
+      ctx.fill()
     }
 
     // The cursor node and its violet web.

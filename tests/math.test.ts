@@ -3,10 +3,7 @@ import { expect, test } from 'bun:test'
 import {
   aboutProgress,
   anchorOffset,
-  asteriskRadius,
-  asteriskTarget,
   auroraStyle,
-  bootDelay,
   cameraAngles,
   cloudCenter,
   collapseFactor,
@@ -18,7 +15,6 @@ import {
   docProgress,
   ellipsoidPoint,
   ellipsoidRadii,
-  formationPhase,
   insideCard,
   lerp,
   logWindow,
@@ -160,12 +156,6 @@ test('anchorOffset lands the target below the nav, and never above the document'
   expect(anchorOffset(30, 64)).toBe(0)
 })
 
-test('bootDelay staggers the hero 170ms per step after a 500ms wait', () => {
-  expect([0, 1, 2, 3, 4].map((n) => bootDelay(n))).toEqual([500, 670, 840, 1010, 1180])
-  // The console's slot (issue 06) jumps to n=10, which is the 2200ms of MOTION_SPEC §2.
-  expect(bootDelay(10)).toBe(2200)
-})
-
 test('typedLength shows nothing before the first character and clamps at the total', () => {
   expect(typedLength(-700, 28, 46)).toBe(0)
   expect(typedLength(0, 28, 46)).toBe(0)
@@ -282,71 +272,6 @@ test('projectNode keeps depth inside [.3, 1] and orders it front to back', () =>
   for (let i = 1; i < depths.length; i++) {
     expect(depths[i]!).toBeLessThanOrEqual(depths[i - 1]!)
   }
-})
-
-test('asteriskTarget spreads the nodes over exactly six arms', () => {
-  const angles = new Set<number>()
-  for (let i = 0; i < 84; i++) {
-    const { x, y } = asteriskTarget(i, 84, 200)
-    angles.add(Math.round(Math.atan2(y, x) * 1000))
-  }
-  expect(angles.size).toBe(6)
-})
-
-test('asteriskTarget keeps every node inside the radius', () => {
-  for (let i = 0; i < 84; i++) {
-    const { x, y } = asteriskTarget(i, 84, 200)
-    expect(Math.hypot(x, y)).toBeLessThanOrEqual(200)
-    expect(Math.hypot(x, y)).toBeGreaterThan(0)
-  }
-})
-
-test('asteriskTarget is symmetric about the center', () => {
-  // Opposite arms are three spokes apart, at the same distance from the center: the
-  // pairing only holds inside a ring of six, which is why it stops at the third spoke.
-  for (let i = 0; i < 84 - 3; i++) {
-    if (i % 6 >= 3) continue
-    const a = asteriskTarget(i, 84, 200)
-    const b = asteriskTarget(i + 3, 84, 200)
-    expect(a.x + b.x).toBeCloseTo(0, 10)
-    expect(a.y + b.y).toBeCloseTo(0, 10)
-  }
-  // And the whole figure balances: the center of mass sits at the origin.
-  let sx = 0
-  let sy = 0
-  for (let i = 0; i < 84; i++) {
-    const { x, y } = asteriskTarget(i, 84, 200)
-    sx += x
-    sy += y
-  }
-  expect(sx).toBeCloseTo(0, 8)
-  expect(sy).toBeCloseTo(0, 8)
-})
-
-test('formationPhase walks idle → forming → holding → dissolving → idle', () => {
-  expect(formationPhase(0)).toEqual({ mode: 'idle', p: 0 })
-  expect(formationPhase(299)).toEqual({ mode: 'idle', p: 0 })
-  expect(formationPhase(300)).toEqual({ mode: 'forming', p: 0 })
-  expect(formationPhase(750).mode).toBe('forming')
-  expect(formationPhase(750).p).toBeCloseTo(0.5, 10)
-  expect(formationPhase(1200)).toEqual({ mode: 'holding', p: 1 })
-  expect(formationPhase(1899)).toEqual({ mode: 'holding', p: 1 })
-  expect(formationPhase(1900)).toEqual({ mode: 'dissolving', p: 1 })
-  expect(formationPhase(2350).mode).toBe('dissolving')
-  expect(formationPhase(2350).p).toBeCloseTo(0.5, 10)
-  expect(formationPhase(2800)).toEqual({ mode: 'idle', p: 0 })
-  expect(formationPhase(99999)).toEqual({ mode: 'idle', p: 0 })
-})
-
-test('formationPhase progress never leaves [0, 1] and eases at both ends', () => {
-  for (let t = 0; t <= 3200; t += 7) {
-    const { p } = formationPhase(t)
-    expect(p).toBeGreaterThanOrEqual(0)
-    expect(p).toBeLessThanOrEqual(1)
-  }
-  // Ease-in-out cubic: slow off the start, so the first quarter covers less than a
-  // quarter of the distance.
-  expect(formationPhase(300 + 225).p).toBeLessThan(0.25)
 })
 
 test('connectionAlpha fades to nothing at 150px and peaks at zero distance', () => {
@@ -478,13 +403,12 @@ test('cloudCenter pulls the cloud a third of the way toward the console', () => 
   expect(cloudCenter(null, 1000, 800)).toEqual({ x: 640, y: 360 })
 })
 
-test('cloudCenter with a full pull lands on the console, which is where the ✳ forms', () => {
+test('cloudCenter damps the pull, so the ellipsoid still covers the text column', () => {
   const rect = { left: 600, top: 100, width: 400, height: 300 }
-  // `MOTION_SPEC` §3 centers the ✳ "en la consola" — undamped, unlike the cloud. The
-  // mock does the same: its cloud uses `cx*.35` and its ✳ uses `cx`.
-  expect(cloudCenter(rect, 1000, 800, 1)).toEqual({ x: 800, y: 240 })
-  // The default is still the cloud's 35%, so no existing caller moves.
-  expect(cloudCenter(rect, 1000, 800, 0.35)).toEqual(cloudCenter(rect, 1000, 800))
+  // Undamped the center would be the card's own 800; the 35% leaves it 105px to the left,
+  // over the H1, which is what keeps the cloud from becoming a halo around the console.
+  expect(cloudCenter(rect, 1000, 800).x).toBeCloseTo(500 + (800 - 500) * 0.35, 10)
+  expect(cloudCenter(rect, 1000, 800).x).toBeLessThan(800)
 })
 
 test('cursorPull attracts toward the cursor and dies at 200px', () => {
@@ -556,11 +480,6 @@ test('nodeAlpha dims with the depth and is stronger in dark', () => {
   expect(nodeAlpha(1, 1, false)).toBeCloseTo(0.8, 10)
   expect(nodeAlpha(0.3, 1, true)).toBeLessThan(nodeAlpha(1, 1, true))
   expect(nodeAlpha(1, 0.1, true)).toBeLessThan(nodeAlpha(1, 1, true))
-})
-
-test('asteriskRadius is 26% of the shorter side of the canvas', () => {
-  expect(asteriskRadius(1000, 800)).toBeCloseTo(208, 10)
-  expect(asteriskRadius(600, 900)).toBeCloseTo(156, 10)
 })
 
 // ── About (`MOTION_SPEC` §6) ─────────────────────────────────────────────────
