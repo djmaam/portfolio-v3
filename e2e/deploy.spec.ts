@@ -27,6 +27,23 @@ test('the policy blocks nothing the page actually does', async ({ page }) => {
   expect(violations).toEqual([])
 })
 
+test('the analytics beacon and the policy that admits it stay in sync', async ({ page }) => {
+  await page.goto('/')
+
+  // Two halves of one decision, in two files. Whichever one is edited alone, the beacon
+  // stops reporting and nothing else changes — so they are asserted together.
+  const beacon = page.locator('script[data-cf-beacon]')
+  await expect(beacon).toHaveAttribute('src', /^https:\/\/static\.cloudflareinsights\.com\//)
+
+  const policy = await page
+    .locator('meta[http-equiv="content-security-policy" i]')
+    .getAttribute('content')
+  expect(policy).toContain('https://static.cloudflareinsights.com')
+  expect(policy).toContain('https://cloudflareinsights.com')
+  // The point of hand-installing the snippet: the hashes survive.
+  expect(policy).toMatch(/script-src[^;]*'sha256-/)
+})
+
 test('robots and sitemap name the two routes and each other', async ({ request }) => {
   const robots = await request.get('/robots.txt')
   expect(robots.ok()).toBe(true)
