@@ -1,0 +1,26 @@
+{
+  "cli_version": "0.10.5",
+  "checkpoint_id": "01M21JMN9NA9XFK1C1WZXHW73F",
+  "strategy": "manual-commit",
+  "branch": "feat/18-deploy",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "docs/superpowers/specs/18-deploy.md"
+  ],
+  "sessions": [
+    {
+      "metadata": "/0/metadata.json",
+      "transcript": "/0/full.jsonl",
+      "compact_transcript": "/0/transcript.jsonl",
+      "content_hash": "/0/content_hash.txt",
+      "prompt": "/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 92,
+    "cache_creation_tokens": 78490,
+    "cache_read_tokens": 3884922,
+    "output_tokens": 28063,
+    "api_call_count": 46
+  }
+}
