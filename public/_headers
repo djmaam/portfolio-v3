@@ -1,0 +1,16 @@
+# Cloudflare Pages reads this file from the build output. The Content-Security-Policy is
+# not here: Astro emits it as a `<meta http-equiv>` with the hashes of the inline scripts
+# it just built (see `security.csp` in `astro.config.mjs`), which is the only version of
+# the policy that cannot go stale. What is left are the headers a meta tag cannot carry.
+/*
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  X-Frame-Options: DENY
+
+# Content-hashed by the build, and the fonts are versioned by their file name: safe to
+# keep for a year. Everything else falls back to the Pages default, which revalidates.
+/_astro/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/fonts/*
+  Cache-Control: public, max-age=31536000, immutable
