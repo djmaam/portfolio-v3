@@ -14,12 +14,19 @@ export default defineConfig({
     csp: {
       directives: [
         "default-src 'self'",
+        // Where the Web Analytics beacon reports to. The host it is *served* from is a
+        // `script-src` source, and Astro owns that directive — see `scriptDirective`.
+        "connect-src 'self' https://cloudflareinsights.com",
         "img-src 'self' data:",
         "font-src 'self'",
         "object-src 'none'",
         "base-uri 'self'",
         "form-action 'none'",
       ],
+      // Astro appends the inline script hashes to whatever sources are listed here, so
+      // naming the beacon's host keeps hashing intact — which is precisely what hand-
+      // installing the snippet buys over letting Cloudflare inject it.
+      scriptDirective: { resources: ["'self'", 'https://static.cloudflareinsights.com'] },
       styleDirective: { resources: ["'self'", "'unsafe-inline'"] },
     },
   },

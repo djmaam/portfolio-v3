@@ -73,23 +73,34 @@ here, because a blocked resource is a console error and nothing else.
 `frame-ancestors` is the directive a `<meta>` policy is not allowed to express. Cloudflare
 carries `X-Frame-Options: DENY` in `_headers` instead, which covers the same need.
 
-### Cloudflare Web Analytics is off, and the policy is why
+### Cloudflare Web Analytics, installed by hand
 
-Pages offers to inject Web Analytics into every HTML response. It injects two things: a
-921-byte inline loader and `https://static.cloudflareinsights.com/beacon.min.js`. The
-policy blocks both, and Lighthouse against production reported it as two console errors
-that cost Best Practices seven points.
+Pages offers to inject Web Analytics into every HTML response, and the first production
+deploy had that turned on. The policy blocked it, which cost Best Practices seven points
+and left two console errors on every page load.
 
-Allowing them is not a matter of adding a host to `script-src`. The external script is
-easy; the inline loader is Cloudflare's, edge-injected, and can only be permitted with
-`'unsafe-inline'` — which, exactly as with the style attributes above, is inert while the
-policy carries script hashes. Keeping analytics therefore means dropping the script
-hashes altogether, which is the whole point of the policy. The toggle goes off instead.
+The beacon script was never the problem. Auto-injection wraps it in a 921-byte inline
+loader, and an inline script Cloudflare generates at the edge can be covered by no hash —
+only by `'unsafe-inline'`, which is inert while the policy carries script hashes, exactly
+as with the style attributes above. Auto-injection therefore costs the entire script
+policy.
 
-This is the one failure mode the test suite structurally cannot catch: the beacon is
-injected at Cloudflare's edge, so `e2e/deploy.spec.ts` running against `astro preview`
-sees a clean console no matter what production does. It has to be checked against the
-live URL, which is what the production Lighthouse run in the acceptance criteria is for.
+The dashboard's third option, "Enable with JS Snippet installation", removes the wrapper:
+the snippet is a plain external `<script type="module">`, which `script-src` admits by
+host. So the tag lives in `Base.astro`, `scriptDirective.resources` names
+`https://static.cloudflareinsights.com` (Astro appends the hashes to it), and
+`connect-src` names `https://cloudflareinsights.com`, where the beacon reports. Analytics
+works and every hash survives.
+
+Two files, one decision, and breaking either half is silent — the beacon simply stops
+reporting. `e2e/deploy.spec.ts` asserts the tag, both hosts in the policy, and that
+`script-src` still carries hashes.
+
+One caveat about that suite: it runs against `astro preview`, so it can only see what the
+build produces. The auto-injected beacon that started all this was added at Cloudflare's
+edge and was invisible to every local test — it took the production Lighthouse run in the
+acceptance criteria to find it. That criterion says "against production, not just
+locally" for this exact reason.
 
 ### `/en`, not `/en/`
 
@@ -167,8 +178,8 @@ Not code. Recorded here because a dashboard has no diff.
 - [ ] `https://marcosarrieta.dev/og.png` resolves as `image/png`.
 - [ ] `https://marcosarrieta.dev/en` answers 200 and not a 308, and `www` 301s to the apex
       preserving the path.
-- [ ] Production loads with an empty console — no blocked beacon, no blocked inline
-      script.
+- [ ] Production loads with an empty console, and the Web Analytics dashboard records
+      the visit.
 - [ ] Lighthouse ≥ 90 in all four categories measured **against production**, not only
       against `dist/`.
 - [ ] `bun test`, `bun run test:e2e` and `bun run test:lh` stay green.

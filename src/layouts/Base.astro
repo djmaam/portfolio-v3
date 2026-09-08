@@ -87,6 +87,21 @@ const person = {
       })()
     </script>
 
+    {
+      /* Cloudflare Web Analytics, installed by hand rather than auto-injected at the
+       edge. The auto-injected version wraps the beacon in an inline loader that no hash
+       can cover, and `'unsafe-inline'` is inert while the policy carries script hashes —
+       so auto-injection means dropping script hashing entirely. This tag is a plain
+       external script, which `script-src` allows by host. Cookieless, and `defer` keeps
+       a module, which defers by default, so it stays off the critical path. Copied
+       verbatim from the dashboard; site tag 12a284913e8c480e8f24792c0b527e22. */
+    }
+    <script
+      is:inline
+      type="module"
+      src="https://static.cloudflareinsights.com/beacon.min.js"
+      data-cf-beacon='{"token": "193e294aa45b43ada6173e6cd278ebd5"}'></script>
+
     <link rel="preload" as="font" type="font/woff2" href="/fonts/manrope-var.woff2" crossorigin />
     <link
       rel="preload"
