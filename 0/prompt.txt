@@ -1,0 +1,1 @@
+tenemos varias cosas que atacar primero: el favicon no se creo, sigue el de astro, deberiamos crearlo desde el logo de la web que esta en el nav y el footer, que es la animacion principal de la web
