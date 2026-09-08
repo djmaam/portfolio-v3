@@ -1,0 +1,17 @@
+cual de las dos opciones es mejor?
+
+---
+
+dale, pushea la branch y abrí el PR
+
+---
+
+listo configurado el proyecto en cloudflare pages y ya delegue el custom domain que lo compre con ellos mismos, tambien instale el plugin de cloudflare para que lo puedas usar
+
+---
+
+ya mergee el pr y di los permisos del mcp
+
+---
+
+dale, abrí el PR con los dos fixes y te paso captura de lo que cree en el dashboard a ver si es lo que me pediste: [Image #3]
