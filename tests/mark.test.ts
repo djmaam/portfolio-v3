@@ -287,3 +287,13 @@ test('the mark is decoration, and ships in the markup rather than from a script'
   // to wait for. Whatever script arrives later can only ever replace it.
   expect(mark).toMatch(/<svg[\s\S]*data-mark-svg/)
 })
+
+test('the favicon is the nav mark, regenerated whenever the mark moves', async () => {
+  const svg = await Bun.file('public/favicon.svg').text()
+  const polys = restingPolygons(20)
+  // Same count and same first vertex: enough to fail the moment `mark.ts` changes and
+  // `bun scripts/make-favicon.ts` has not been rerun.
+  expect(svg.match(/<(?:polygon|polyline)/g)).toHaveLength(polys.length)
+  const first = polys[0]!.points[0]!
+  expect(svg).toContain(`${first.x.toFixed(2)},${first.y.toFixed(2)}`)
+})
