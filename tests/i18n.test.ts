@@ -25,6 +25,16 @@ test('siblingPath swaps the language prefix', () => {
   expect(siblingPath('/anything', 'en')).toBe('/en/anything')
 })
 
+// `build.format: 'file'` is what makes `/en` serve without a 308 on Cloudflare Pages,
+// and it is also what puts the built file name into `Astro.url.pathname`. Both callers
+// pass that pathname straight in, so the canonical of every page depends on this.
+test('siblingPath recovers the route from the file `format: file` builds', () => {
+  expect(siblingPath('/index.html', 'es')).toBe('/')
+  expect(siblingPath('/index.html', 'en')).toBe('/en')
+  expect(siblingPath('/en/en.html', 'en')).toBe('/en')
+  expect(siblingPath('/en/en.html', 'es')).toBe('/')
+})
+
 test('siblingPath is a no-op when the target language is already the current one', () => {
   expect(siblingPath('/', 'es')).toBe('/')
   expect(siblingPath('/en', 'en')).toBe('/en')

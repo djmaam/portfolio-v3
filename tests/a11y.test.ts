@@ -17,9 +17,11 @@ if (build.exitCode !== 0) {
   throw new Error(`astro build failed:\n${build.stderr.toString()}${build.stdout.toString()}`)
 }
 
+// `build.format: 'file'` writes `en.html` beside `index.html` rather than `en/index.html`,
+// which is what lets Cloudflare Pages serve `/en` without a 308 to `/en/`.
 const pages = {
   '/': await Bun.file(`${root}dist/index.html`).text(),
-  '/en': await Bun.file(`${root}dist/en/index.html`).text(),
+  '/en': await Bun.file(`${root}dist/en.html`).text(),
 }
 
 const stylesheets = await Array.fromAsync(new Glob('dist/**/*.css').scan({ cwd: root }))
