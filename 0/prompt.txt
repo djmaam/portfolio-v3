@@ -1,0 +1,5 @@
+[Image #4] ya deploye la rule pero no se si ya existe el dns record para el redirect
+
+---
+
+[Image #5] esto me aparece en web analytics
