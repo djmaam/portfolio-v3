@@ -12,11 +12,13 @@ export const ui: Record<Lang, { themeToggle: string; skipToContent: string }> = 
 
 /**
  * The hero stats. Language-independent facts, absent from the read-only `content.json`,
- * which pairs each number with its label. `companies` is asserted against
- * `content.jobs.length` in the tests; `years` and `platforms` are editorial and have no
- * derivable source.
+ * which pairs each number with its label. All three are editorial and have no derivable
+ * source: `years` counts from the 2019 freelance work, not from the first listed job;
+ * `products` is the eight shipped products the site names (Nera, Tplay, AgroPro,
+ * +Ushuaia, Demedis, Hashme, Creativa Media Lab, Kodai) plus the software-factory client
+ * work at DePC and Ucosmos.
  */
-export const stats = { years: '8+', companies: '5', platforms: '6' } as const
+export const stats = { years: '7+', products: '10+', platforms: '6' } as const
 
 /**
  * The console's chrome (`DESIGN_SPEC` §3.2). Not page copy and not translated: a session

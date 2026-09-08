@@ -20,6 +20,22 @@ const canonical = `${links.domain}${siblingPath(Astro.url.pathname, lang)}`
 const siblingHref = siblingPath(Astro.url.pathname, otherLang)
 const ogLocale = lang === 'es' ? 'es_AR' : 'en_US'
 const title = `${site.name} · ${t.eyebrow}`
+
+// What Google reads to tie the domain, the profiles and the person together — the one
+// thing a single static page can do for search that copy cannot. The job title is the
+// eyebrow's first segment rather than a second copy of the string; if the separator ever
+// goes, this falls back to the whole eyebrow instead of breaking.
+const person = {
+  '@context': 'https://schema.org',
+  '@type': 'Person',
+  name: site.name,
+  alternateName: site.handle,
+  url: links.domain,
+  jobTitle: t.eyebrow.split(' · ')[0],
+  email: `mailto:${links.email}`,
+  address: { '@type': 'PostalAddress', addressCountry: 'AR' },
+  sameAs: [links.github, links.linkedin],
+}
 ---
 
 <!doctype html>
@@ -44,6 +60,8 @@ const title = `${site.name} · ${t.eyebrow}`
     {/* Shipped ahead of the file: `public/og.png` arrives with the deploy issue. */}
     <meta property="og:image" content={`${links.domain}/og.png`} />
     <meta name="twitter:card" content="summary_large_image" />
+
+    <script type="application/ld+json" is:inline set:html={JSON.stringify(person)} />
 
     {/* Before any stylesheet: settles the theme and the language on the first paint. */}
     <script is:inline define:vars={{ otherLang, siblingHref }}>

@@ -18,7 +18,7 @@ const names = stack.rows.flat()
 test('every name in stack.core appears in some row of stack.rows', () => {
   const inRows = new Set(names)
   expect(stack.core.filter((name) => !inRows.has(name))).toEqual([])
-  expect(stack.core).toHaveLength(21)
+  expect(stack.core).toHaveLength(20)
   expect(stack.rows.map((row) => row.length)).toEqual([17, 17, 18])
 })
 

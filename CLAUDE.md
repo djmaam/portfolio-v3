@@ -17,7 +17,10 @@ Spanish and English (that is product content, not code).
 
 ## Sources of truth
 
-- `handoff/` — design, motion and content specs. **Read-only.** Never edit.
+- `handoff/` — design, motion and content specs. The `*_SPEC.md` files are
+  **read-only** — never edit. `handoff/content.json` is the site copy, and copy is a
+  product decision: it changes only through a spec, and only when Marcos asks
+  (see `docs/superpowers/specs/32-copy-positioning.md`).
 - `docs/README.md` — central documentation map and spec index across all phases.
 - `docs/superpowers/specs/2026-09-05-portfolio-v3-design.md` — technical design.
 - `docs/superpowers/specs/NN-<block>.md` — one spec per Linear issue, written before
