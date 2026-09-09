@@ -2,10 +2,17 @@
 # not here: Astro emits it as a `<meta http-equiv>` with the hashes of the inline scripts
 # it just built (see `security.csp` in `astro.config.mjs`), which is the only version of
 # the policy that cannot go stale. What is left are the headers a meta tag cannot carry.
+# `Strict-Transport-Security` is a day, not a year, and carries neither
+# `includeSubDomains` nor `preload`: the browser caches HSTS for the whole `max-age`, so
+# a wrong value is not something a redeploy can take back. Raise it once this has run for
+# a while without a plain-HTTP surprise. `Permissions-Policy` denies the features a
+# static portfolio never asks for, and with them anything ever embedded here.
 /*
   X-Content-Type-Options: nosniff
   Referrer-Policy: strict-origin-when-cross-origin
   X-Frame-Options: DENY
+  Strict-Transport-Security: max-age=86400
+  Permissions-Policy: accelerometer=(), camera=(), display-capture=(), geolocation=(), gyroscope=(), microphone=(), midi=(), payment=(), usb=()
 
 # Content-hashed by the build, and the fonts are versioned by their file name: safe to
 # keep for a year. Everything else falls back to the Pages default, which revalidates.
