@@ -102,7 +102,7 @@
           "company": "Telecentro · Tplay",
           "period": "jul. 2022 — abr. 2023",
           "role": "Full Stack Engineer Sr",
-          "note": "App de streaming con TV en vivo y on demand. Impulsé la nueva versión, un rediseño técnico y visual completo que dio vuelta las reseñas, en seis plataformas desde una sola base de código.",
+          "note": "App de streaming con TV en vivo y on demand. Impulsé la nueva versión, un rediseño técnico y visual completo que revirtió las reseñas, en seis plataformas desde una sola base de código.",
           "stack": [
             "Mobile",
             "Web",
@@ -211,7 +211,7 @@
       "stackCore": "USO A DIARIO",
       "stackAlso": "TAMBIÉN HABLO",
       "secContact": "CONTACTO",
-      "contactTitle": "Si tenés algo que construir, hablemos.",
+      "contactTitle": "¿Tienes algo que construir? Hablemos.",
       "contactSub": "Productos nuevos, equipos que quieren trabajar con agentes de IA, o una charla sobre arquitectura.",
       "footerSig": "Creado con ❤️ by"
     },
@@ -426,7 +426,7 @@
       "stackCore": "DAILY DRIVERS",
       "stackAlso": "ALSO FLUENT",
       "secContact": "CONTACT",
-      "contactTitle": "If you have something to build, let's talk.",
+      "contactTitle": "Got something to build? Let's talk.",
       "contactSub": "New products, teams that want to work with AI agents, or a conversation about architecture.",
       "footerSig": "Created with ❤️ by"
     }
