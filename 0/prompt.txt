@@ -1,0 +1,17 @@
+/commit-commands:clean_gone
+
+---
+
+now give me a description for the github repo
+
+---
+
+use the recommended one, set homepage and topics too
+
+---
+
+can you check the security of the repo, i make it public
+
+---
+
+yes, do 2, 4 and 6 and open the HSTS PR
