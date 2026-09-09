@@ -1,0 +1,38 @@
+# Draws the contribution grid of the profile as a snake eating it, once a day, and pushes
+# the two SVGs to the `output` branch. The README reads them from there rather than from a
+# third-party renderer: the image is served by GitHub, so it cannot go down on its own.
+#
+# This file does not belong to portfolio-v3. It goes to `.github/workflows/snake.yml` of
+# the profile repository (`djmaam/djmaam`) — see ../README.md.
+name: Contribution snake
+
+on:
+  schedule:
+    - cron: '0 3 * * *'
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+# Writes the generated SVGs back to the `output` branch, and nothing else.
+permissions:
+  contents: write
+
+jobs:
+  snake:
+    runs-on: ubuntu-latest
+    steps:
+      # The palettes are the site's own: the accent for the snake, and a five-step ramp
+      # from the background to the accent for the cells. `#` is `%23` inside the query.
+      - uses: Platane/snk@d8f6715049803e982ee5ff501b6b9b7d5deeb09b # v3.5.0
+        with:
+          github_user_name: ${{ github.repository_owner }}
+          outputs: |
+            dist/snake-dark.svg?color_snake=%233ee7ff&color_dots=%230e1015,%23123c47,%2317707f,%2325b0c9,%233ee7ff
+            dist/snake-light.svg?color_snake=%230a8faf&color_dots=%23e9ebef,%23cfe7ee,%2392cddc,%2345a5be,%230a8faf
+
+      - uses: crazy-max/ghaction-github-pages@1d6ee9b181a81033a16bd707a1401afa978daab4 # v5.0.0
+        with:
+          target_branch: output
+          build_dir: dist
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
