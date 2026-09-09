@@ -1,1 +1,13 @@
 en base al diseno de la web que construimos, ayudame a construir un banner para colocar en mi linkedin y tambien ayudame a actualizarlo y dejarlo acorde a lo que construimos aca
+
+---
+
+pusiste lo de 12 mil productores y no lo de productos quedo desactualizado eso regeneralos
+
+---
+
+listo, vale la pena subirlo al repo?
+
+---
+
+dale, hacelo y commiteá, y una pregunta que tengo se puede tener el linkedin en dos idiomas?
