@@ -20,3 +20,7 @@ docs/architecture/
 # LinkedIn banner — derived artifacts, regenerate with assets/linkedin/gen-banner.py
 assets/linkedin/*.png
 assets/linkedin/*.html
+
+# GitHub profile header — derived artifacts, regenerate with assets/github/gen-header.py
+assets/github/*.png
+assets/github/*.html
