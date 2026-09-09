@@ -16,3 +16,7 @@ graphify-out/
 # version a cache: it goes stale the first time an import changes and nobody re-runs
 # graphify, and then the repo asserts something false. `CLAUDE.md` names the command.
 docs/architecture/
+
+# LinkedIn banner — derived artifacts, regenerate with assets/linkedin/gen-banner.py
+assets/linkedin/*.png
+assets/linkedin/*.html

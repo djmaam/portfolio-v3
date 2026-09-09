@@ -20,6 +20,8 @@ export default [
       'test-results/',
       'playwright-report/',
       '.lighthouseci/',
+      // Not site source: a one-off banner generator that runs in Node with Playwright.
+      'assets/',
     ],
   },
   js.configs.recommended,
