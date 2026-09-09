@@ -1,7 +1,7 @@
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="assets/header-dark.png">
-  <source media="(prefers-color-scheme: light)" srcset="assets/header-light.png">
-  <img alt="Marcos Arrieta — AI Engineer. I think the product. I ship it to production." src="assets/header-dark.png">
+  <source media="(prefers-color-scheme: dark)" srcset="assets/header-dark.svg">
+  <source media="(prefers-color-scheme: light)" srcset="assets/header-light.svg">
+  <img alt="Marcos Arrieta — AI Engineer. I think the product. I ship it to production." src="assets/header-dark.svg">
 </picture>
 
 <p align="center">
@@ -97,7 +97,7 @@ The spec is the contract. Agents execute. I design the architecture, review the 
 
 ---
 
-**Shipped:** [Nera](https://nera-agro.com/) · [Tplay](https://telecentro.com.ar/) · [AgroPro](https://agropro.ag) · [+Ushuaia](https://masushuaia.com) · [Kodai](https://kodaiverse.com) · [Creativa Media Lab](https://creativamedialab.com) — 12,000+ farmers, 500,000+ hectares, six platforms. [The long version](https://marcosarrieta.dev).
+**Shipped:** [Nera](https://nera-agro.com/) · [Tplay](https://telecentro.com.ar/) · [AgroPro](https://agropro.ag) · [+Ushuaia](https://masushuaia.com) · [Kodai](https://kodaiverse.com) · [Creativa Media Lab](https://creativamedialab.com) — 12,000+ farmers, 500,000+ hectares, six platforms.
 
 <p align="center">
   <b>Got something to build? Let's talk.</b><br>

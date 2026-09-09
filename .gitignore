@@ -23,4 +23,4 @@ assets/linkedin/*.html
 
 # GitHub profile header — derived artifacts, regenerate with assets/github/gen-header.py
 assets/github/*.png
-assets/github/*.html
+assets/github/*.svg

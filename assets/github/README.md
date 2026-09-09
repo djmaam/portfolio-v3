@@ -3,19 +3,33 @@
 GitHub profile README, built from the same tokens and copy as the site.
 Not part of the site build: nothing here ships to `dist/`.
 
-- `gen-header.py` — writes `header-{dark,light}.html`. The colors are the two branches of
-  every `light-dark()` token in `src/styles/app.css`, the copy is the hero of
-  `handoff/content.json` and the figures come from `src/lib/ui.ts`; the node cloud uses
-  the projection of `src/lib/motion/network.ts` with a fixed seed, so the output is
-  reproducible and both themes get the identical cloud.
-- `shot.mjs` — renders each HTML to `header-{dark,light}.png`, 1280×360 at 2x (2560×720).
+- `gen-header.py` — writes `header-{dark,light}.svg`, 1280×360 and animated. The colors
+  are the two branches of every `light-dark()` token in `src/styles/app.css`, the copy is
+  the hero of `handoff/content.json` and the figures come from `src/lib/ui.ts`; the node
+  cloud uses the projection of `src/lib/motion/network.ts` with a fixed seed, so the
+  output is reproducible and both themes get the identical cloud.
+- `shot.mjs` — screenshots each SVG _inside an `<img>`_ to `header-{dark,light}.png`. That
+  is the context GitHub renders it in, and it is stricter than opening the file: no
+  scripts, no external resources. A still is all a screenshot can show, so it verifies the
+  layout and the fonts; that the animation runs is verified by two frames differing.
 - `profile-readme.md` — the profile README itself, ready to publish.
 - `workflows/snake.yml` — the GitHub Action that draws the contribution grid as a snake
   and pushes the two SVGs to the `output` branch of the profile repo, once a day. Goes to
   `.github/workflows/` of that repo, not of this one.
 
-The `.html` and `.png` are generated and git-ignored: they embed the woff2 fonts as
-base64 and weigh over a megabyte together.
+The `.svg` and `.png` are generated and git-ignored: the SVGs embed the three woff2 fonts
+as base64, ~130KB each.
+
+## Why the header is an SVG
+
+GitHub renders a README image through an `<img>`, which runs CSS and SMIL animations and
+refuses scripts — the same reason the contribution snake moves. So the header animates:
+the aurora blobs drift, the network twinkles, pulses travel its edges, and a light sweeps
+across the second line. All of it sits behind `prefers-reduced-motion: no-preference`, as
+on the site; with `reduce` the first frame is the finished layout.
+
+The fonts are embedded as base64 for the same reason: inside an `<img>` the SVG may not
+fetch anything, so a `<link>` to /fonts would render the header in Times.
 
 ## Regenerate
 
@@ -36,7 +50,7 @@ That repository does not exist yet:
 gh repo create djmaam --public --description "Profile README" --clone
 cd djmaam && mkdir -p assets
 cp ../portfolio-v3/assets/github/profile-readme.md README.md
-cp ../portfolio-v3/assets/github/header-*.png assets/
+cp ../portfolio-v3/assets/github/header-*.svg assets/
 mkdir -p .github/workflows
 cp ../portfolio-v3/assets/github/workflows/snake.yml .github/workflows/
 git add . && git commit -m "feat: profile README" && git push
