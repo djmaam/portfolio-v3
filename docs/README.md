@@ -101,11 +101,12 @@ These specs addressed pixel-perfect visual alignment, container overflow bugs, a
 
 ---
 
-### Phase 7: Deploy (18)
+### Phase 7: Deploy (18, 35)
 
 | Spec | Title | Linear Issue | Target Area | Description |
 | :--- | :--- | :--- | :--- | :--- |
 | [`18-deploy.md`](./superpowers/specs/18-deploy.md) | Cloudflare Pages, Domain & Email Routing | PV3-23 | `astro.config.mjs`, `public/_headers`, `src/pages/` | Puts `marcosarrieta.dev` online: build-time hashed CSP in a `<meta>`, security and cache headers, `robots.txt` and `sitemap.xml` as endpoints, and the `og.png` `Base.astro` has pointed at since spec 03. |
+| [`35-security-txt.md`](./superpowers/specs/35-security-txt.md) | security.txt | — | `src/pages/.well-known/` | RFC 9116 `security.txt` as a static endpoint, like `robots.txt`: contact and canonical from `content.json`, `Expires` a year from the build. |
 
 ---
 
