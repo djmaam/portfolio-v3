@@ -1,0 +1,165 @@
+que nos quedo pendiente por hacer en el portfolio? el SEO y eso como lo manejamos? cuando busco mi nombre aparece siempre mi linkein pero no me pagina, aparece primero mi pagina vieja, con el dominio viejo y no el nuevo, lo quise renovar el viejo como puedo mejorar esto?
+
+---
+
+mi idea no es renovar el .ar
+
+---
+
+ya vencio y ya no tengo acceso a el
+
+---
+
+netlify tiene hosteado ese sitio, tengo que darlo de baja?
+
+---
+
+el sitio es un repositorio tambien, es el portfolio v2, lo podes meter  vos el cambio directamente porque netlify actualiza el sitio directamente de los push al main
+
+---
+
+<pasted_content id="d5c5">
+11:53:00 PM: Netlify Build                                                 
+11:53:00 PM: ────────────────────────────────────────────────────────────────
+11:53:00 PM: 
+11:53:00 PM: ❯ Version
+11:53:00 PM:   @netlify/build 37.5.0
+11:53:00 PM: 
+11:53:00 PM: ❯ Flags
+11:53:00 PM:   accountId: 5f99fa178b8d8321f1fce21c
+11:53:00 PM:   baseRelDir: true
+11:53:00 PM:   buildId: 6ad828e925486f817b7347d2
+11:53:00 PM:   deployId: 6ad828e925486f817b7347d4
+11:53:00 PM: 
+11:53:00 PM: ❯ Current directory
+11:53:00 PM:   /opt/build/repo
+11:53:00 PM: 
+11:53:00 PM: ❯ Config file
+11:53:00 PM:   /opt/build/repo/netlify.toml
+11:53:00 PM: 
+11:53:00 PM: ❯ Context
+11:53:00 PM:   production
+11:53:00 PM: 
+11:53:00 PM: ❯ Installing plugins
+11:53:00 PM:    - @netlify/plugin-lighthouse@4
+11:53:07 PM: Failed during stage 'building site': Build script returned non-zero exit code: 2 (https://ntl.fyi/exit-code-2)
+11:53:07 PM: 
+11:53:07 PM: Configuration error                                           
+11:53:07 PM: ────────────────────────────────────────────────────────────────
+11:53:07 PM: 
+11:53:07 PM:   Error message
+11:53:07 PM:   The Node.js version is 22.23.3 but the plugin "@netlify/plugin-lighthouse" requires >=14.15 <20
+11:53:07 PM: 
+11:53:07 PM:   Resolved config
+11:53:07 PM:   build:
+11:53:07 PM:     command: echo redirect-only
+11:53:07 PM:     commandOrigin: config
+11:53:07 PM:     publish: /opt/build/repo/redirect
+11:53:07 PM:     publishOrigin: config
+11:53:07 PM:   plugins:
+11:53:07 PM:     - inputs: {}
+11:53:07 PM:       origin: ui
+11:53:07 PM:       package: "@netlify/plugin-lighthouse"
+11:53:07 PM:   redirects:
+11:53:07 PM:     - force: true
+11:53:07 PM:       from: /*
+11:53:07 PM:       status: 301
+11:53:07 PM:       to: https://marcosarrieta.dev/:splat
+11:53:07 PM: Build failed due to a user error: Build script returned non-zero exit code: 2
+11:53:07 PM: Failing build: Failed to build site
+11:53:08 PM: Finished processing build request in 41.308s
+</pasted_content id="d5c5">
+
+---
+
+volvio a fallar pero la verdad que no consigo desactivar el plugin
+
+---
+
+<pasted_content id="d5c5">
+The Netlify deploy errored, with the following guidance provided:
+
+Looking at the logs, the build fails at [line 67](#L67) with a non-zero exit code during the build stage. The logs are truncated, but let me point to the key issue.
+
+The failure is caused by the build script returning a non-zero exit code. To get more detail, let's look at what's likely happening based on the repo structure.
+
+Checking the [`netlify.toml`](https://github.com/djmaam/portfolio-v2/blob/master/netlify.toml) and [`package.json`](https://github.com/djmaam/portfolio-v2/blob/master/package.json) in the repo, the build command is likely failing due to a missing dependency or script error.
+
+**Diagnosis:**
+
+The build is exiting with code `2`, which typically indicates a command was not found or a script failed. The logs are too truncated to see the exact error line, but common causes include:
+
+- A missing or incompatible Node.js version
+- A missing dependency not listed in `package.json`
+- A build command that references a script that doesn't exist
+
+**Solution:**
+
+1. Check that your Node.js version is compatible. The repo may require a specific Node version. You can set it in `netlify.toml`:
+
+```toml
+[build.environment]
+  NODE_VERSION = "18"
+```
+
+Refer to the [Netlify documentation for changing Node versions](https://docs.netlify.com/configure-builds/manage-dependencies/#node-js-and-javascript) for more details.
+
+2. Verify all dependencies in `package.json` are correct and run `npm install` locally to confirm there are no errors.
+
+3. Confirm your build command runs successfully locally before deploying:
+
+```bash
+npm run build
+```
+
+If the issue persists, enable more verbose logging by adding `CI=false` to your build environment variables in `netlify.toml`:
+
+```toml
+[build.environment]
+  CI = "false"
+```
+
+This will surface more detailed error output in your Netlify build logs.
+
+The relevant error logs are:
+
+Line 57:   /opt/build/repo
+Line 58: 
+Line 59: ❯ Config file
+Line 60:   /opt/build/repo/netlify.toml
+Line 61: 
+Line 62: ❯ Context
+Line 63:   production
+Line 64: 
+Line 65: ❯ Installing plugins
+Line 66:    - @netlify/plugin-lighthouse@4
+Line 67: Failed during stage 'building site': Build script returned non-zero exit code: 2
+</pasted_content id="d5c5">
+
+---
+
+no me aparece nada para el build manual, com olo puedo solucionar?
+
+---
+
+dale sacalo
+
+---
+
+como funciona lo de google search console?
+
+---
+
+listo ya hice todo eso
+
+---
+
+eso ya lo hice en todos lados, redirecciona a mi web nueva no a la vieja
+
+---
+
+Configure and manage your Security.txt file to improve your website’s vulnerability disclosure process.
+
+---
+
+agregalo tu por codigo porfavor y subelo
